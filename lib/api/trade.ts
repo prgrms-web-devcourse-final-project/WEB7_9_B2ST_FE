@@ -172,5 +172,29 @@ export const tradeApi = {
     const response = await apiClient.post<TradeRequest>(`/api/trades/${tradeId}/requests`, request);
     return response;
   },
+
+  /**
+   * 교환 신청 거절
+   */
+  async rejectTradeRequest(tradeRequestId: number) {
+    const response = await apiClient.patch<null>(`/api/trade-requests/${tradeRequestId}/reject`);
+    return response;
+  },
+
+  /**
+   * 교환 신청 수락
+   */
+  async acceptTradeRequest(tradeRequestId: number) {
+    const response = await apiClient.patch<null>(`/api/trade-requests/${tradeRequestId}/accept`);
+    return response;
+  },
+
+  /**
+   * 양도 게시글 가격 수정
+   */
+  async updateTradePrice(tradeId: number, price: number) {
+    const response = await apiClient.patch<null>(`/api/trades/${tradeId}`, { price });
+    return response;
+  },
 };
 

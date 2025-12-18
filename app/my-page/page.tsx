@@ -201,7 +201,12 @@ export default function MyPage() {
         {/* Trades Tab */}
         {activeTab === 'trades' && (
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">나의 교환/양도</h2>
+            <Link
+              href="/my-page/trades"
+              className="text-xl font-bold text-gray-900 mb-4 block hover:text-purple-600"
+            >
+              나의 교환/양도 →
+            </Link>
             <div className="text-center py-12 text-gray-400">
               <p>등록된 교환/양도 내역이 없습니다.</p>
             </div>

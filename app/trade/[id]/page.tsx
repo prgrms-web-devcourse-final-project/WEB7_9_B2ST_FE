@@ -20,6 +20,11 @@ export default function TradeDetailPage() {
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFetchingTickets, setIsFetchingTickets] = useState(false);
+  
+  // 가격 수정 관련 상태
+  const [showPriceEditModal, setShowPriceEditModal] = useState(false);
+  const [newPrice, setNewPrice] = useState('');
+  const [isUpdatingPrice, setIsUpdatingPrice] = useState(false);
 
   useEffect(() => {
     const fetchTradeDetail = async () => {
@@ -231,7 +236,20 @@ export default function TradeDetailPage() {
 
             {trade.type === 'TRANSFER' && (
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">가격 정보</h2>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-semibold text-gray-900">가격 정보</h2>
+                  {trade.status === 'ACTIVE' && (
+                    <button
+                      onClick={() => {
+                        setShowPriceEditModal(true);
+                        setNewPrice(trade.price?.toString() || '');
+                      }}
+                      className="text-sm text-purple-600 hover:text-purple-700 font-medium"
+                    >
+                      가격 수정
+                    </button>
+                  )}
+                </div>
                 <p className="text-2xl font-bold text-purple-600">{formatPrice(trade.price)}</p>
               </div>
             )}
@@ -345,6 +363,101 @@ export default function TradeDetailPage() {
                     className="flex-1 px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmitting ? '신청 중...' : '신청하기'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 가격 수정 모달 */}
+      {showPriceEditModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg max-w-md w-full">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">가격 수정</h2>
+                <button
+                  onClick={() => {
+                    setShowPriceEditModal(false);
+                    setNewPrice('');
+                    setError('');
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+                  {error}
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    새 가격 (원)
+                  </label>
+                  <input
+                    type="number"
+                    value={newPrice}
+                    onChange={(e) => setNewPrice(e.target.value)}
+                    placeholder="예: 50000"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => {
+                      setShowPriceEditModal(false);
+                      setNewPrice('');
+                      setError('');
+                    }}
+                    className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                  >
+                    취소
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (!newPrice || parseInt(newPrice) <= 0) {
+                        setError('올바른 가격을 입력해주세요.');
+                        return;
+                      }
+
+                      setIsUpdatingPrice(true);
+                      setError('');
+
+                      try {
+                        await tradeApi.updateTradePrice(tradeId, parseInt(newPrice));
+                        alert('가격이 수정되었습니다.');
+                        setShowPriceEditModal(false);
+                        setNewPrice('');
+                        
+                        // 거래 상세 정보 다시 불러오기
+                        const tradeResponse = await tradeApi.getTradeDetail(tradeId);
+                        if (tradeResponse.data) {
+                          setTrade(tradeResponse.data);
+                        }
+                      } catch (err) {
+                        if (err instanceof Error) {
+                          setError(err.message);
+                        } else {
+                          setError('가격 수정에 실패했습니다.');
+                        }
+                      } finally {
+                        setIsUpdatingPrice(false);
+                      }
+                    }}
+                    disabled={isUpdatingPrice}
+                    className="flex-1 px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isUpdatingPrice ? '수정 중...' : '수정하기'}
                   </button>
                 </div>
               </div>

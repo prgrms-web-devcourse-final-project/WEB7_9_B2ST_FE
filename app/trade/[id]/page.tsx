@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { tradeApi, type Trade } from '@/lib/api/trade';
+import { tradeApi, type Trade, type Ticket } from '@/lib/api/trade';
 import Link from 'next/link';
 
 export default function TradeDetailPage() {
@@ -13,6 +13,13 @@ export default function TradeDetailPage() {
   const [trade, setTrade] = useState<Trade | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  
+  // 교환 신청 관련 상태
+  const [showExchangeModal, setShowExchangeModal] = useState(false);
+  const [myTickets, setMyTickets] = useState<Ticket[]>([]);
+  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFetchingTickets, setIsFetchingTickets] = useState(false);
 
   useEffect(() => {
     const fetchTradeDetail = async () => {
@@ -40,6 +47,66 @@ export default function TradeDetailPage() {
     }
   }, [tradeId]);
 
+  const handleOpenExchangeModal = async () => {
+    setShowExchangeModal(true);
+    setIsFetchingTickets(true);
+    setError('');
+
+    try {
+      const response = await tradeApi.getMyTickets();
+      if (response.data) {
+        // ISSUED 상태인 티켓만 필터링
+        const availableTickets = response.data.filter(
+          ticket => ticket.status === 'ISSUED'
+        );
+        setMyTickets(availableTickets);
+      }
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('티켓 목록을 불러오는데 실패했습니다.');
+      }
+    } finally {
+      setIsFetchingTickets(false);
+    }
+  };
+
+  const handleSubmitExchange = async () => {
+    if (!selectedTicketId) {
+      setError('교환할 티켓을 선택해주세요.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      const response = await tradeApi.createTradeRequest(tradeId, {
+        requesterTicketId: selectedTicketId,
+      });
+
+      if (response.data) {
+        alert('교환 신청이 완료되었습니다.');
+        setShowExchangeModal(false);
+        setSelectedTicketId(null);
+        // 거래 상세 정보 다시 불러오기
+        const tradeResponse = await tradeApi.getTradeDetail(tradeId);
+        if (tradeResponse.data) {
+          setTrade(tradeResponse.data);
+        }
+      }
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('교환 신청에 실패했습니다.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('ko-KR', {
@@ -66,7 +133,7 @@ export default function TradeDetailPage() {
     );
   }
 
-  if (error || !trade) {
+  if (error && !trade) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -81,6 +148,8 @@ export default function TradeDetailPage() {
       </div>
     );
   }
+
+  if (!trade) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -103,6 +172,12 @@ export default function TradeDetailPage() {
               {trade.type === 'EXCHANGE' ? '교환' : '양도'}
             </span>
           </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+              {error}
+            </div>
+          )}
 
           <div className="space-y-6">
             <div>
@@ -168,12 +243,15 @@ export default function TradeDetailPage() {
             </div>
 
             <div className="flex gap-3 pt-6 border-t">
-              {trade.type === 'EXCHANGE' && (
-                <button className="px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors">
+              {trade.type === 'EXCHANGE' && trade.status === 'ACTIVE' && (
+                <button
+                  onClick={handleOpenExchangeModal}
+                  className="px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
+                >
                   교환 신청하기
                 </button>
               )}
-              {trade.type === 'TRANSFER' && (
+              {trade.type === 'TRANSFER' && trade.status === 'ACTIVE' && (
                 <button className="px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors">
                   구매하기
                 </button>
@@ -182,7 +260,98 @@ export default function TradeDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* 교환 신청 모달 */}
+      {showExchangeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">교환 신청</h2>
+                <button
+                  onClick={() => {
+                    setShowExchangeModal(false);
+                    setSelectedTicketId(null);
+                    setError('');
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+                  {error}
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-gray-600 mb-2">교환할 티켓을 선택해주세요</p>
+                  {isFetchingTickets ? (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500">티켓 목록을 불러오는 중...</p>
+                    </div>
+                  ) : myTickets.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500">교환 가능한 티켓이 없습니다.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-4">
+                      {myTickets.map((ticket) => (
+                        <button
+                          key={ticket.ticketId}
+                          onClick={() => setSelectedTicketId(ticket.ticketId)}
+                          className={`w-full p-4 text-left rounded-lg border-2 transition-colors ${
+                            selectedTicketId === ticket.ticketId
+                              ? 'border-purple-600 bg-purple-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium text-gray-900">티켓 ID: {ticket.ticketId}</p>
+                              <p className="text-sm text-gray-600">예약 ID: {ticket.reservationId}</p>
+                            </div>
+                            {selectedTicketId === ticket.ticketId && (
+                              <div className="w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center">
+                                <div className="w-2 h-2 bg-white rounded-full"></div>
+                              </div>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => {
+                      setShowExchangeModal(false);
+                      setSelectedTicketId(null);
+                      setError('');
+                    }}
+                    className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                  >
+                    취소
+                  </button>
+                  <button
+                    onClick={handleSubmitExchange}
+                    disabled={!selectedTicketId || isSubmitting}
+                    className="flex-1 px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? '신청 중...' : '신청하기'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-

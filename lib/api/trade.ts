@@ -64,6 +64,35 @@ export interface TradeRequestListParams {
   requesterId?: number;
 }
 
+export interface CreateExchangeTradeRequest {
+  ticketId: number;
+  type: 'EXCHANGE';
+  totalCount: number;
+}
+
+export interface CreateTransferTradeRequest {
+  ticketIds: number[];
+  type: 'TRANSFER';
+  price: number;
+}
+
+export type CreateTradeRequest = CreateExchangeTradeRequest | CreateTransferTradeRequest;
+
+export interface CreateTradeResponse {
+  tradeId: number;
+  type: TradeType;
+  status: string;
+  section: string;
+  row: string;
+  seatNumber: string;
+  totalCount: number;
+  price: number | null;
+}
+
+export interface CreateTradeRequestRequest {
+  requesterTicketId: number;
+}
+
 export const tradeApi = {
   /**
    * 티켓 양도/교환 게시글 목록 조회 (필터링 + 페이징)
@@ -125,6 +154,22 @@ export const tradeApi = {
    */
   async getMyTickets() {
     const response = await apiClient.get<Ticket[]>('/api/tickets');
+    return response;
+  },
+
+  /**
+   * 티켓 양도/교환 게시글 등록
+   */
+  async createTrade(request: CreateTradeRequest) {
+    const response = await apiClient.post<CreateTradeResponse | CreateTradeResponse[]>('/api/trades', request);
+    return response;
+  },
+
+  /**
+   * 교환 게시글에 교환 신청
+   */
+  async createTradeRequest(tradeId: number, request: CreateTradeRequestRequest) {
+    const response = await apiClient.post<TradeRequest>(`/api/trades/${tradeId}/requests`, request);
     return response;
   },
 };

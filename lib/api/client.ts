@@ -50,17 +50,42 @@ class ApiClient {
         headers,
       });
 
-      const data: ApiResponse<T> = await response.json();
+      const jsonData = await response.json();
 
       if (!response.ok) {
         // 401 에러 시 토큰 재발급 시도 (나중에 구현)
         if (response.status === 401) {
           // TODO: 토큰 재발급 로직 추가
         }
-        throw new Error(data.message || '요청에 실패했습니다.');
+        
+        // 에러 응답 형식 처리 (code와 message가 있는 경우)
+        if ('message' in jsonData) {
+          throw new Error(jsonData.message || '요청에 실패했습니다.');
+        }
+        throw new Error('요청에 실패했습니다.');
       }
 
-      return data;
+      // 성공 응답 형식 처리
+      // 형식 1: { code, message, data }
+      if ('code' in jsonData && 'data' in jsonData) {
+        return jsonData as ApiResponse<T>;
+      }
+      
+      // 형식 2: { data: T } (티켓 교환 API 등)
+      if ('data' in jsonData) {
+        return {
+          code: response.status,
+          message: '성공적으로 처리되었습니다',
+          data: jsonData.data as T,
+        };
+      }
+
+      // 형식 3: 직접 데이터 (배열 등)
+      return {
+        code: response.status,
+        message: '성공적으로 처리되었습니다',
+        data: jsonData as T,
+      };
     } catch (error) {
       if (error instanceof Error) {
         throw error;

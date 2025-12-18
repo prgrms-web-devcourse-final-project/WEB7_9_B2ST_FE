@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 export default function MyPage() {
-  const [activeTab, setActiveTab] = useState<'reservations' | 'profile' | 'trades'>('reservations');
+  const [activeTab, setActiveTab] = useState<'reservations' | 'profile' | 'trades' | 'lottery'>('reservations');
   const [periodFilter, setPeriodFilter] = useState('1month');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState<'bookingDate' | 'viewingDate'>('bookingDate');
@@ -67,6 +67,16 @@ export default function MyPage() {
               }`}
             >
               나의 교환/양도
+            </button>
+            <button
+              onClick={() => setActiveTab('lottery')}
+              className={`px-6 py-4 font-medium transition-colors ${
+                activeTab === 'lottery'
+                  ? 'text-purple-600 border-b-2 border-purple-600'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              추첨 응모
             </button>
             <button
               onClick={() => setActiveTab('profile')}
@@ -209,6 +219,21 @@ export default function MyPage() {
             </Link>
             <div className="text-center py-12 text-gray-400">
               <p>등록된 교환/양도 내역이 없습니다.</p>
+            </div>
+          </div>
+        )}
+
+        {/* Lottery Tab */}
+        {activeTab === 'lottery' && (
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <Link
+              href="/my-page/lottery"
+              className="text-xl font-bold text-gray-900 mb-4 block hover:text-purple-600"
+            >
+              내 추첨 응모 →
+            </Link>
+            <div className="text-center py-12 text-gray-400">
+              <p>응모 내역이 없습니다.</p>
             </div>
           </div>
         )}

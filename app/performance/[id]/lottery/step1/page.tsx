@@ -137,7 +137,7 @@ export default function LotteryStep1({ params }: { params: { id: string } }) {
 
               {selectedDate && selectedRound && (
                 <Link
-                  href={`/performance/${params.id}/lottery/step2?date=${selectedDate}&round=${selectedRound}`}
+                  href={`/performance/${params.id}/lottery/step2?scheduleId=1&date=${selectedDate}&round=${selectedRound}`}
                   className="block w-full px-6 py-4 bg-purple-600 text-white rounded-lg font-semibold text-center hover:bg-purple-700 transition-colors"
                 >
                   다음 단계

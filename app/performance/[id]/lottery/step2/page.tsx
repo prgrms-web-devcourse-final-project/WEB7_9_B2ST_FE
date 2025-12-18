@@ -2,19 +2,45 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { lotteryApi, type LotterySection } from '@/lib/api/lottery';
 
 export default function LotteryStep2({ params }: { params: { id: string } }) {
   const searchParams = useSearchParams();
-  const [selectedSection, setSelectedSection] = useState<string | null>(null);
+  const performanceId = Number(params.id);
+  const scheduleId = searchParams.get('scheduleId');
+  
+  const [sections, setSections] = useState<LotterySection[]>([]);
+  const [selectedGrade, setSelectedGrade] = useState<{ sectionName: string; grade: string; seatGradeId?: number } | null>(null);
   const [ticketCount, setTicketCount] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const sections = [
-    { id: 'vip', name: 'VIP석', price: '250,000원' },
-    { id: 'r', name: 'R석', price: '200,000원' },
-    { id: 's', name: 'S석', price: '180,000원' },
-    { id: 'a', name: 'A석', price: '150,000원' },
-  ];
+  useEffect(() => {
+    const fetchSections = async () => {
+      setIsLoading(true);
+      setError('');
+
+      try {
+        const response = await lotteryApi.getLotterySections(performanceId);
+        if (response.data) {
+          setSections(response.data);
+        }
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('구역 배치 정보를 불러오는데 실패했습니다.');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (performanceId) {
+      fetchSections();
+    }
+  }, [performanceId]);
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -45,105 +71,149 @@ export default function LotteryStep2({ params }: { params: { id: string } }) {
           </div>
         </div>
 
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+            {error}
+          </div>
+        )}
+
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Left: Section Info */}
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-6">구역 배치 설명</h2>
-            <div className="relative bg-gray-100 rounded-lg p-8 min-h-[400px]">
-              <div className="absolute top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-8 py-4 rounded-lg text-center font-bold">
-                STAGE
+            {isLoading ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500">로딩 중...</p>
               </div>
-              <div className="grid grid-cols-2 gap-4 mt-32">
-                {sections.map((section) => (
-                  <div
-                    key={section.id}
-                    className={`p-6 rounded-lg border-2 ${
-                      selectedSection === section.id
-                        ? 'border-purple-600 bg-purple-50'
-                        : 'border-gray-300 bg-white'
-                    }`}
-                  >
-                    <div className="text-center">
-                      <h3 className="font-bold text-lg text-gray-900 mb-2">{section.name}</h3>
-                      <p className="text-purple-600 font-semibold">{section.price}</p>
-                    </div>
-                  </div>
-                ))}
+            ) : (
+              <div className="relative bg-gray-100 rounded-lg p-8 min-h-[400px]">
+                <div className="absolute top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-8 py-4 rounded-lg text-center font-bold">
+                  STAGE
+                </div>
+                <div className="grid grid-cols-2 gap-4 mt-32">
+                  {sections.map((section) =>
+                    section.grades.map((grade, gradeIndex) => {
+                      const isSelected = selectedGrade?.sectionName === section.sectionName && 
+                                        selectedGrade?.grade === grade.grade;
+                      return (
+                        <div
+                          key={`${section.sectionName}-${grade.grade}`}
+                          className={`p-6 rounded-lg border-2 ${
+                            isSelected
+                              ? 'border-purple-600 bg-purple-50'
+                              : 'border-gray-300 bg-white'
+                          }`}
+                        >
+                          <div className="text-center">
+                            <h3 className="font-bold text-lg text-gray-900 mb-2">
+                              {section.sectionName} - {grade.grade}
+                            </h3>
+                            <p className="text-sm text-gray-600">
+                              {grade.rows.length}개 행
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Right: Selection */}
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-6">좌석 등급 정보</h2>
             
-            <div className="space-y-4 mb-6">
-              {sections.map((section) => (
-                <button
-                  key={section.id}
-                  onClick={() => setSelectedSection(section.id)}
-                  className={`w-full p-4 rounded-lg border-2 text-left transition-colors ${
-                    selectedSection === section.id
-                      ? 'border-purple-600 bg-purple-50'
-                      : 'border-gray-300 hover:border-gray-400'
-                  }`}
-                >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="font-bold text-gray-900">{section.name}</h3>
-                      <p className="text-sm text-gray-600">{section.price}</p>
-                    </div>
-                    {selectedSection === section.id && (
-                      <div className="w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center">
-                        <div className="w-2 h-2 bg-white rounded-full"></div>
-                      </div>
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            {selectedSection && (
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">매수 선택</label>
-                <div className="flex items-center gap-4">
-                  <button
-                    onClick={() => setTicketCount(Math.max(1, ticketCount - 1))}
-                    className="w-10 h-10 border border-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-50"
-                  >
-                    -
-                  </button>
-                  <span className="text-lg font-medium w-12 text-center">{ticketCount}</span>
-                  <button
-                    onClick={() => setTicketCount(ticketCount + 1)}
-                    className="w-10 h-10 border border-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-50"
-                  >
-                    +
-                  </button>
-                </div>
+            {isLoading ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500">로딩 중...</p>
               </div>
-            )}
+            ) : (
+              <>
+                <div className="space-y-4 mb-6 max-h-96 overflow-y-auto">
+                  {sections.map((section) =>
+                    section.grades.map((grade, gradeIndex) => {
+                      const isSelected = selectedGrade?.sectionName === section.sectionName && 
+                                        selectedGrade?.grade === grade.grade;
+                      return (
+                        <button
+                          key={`${section.sectionName}-${grade.grade}`}
+                          onClick={() => setSelectedGrade({
+                            sectionName: section.sectionName,
+                            grade: grade.grade,
+                            // TODO: seatGradeId는 실제 API 응답에 따라 매핑 필요
+                            seatGradeId: gradeIndex + 1,
+                          })}
+                          className={`w-full p-4 rounded-lg border-2 text-left transition-colors ${
+                            isSelected
+                              ? 'border-purple-600 bg-purple-50'
+                              : 'border-gray-300 hover:border-gray-400'
+                          }`}
+                        >
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <h3 className="font-bold text-gray-900">
+                                {section.sectionName} - {grade.grade}
+                              </h3>
+                              <p className="text-sm text-gray-600">
+                                행: {grade.rows.join(', ')}
+                              </p>
+                            </div>
+                            {isSelected && (
+                              <div className="w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center">
+                                <div className="w-2 h-2 bg-white rounded-full"></div>
+                              </div>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
 
-            <div className="flex gap-3">
-              <Link
-                href={`/performance/${params.id}/lottery/step1`}
-                className="flex-1 px-6 py-4 bg-gray-200 text-gray-700 rounded-lg font-semibold text-center hover:bg-gray-300 transition-colors"
-              >
-                이전 단계
-              </Link>
-              {selectedSection && (
-                <Link
-                  href={`/performance/${params.id}/lottery/step3?section=${selectedSection}&count=${ticketCount}`}
-                  className="flex-1 px-6 py-4 bg-purple-600 text-white rounded-lg font-semibold text-center hover:bg-purple-700 transition-colors"
-                >
-                  다음 단계
-                </Link>
-              )}
-            </div>
+                {selectedGrade && (
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">매수 선택</label>
+                    <div className="flex items-center gap-4">
+                      <button
+                        onClick={() => setTicketCount(Math.max(1, ticketCount - 1))}
+                        className="w-10 h-10 border border-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-50"
+                      >
+                        -
+                      </button>
+                      <span className="text-lg font-medium w-12 text-center">{ticketCount}</span>
+                      <button
+                        onClick={() => setTicketCount(ticketCount + 1)}
+                        className="w-10 h-10 border border-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-50"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <Link
+                    href={`/performance/${params.id}/lottery/step1`}
+                    className="flex-1 px-6 py-4 bg-gray-200 text-gray-700 rounded-lg font-semibold text-center hover:bg-gray-300 transition-colors"
+                  >
+                    이전 단계
+                  </Link>
+                  {selectedGrade && scheduleId && (
+                    <Link
+                      href={`/performance/${params.id}/lottery/step3?scheduleId=${scheduleId}&seatGradeId=${selectedGrade.seatGradeId}&quantity=${ticketCount}`}
+                      className="flex-1 px-6 py-4 bg-purple-600 text-white rounded-lg font-semibold text-center hover:bg-purple-700 transition-colors"
+                    >
+                      다음 단계
+                    </Link>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
 }
-

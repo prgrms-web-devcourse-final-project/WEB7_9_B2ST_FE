@@ -1,22 +1,51 @@
 'use client';
 
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { lotteryApi } from '@/lib/api/lottery';
 
 export default function LotteryStep3({ params }: { params: { id: string } }) {
   const searchParams = useSearchParams();
-  const section = searchParams.get('section') || 'vip';
-  const count = parseInt(searchParams.get('count') || '1');
+  const router = useRouter();
+  const performanceId = Number(params.id);
+  const scheduleId = parseInt(searchParams.get('scheduleId') || '0');
+  const seatGradeId = parseInt(searchParams.get('seatGradeId') || '0');
+  const quantity = parseInt(searchParams.get('quantity') || '1');
+  
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'bank' | 'kakao'>('card');
   const [isComplete, setIsComplete] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-  const pricePerTicket = section === 'vip' ? 250000 : section === 'r' ? 200000 : section === 's' ? 180000 : 150000;
-  const totalPrice = count * pricePerTicket;
+  const handleSubmit = async () => {
+    if (!scheduleId || !seatGradeId) {
+      setError('필수 정보가 누락되었습니다.');
+      return;
+    }
 
-  const handleSubmit = () => {
-    // 응모 처리 로직 (API 호출 부분은 나중에)
-    setIsComplete(true);
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      const response = await lotteryApi.createLotteryEntry(performanceId, {
+        scheduleId,
+        seatGradeId,
+        quantity,
+      });
+
+      if (response.data) {
+        setIsComplete(true);
+      }
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('응모 등록에 실패했습니다.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isComplete) {
@@ -30,7 +59,13 @@ export default function LotteryStep3({ params }: { params: { id: string } }) {
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">응모 완료</h2>
           <p className="text-gray-600 mb-4">추첨 결과는 발표일자에 알려드립니다.</p>
-          <p className="text-sm text-gray-500">당첨 시에만 결제가 진행됩니다.</p>
+          <p className="text-sm text-gray-500 mb-6">당첨 시에만 결제가 진행됩니다.</p>
+          <button
+            onClick={() => router.push('/my-page')}
+            className="px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
+          >
+            마이페이지로 이동
+          </button>
         </div>
       </div>
     );
@@ -66,6 +101,12 @@ export default function LotteryStep3({ params }: { params: { id: string } }) {
         </div>
 
         <div className="bg-white rounded-lg shadow-sm p-8">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+              {error}
+            </div>
+          )}
+
           <div className="mb-6 p-4 bg-blue-50 rounded-lg">
             <p className="text-sm text-blue-800">
               <strong>안내:</strong> 추첨 방식 예매입니다. 당첨 시에만 결제가 진행되며, 결제 수단은 당첨 후 결제 시 사용됩니다.
@@ -131,11 +172,11 @@ export default function LotteryStep3({ params }: { params: { id: string } }) {
           </div>
 
           <div className="border-t pt-6">
-            <div className="flex justify-between items-center mb-6">
-              <span className="text-lg font-medium text-gray-700">예상 결제금액</span>
-              <span className="text-2xl font-bold text-purple-600">
-                {totalPrice.toLocaleString()}원
-              </span>
+            <div className="mb-6">
+              <p className="text-sm text-gray-600 mb-2">응모 정보</p>
+              <div className="space-y-1 text-sm">
+                <p>매수: {quantity}매</p>
+              </div>
             </div>
             <p className="text-sm text-gray-500 mb-6 text-center">
               (당첨 시에만 결제됩니다)
@@ -143,16 +184,17 @@ export default function LotteryStep3({ params }: { params: { id: string } }) {
 
             <div className="flex gap-3">
               <Link
-                href={`/performance/${params.id}/lottery/step2`}
+                href={`/performance/${params.id}/lottery/step2?scheduleId=${scheduleId}`}
                 className="flex-1 px-6 py-4 bg-gray-200 text-gray-700 rounded-lg font-semibold text-center hover:bg-gray-300 transition-colors"
               >
                 이전 단계
               </Link>
               <button
                 onClick={handleSubmit}
-                className="flex-1 px-6 py-4 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors"
+                disabled={isSubmitting}
+                className="flex-1 px-6 py-4 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                응모 완료
+                {isSubmitting ? '응모 중...' : '응모 완료'}
               </button>
             </div>
           </div>
@@ -161,4 +203,3 @@ export default function LotteryStep3({ params }: { params: { id: string } }) {
     </div>
   );
 }
-

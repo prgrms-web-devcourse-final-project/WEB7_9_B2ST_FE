@@ -196,5 +196,13 @@ export const tradeApi = {
     const response = await apiClient.patch<null>(`/api/trades/${tradeId}`, { price });
     return response;
   },
+
+  /**
+   * 거래 게시글 삭제
+   */
+  async deleteTrade(tradeId: number) {
+    const response = await apiClient.delete<null>(`/api/trades/${tradeId}`);
+    return response;
+  },
 };
 

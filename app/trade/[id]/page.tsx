@@ -274,6 +274,35 @@ export default function TradeDetailPage() {
                   구매하기
                 </button>
               )}
+              {trade.status === 'ACTIVE' && (
+                <button
+                  onClick={async () => {
+                    if (!confirm('정말로 이 거래를 삭제하시겠습니까?\n대기 중인 신청이 있으면 삭제할 수 없습니다.')) {
+                      return;
+                    }
+
+                    setIsLoading(true);
+                    setError('');
+
+                    try {
+                      await tradeApi.deleteTrade(tradeId);
+                      alert('거래가 삭제되었습니다.');
+                      router.push('/trade');
+                    } catch (err) {
+                      if (err instanceof Error) {
+                        setError(err.message);
+                      } else {
+                        setError('거래 삭제에 실패했습니다.');
+                      }
+                    } finally {
+                      setIsLoading(false);
+                    }
+                  }}
+                  className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+                >
+                  거래 삭제
+                </button>
+              )}
             </div>
           </div>
         </div>

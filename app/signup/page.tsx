@@ -87,15 +87,18 @@ export default function SignupPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // 타이머 처리
+  // 타이머 처리 (이메일 인증 완료 시 타이머 중지)
   useEffect(() => {
-    if (resendTimer > 0) {
+    if (resendTimer > 0 && !isEmailVerified) {
       const timer = setTimeout(() => {
         setResendTimer(resendTimer - 1);
       }, 1000);
       return () => clearTimeout(timer);
+    } else if (isEmailVerified && resendTimer > 0) {
+      // 인증 완료 시 타이머 리셋
+      setResendTimer(0);
     }
-  }, [resendTimer]);
+  }, [resendTimer, isEmailVerified]);
 
   // 이메일 중복 체크 (debounce)
   useEffect(() => {
@@ -186,6 +189,7 @@ export default function SignupPage() {
     try {
       await emailApi.verifyCode({ email: formData.email, code: verificationCode });
       setIsEmailVerified(true);
+      setResendTimer(0); // 인증 완료 시 타이머 리셋
       setErrors({ ...errors, verificationCode: "" });
       alert("이메일 인증이 완료되었습니다.");
     } catch (err) {

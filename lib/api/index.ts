@@ -20,6 +20,7 @@ export { typedBanksApi } from './typed-banks';
 export { apiClient } from './client';
 export { authApi } from './auth';
 export { emailApi } from './email';
+export { performanceApi } from './performance';
 export { tradeApi } from './trade';
 export { lotteryApi } from './lottery';
 

@@ -1,31 +1,71 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { performanceApi, type PerformanceListRes } from '@/lib/api/performance';
 
 export default function Home() {
   const { isAuthenticated, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<'ticket' | 'trade'>('ticket');
   const [activeCategory, setActiveCategory] = useState<string>('전체');
+  const [performances, setPerformances] = useState<PerformanceListRes[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const categories = ['전체', '콘서트', '뮤지컬', '클래식', '연극', '전시/행사'];
-  
-  // 더미 공연 데이터
-  const performances = [
-    { id: 1, title: '아이유 콘서트', category: '콘서트', venue: '올림픽공원 올림픽홀', date: '2025.01.15 ~ 2025.01.20' },
-    { id: 2, title: '레미제라블', category: '뮤지컬', venue: '샤롯데씨어터', date: '2025.01.10 ~ 2025.03.15' },
-    { id: 3, title: '베토벤 교향곡', category: '클래식', venue: '예술의전당', date: '2025.02.01 ~ 2025.02.28' },
-    { id: 4, title: 'BTS 콘서트', category: '콘서트', venue: '잠실종합운동장', date: '2025.03.01 ~ 2025.03.05' },
-    { id: 5, title: '오페라의 유령', category: '뮤지컬', venue: '블루스퀘어', date: '2025.02.15 ~ 2025.04.30' },
-    { id: 6, title: '모차르트 피아노', category: '클래식', venue: '세종문화회관', date: '2025.02.20 ~ 2025.03.10' },
-    { id: 7, title: '햄릿', category: '연극', venue: '대학로 아트원씨어터', date: '2025.01.20 ~ 2025.03.20' },
-    { id: 8, title: '반 고흐 전시', category: '전시/행사', venue: '국립중앙박물관', date: '2025.01.01 ~ 2025.04.30' },
-  ];
+
+  // 공연 목록 조회
+  useEffect(() => {
+    const fetchPerformances = async () => {
+      if (activeTab !== 'ticket') return;
+
+      setIsLoading(true);
+      setError('');
+
+      try {
+        const response = await performanceApi.getPerformances({
+          page: 0,
+          size: 20,
+          sort: ['createdAt,desc'],
+        });
+
+        if (response.data?.content) {
+          setPerformances(response.data.content);
+        }
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('공연 목록을 불러오는데 실패했습니다.');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPerformances();
+  }, [activeTab]);
 
   const filteredPerformances = activeCategory === '전체' 
     ? performances 
     : performances.filter(p => p.category === activeCategory);
+
+  // 날짜 포맷팅
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+  };
+
+  const formatDateRange = (startDate?: string, endDate?: string) => {
+    if (!startDate || !endDate) return '';
+    return `${formatDate(startDate)} ~ ${formatDate(endDate)}`;
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -143,42 +183,62 @@ export default function Home() {
       </header>
 
       {/* Hero Banner */}
-      {activeTab === 'ticket' && (
+      {activeTab === 'ticket' && performances.length > 0 && (
         <section className="relative bg-gradient-to-br from-pink-50 via-white to-blue-50 py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="relative bg-white rounded-2xl shadow-xl overflow-hidden">
               <div className="grid md:grid-cols-2 gap-0">
                 {/* Left: Content */}
                 <div className="p-12 flex flex-col justify-center">
-                  <div className="mb-4">
-                    <span className="text-sm font-medium text-red-600">2025</span>
-                  </div>
+                  {performances[0].startDate && (
+                    <div className="mb-4">
+                      <span className="text-sm font-medium text-red-600">
+                        {new Date(performances[0].startDate).getFullYear()}
+                      </span>
+                    </div>
+                  )}
                   <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                    아이유 콘서트
+                    {performances[0].title}
                   </h1>
-                  <p className="text-xl text-gray-600 mb-2">HEREH WORLD TOUR</p>
+                  {performances[0].category && (
+                    <p className="text-xl text-gray-600 mb-2">{performances[0].category}</p>
+                  )}
                   <div className="space-y-2 text-gray-500 mb-6">
-                    <p className="text-sm">명화라이브홀</p>
-                    <p className="text-sm">2025.01.15 - 2025.01.20</p>
+                    {performances[0].venueName && (
+                      <p className="text-sm">{performances[0].venueName}</p>
+                    )}
+                    {(performances[0].startDate || performances[0].endDate) && (
+                      <p className="text-sm">
+                        {formatDateRange(performances[0].startDate, performances[0].endDate)}
+                      </p>
+                    )}
                   </div>
                   <Link
-                    href="/performance/1"
+                    href={`/performance/${performances[0].performanceId}`}
                     className="inline-block px-8 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors"
                   >
                     예매하기
                   </Link>
                 </div>
                 
-                {/* Right: Image Placeholder */}
-                <div className="bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center min-h-[400px]">
-                  <div className="text-center">
-                    <div className="w-32 h-32 bg-white/50 rounded-full mx-auto mb-4 flex items-center justify-center">
-                      <svg className="w-16 h-16 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                      </svg>
+                {/* Right: Image */}
+                <div className="bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center min-h-[400px] relative overflow-hidden">
+                  {performances[0].posterUrl ? (
+                    <img
+                      src={performances[0].posterUrl}
+                      alt={performances[0].title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="text-center">
+                      <div className="w-32 h-32 bg-white/50 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <svg className="w-16 h-16 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                        </svg>
+                      </div>
+                      <p className="text-gray-400 text-sm">공연 포스터</p>
                     </div>
-                    <p className="text-gray-400 text-sm">공연 포스터</p>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -193,37 +253,63 @@ export default function Home() {
           <p className="text-gray-600 text-sm">지금 가장 HOT한 공연을 만나보세요</p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-          {filteredPerformances.map((performance) => (
-            <Link
-              key={performance.id}
-              href={`/performance/${performance.id}`}
-              className="group cursor-pointer"
-            >
-              <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                <div className="aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    <svg className="w-16 h-16 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                    </svg>
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+            {error}
+          </div>
+        )}
+
+        {isLoading ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="text-gray-400">공연 목록을 불러오는 중...</div>
+          </div>
+        ) : filteredPerformances.length === 0 ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="text-gray-400">표시할 공연이 없습니다.</div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {filteredPerformances.map((performance) => (
+              <Link
+                key={performance.performanceId}
+                href={`/performance/${performance.performanceId}`}
+                className="group cursor-pointer"
+              >
+                <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                  <div className="aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
+                    {performance.posterUrl ? (
+                      <img
+                        src={performance.posterUrl}
+                        alt={performance.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-400">
+                        <svg className="w-16 h-16 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                        </svg>
+                      </div>
+                    )}
+                    {performance.category === '뮤지컬' && (
+                      <span className="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded">
+                        단독판매
+                      </span>
+                    )}
                   </div>
-                  {performance.category === '뮤지컬' && (
-                    <span className="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded">
-                      단독판매
-                    </span>
-                  )}
+                  <div className="p-3">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-1 line-clamp-2 group-hover:text-red-600 transition-colors">
+                      {performance.title}
+                    </h3>
+                    <p className="text-xs text-gray-500 mb-1">{performance.venueName}</p>
+                    <p className="text-xs text-gray-400">
+                      {formatDateRange(performance.startDate, performance.endDate)}
+                    </p>
+                  </div>
                 </div>
-                <div className="p-3">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-1 line-clamp-2 group-hover:text-red-600 transition-colors">
-                    {performance.title}
-                  </h3>
-                  <p className="text-xs text-gray-500 mb-1">{performance.venue}</p>
-                  <p className="text-xs text-gray-400">{performance.date}</p>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );

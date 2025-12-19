@@ -3,6 +3,21 @@ import type { components } from '@/types/api';
 
 export const typedPerformanceApi = {
   /**
+   * 공연 목록 조회
+   */
+  async getPerformances(params: {
+    pageable: components['schemas']['Pageable'];
+  }) {
+    return typedApiClient.get<
+      '/api/performances',
+      'get',
+      200
+    >('/api/performances', {
+      query: params,
+    });
+  },
+
+  /**
    * 공연 목록 검색
    */
   async searchPerformances(params: {

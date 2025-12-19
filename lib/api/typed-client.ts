@@ -1,0 +1,250 @@
+import type { paths, components } from '@/types/api';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.b2st.doncrytt.online';
+
+// 헬퍼 타입: paths에서 특정 경로와 메서드의 타입 추출
+type PathMethod<T extends keyof paths, M extends keyof paths[T]> = paths[T][M];
+
+// 헬퍼 타입: 응답 타입 추출
+type ResponseData<
+  T extends keyof paths,
+  M extends keyof paths[T],
+  Status extends number = 200
+> = PathMethod<T, M> extends { responses: infer R }
+  ? R extends { [K in Status]: { content: { '*/*': infer D } } }
+    ? D
+    : never
+  : never;
+
+// 헬퍼 타입: 요청 본문 타입 추출
+type RequestBody<T extends keyof paths, M extends keyof paths[T]> = PathMethod<
+  T,
+  M
+> extends { requestBody: { content: { 'application/json': infer B } } }
+  ? B
+  : never;
+
+// 헬퍼 타입: 쿼리 파라미터 타입 추출
+type QueryParams<T extends keyof paths, M extends keyof paths[T]> = PathMethod<
+  T,
+  M
+> extends { parameters: { query: infer Q } }
+  ? Q
+  : never;
+
+// 헬퍼 타입: 경로 파라미터 타입 추출
+type PathParams<T extends keyof paths, M extends keyof paths[T]> = PathMethod<
+  T,
+  M
+> extends { parameters: { path: infer P } }
+  ? P
+  : never;
+
+class TypedApiClient {
+  private baseURL: string;
+
+  constructor() {
+    this.baseURL = API_BASE_URL;
+  }
+
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    const url = `${this.baseURL}${endpoint}`;
+
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+
+    // 토큰이 있으면 헤더에 추가
+    if (typeof window !== 'undefined') {
+      const accessToken = localStorage.getItem('accessToken');
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+      }
+    }
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers,
+      });
+
+      const jsonData = await response.json();
+
+      if (!response.ok) {
+        // 에러 응답 처리
+        if ('message' in jsonData) {
+          throw new Error(jsonData.message as string);
+        }
+        throw new Error(`요청에 실패했습니다. (${response.status})`);
+      }
+
+      // 성공 응답 처리
+      // BaseResponse 형태인 경우 data 필드 추출
+      if (
+        jsonData &&
+        typeof jsonData === 'object' &&
+        'data' in jsonData &&
+        jsonData.data !== null &&
+        jsonData.data !== undefined
+      ) {
+        return jsonData.data as T;
+      }
+
+      // data가 null이거나 없는 경우 전체 응답 반환
+      return jsonData as T;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('알 수 없는 오류가 발생했습니다.');
+    }
+  }
+
+  /**
+   * GET 요청
+   */
+  async get<
+    TPath extends keyof paths,
+    TMethod extends 'get',
+    TStatus extends number = 200
+  >(
+    path: TPath,
+    params?: {
+      query?: QueryParams<TPath, TMethod>;
+      path?: PathParams<TPath, TMethod>;
+    }
+  ): Promise<ResponseData<TPath, TMethod, TStatus>> {
+    let url = path as string;
+
+    // 경로 파라미터 치환
+    if (params?.path) {
+      Object.entries(params.path).forEach(([key, value]) => {
+        url = url.replace(`{${key}}`, String(value));
+      });
+    }
+
+    // 쿼리 파라미터 추가
+    if (params?.query) {
+      const queryParams = new URLSearchParams();
+      Object.entries(params.query).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          if (Array.isArray(value)) {
+            value.forEach((v) => queryParams.append(key, String(v)));
+          } else if (typeof value === 'object') {
+            // Pageable 같은 객체는 JSON으로 직렬화
+            queryParams.append(key, JSON.stringify(value));
+          } else {
+            queryParams.append(key, String(value));
+          }
+        }
+      });
+      const queryString = queryParams.toString();
+      if (queryString) {
+        url += `?${queryString}`;
+      }
+    }
+
+    return this.request<ResponseData<TPath, TMethod, TStatus>>(url, {
+      method: 'GET',
+    });
+  }
+
+  /**
+   * POST 요청
+   */
+  async post<
+    TPath extends keyof paths,
+    TMethod extends 'post',
+    TStatus extends number = 200
+  >(
+    path: TPath,
+    data?: RequestBody<TPath, TMethod> extends never
+      ? never
+      : RequestBody<TPath, TMethod>,
+    params?: {
+      path?: PathParams<TPath, TMethod>;
+    }
+  ): Promise<ResponseData<TPath, TMethod, TStatus>> {
+    let url = path as string;
+
+    // 경로 파라미터 치환
+    if (params?.path) {
+      Object.entries(params.path).forEach(([key, value]) => {
+        url = url.replace(`{${key}}`, String(value));
+      });
+    }
+
+    return this.request<ResponseData<TPath, TMethod, TStatus>>(url, {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  /**
+   * PATCH 요청
+   */
+  async patch<
+    TPath extends keyof paths,
+    TMethod extends 'patch',
+    TStatus extends number = 200
+  >(
+    path: TPath,
+    data?: RequestBody<TPath, TMethod> extends never
+      ? never
+      : RequestBody<TPath, TMethod>,
+    params?: {
+      path?: PathParams<TPath, TMethod>;
+    }
+  ): Promise<ResponseData<TPath, TMethod, TStatus>> {
+    let url = path as string;
+
+    // 경로 파라미터 치환
+    if (params?.path) {
+      Object.entries(params.path).forEach(([key, value]) => {
+        url = url.replace(`{${key}}`, String(value));
+      });
+    }
+
+    return this.request<ResponseData<TPath, TMethod, TStatus>>(url, {
+      method: 'PATCH',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  /**
+   * DELETE 요청
+   */
+  async delete<
+    TPath extends keyof paths,
+    TMethod extends 'delete',
+    TStatus extends number = 200
+  >(
+    path: TPath,
+    params?: {
+      path?: PathParams<TPath, TMethod>;
+    }
+  ): Promise<ResponseData<TPath, TMethod, TStatus>> {
+    let url = path as string;
+
+    // 경로 파라미터 치환
+    if (params?.path) {
+      Object.entries(params.path).forEach(([key, value]) => {
+        url = url.replace(`{${key}}`, String(value));
+      });
+    }
+
+    return this.request<ResponseData<TPath, TMethod, TStatus>>(url, {
+      method: 'DELETE',
+    });
+  }
+}
+
+export const typedApiClient = new TypedApiClient();
+
+// 타입 재사용을 위한 헬퍼 export
+export type { paths, components };
+

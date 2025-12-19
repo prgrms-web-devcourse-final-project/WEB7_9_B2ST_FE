@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useState, use } from 'react';
 
-export default function BookingSeats({ params }: { params: { id: string } }) {
+export default function BookingSeats({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const searchParams = useSearchParams();
   const section = searchParams.get('section') || 'vip';
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
@@ -115,7 +116,7 @@ export default function BookingSeats({ params }: { params: { id: string } }) {
                   </div>
 
                   <Link
-                    href={`/performance/${params.id}/booking/payment?seats=${selectedSeats.join(',')}&section=${section}`}
+                    href={`/performance/${id}/booking/payment?seats=${selectedSeats.join(',')}&section=${section}`}
                     className="block w-full px-6 py-4 bg-purple-600 text-white rounded-lg font-semibold text-center hover:bg-purple-700 transition-colors"
                   >
                     결제하기

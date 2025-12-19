@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { lotteryApi, type LotterySection } from '@/lib/api/lottery';
 
-export default function LotteryStep2({ params }: { params: { id: string } }) {
+export default function LotteryStep2({ params }: { params: Promise<{ id: string }> }) {
   const searchParams = useSearchParams();
-  const performanceId = Number(params.id);
+  const { id } = use(params);
+  const performanceId = Number(id);
   const scheduleId = searchParams.get('scheduleId');
   
   const [sections, setSections] = useState<LotterySection[]>([]);
@@ -195,14 +196,14 @@ export default function LotteryStep2({ params }: { params: { id: string } }) {
 
                 <div className="flex gap-3">
                   <Link
-                    href={`/performance/${params.id}/lottery/step1`}
+                    href={`/performance/${id}/lottery/step1`}
                     className="flex-1 px-6 py-4 bg-gray-200 text-gray-700 rounded-lg font-semibold text-center hover:bg-gray-300 transition-colors"
                   >
                     이전 단계
                   </Link>
                   {selectedGrade && scheduleId && (
                     <Link
-                      href={`/performance/${params.id}/lottery/step3?scheduleId=${scheduleId}&seatGradeId=${selectedGrade.seatGradeId}&quantity=${ticketCount}`}
+                      href={`/performance/${id}/lottery/step3?scheduleId=${scheduleId}&seatGradeId=${selectedGrade.seatGradeId}&quantity=${ticketCount}`}
                       className="flex-1 px-6 py-4 bg-purple-600 text-white rounded-lg font-semibold text-center hover:bg-purple-700 transition-colors"
                     >
                       다음 단계

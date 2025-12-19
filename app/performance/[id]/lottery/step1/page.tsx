@@ -1,15 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, use } from 'react';
 
-export default function LotteryStep1({ params }: { params: { id: string } }) {
+export default function LotteryStep1({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedRound, setSelectedRound] = useState<string | null>(null);
 
   // 더미 데이터
   const performance = {
-    id: params.id,
+    id: id,
     title: '아이유 콘서트',
     venue: '올림픽공원 올림픽홀',
     period: '2025.01.15 - 2025.01.20',
@@ -137,7 +138,7 @@ export default function LotteryStep1({ params }: { params: { id: string } }) {
 
               {selectedDate && selectedRound && (
                 <Link
-                  href={`/performance/${params.id}/lottery/step2?scheduleId=1&date=${selectedDate}&round=${selectedRound}`}
+                  href={`/performance/${id}/lottery/step2?scheduleId=1&date=${selectedDate}&round=${selectedRound}`}
                   className="block w-full px-6 py-4 bg-purple-600 text-white rounded-lg font-semibold text-center hover:bg-purple-700 transition-colors"
                 >
                   다음 단계

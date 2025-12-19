@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, use } from 'react';
 import { lotteryApi } from '@/lib/api/lottery';
 
-export default function LotteryStep3({ params }: { params: { id: string } }) {
+export default function LotteryStep3({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const searchParams = useSearchParams();
   const router = useRouter();
-  const performanceId = Number(params.id);
+  const performanceId = Number(id);
   const scheduleId = parseInt(searchParams.get('scheduleId') || '0');
   const seatGradeId = parseInt(searchParams.get('seatGradeId') || '0');
   const quantity = parseInt(searchParams.get('quantity') || '1');
@@ -184,7 +185,7 @@ export default function LotteryStep3({ params }: { params: { id: string } }) {
 
             <div className="flex gap-3">
               <Link
-                href={`/performance/${params.id}/lottery/step2?scheduleId=${scheduleId}`}
+                href={`/performance/${id}/lottery/step2?scheduleId=${scheduleId}`}
                 className="flex-1 px-6 py-4 bg-gray-200 text-gray-700 rounded-lg font-semibold text-center hover:bg-gray-300 transition-colors"
               >
                 이전 단계

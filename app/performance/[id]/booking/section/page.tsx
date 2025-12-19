@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, use } from 'react';
 
-export default function BookingSection({ params }: { params: { id: string } }) {
+export default function BookingSection({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
 
   const sections = [
@@ -66,7 +67,7 @@ export default function BookingSection({ params }: { params: { id: string } }) {
                 </div>
 
                 <Link
-                  href={`/performance/${params.id}/booking/seats?section=${selectedSection}`}
+                  href={`/performance/${id}/booking/seats?section=${selectedSection}`}
                   className="block w-full px-6 py-4 bg-purple-600 text-white rounded-lg font-semibold text-center hover:bg-purple-700 transition-colors"
                 >
                   좌석 선택하기

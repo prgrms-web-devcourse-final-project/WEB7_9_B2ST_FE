@@ -1,10 +1,11 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function BookingPayment({ params }: { params: { id: string } }) {
+export default function BookingPayment({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const searchParams = useSearchParams();
   const router = useRouter();
   const seats = searchParams.get('seats')?.split(',') || [];

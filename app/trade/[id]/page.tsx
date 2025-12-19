@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { tradeApi, type Trade, type Ticket } from '@/lib/api/trade';
 import Link from 'next/link';
 
-export default function TradeDetailPage() {
-  const params = useParams();
+export default function TradeDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
-  const tradeId = Number(params.id);
+  const tradeId = Number(id);
   
   const [trade, setTrade] = useState<Trade | null>(null);
   const [isLoading, setIsLoading] = useState(true);

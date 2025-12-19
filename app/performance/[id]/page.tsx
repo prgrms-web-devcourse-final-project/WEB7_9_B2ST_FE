@@ -1,15 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useState, useEffect, use } from 'react';
+import { useRouter } from 'next/navigation';
 import { performanceApi, type PerformanceDetailRes, type PerformanceScheduleListRes } from '@/lib/api/performance';
 
 type TabType = 'info' | 'description' | 'additional';
 
-export default function PerformanceDetail({ params }: { params: { id: string } }) {
+export default function PerformanceDetail({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
-  const performanceId = Number(params.id);
+  const { id } = use(params);
+  const performanceId = Number(id);
   const [activeTab, setActiveTab] = useState<TabType>('info');
   const [performance, setPerformance] = useState<PerformanceDetailRes | null>(null);
   const [schedules, setSchedules] = useState<PerformanceScheduleListRes[]>([]);
@@ -126,9 +127,9 @@ export default function PerformanceDetail({ params }: { params: { id: string } }
     }
 
     if (selectedSchedule.bookingType === 'LOTTERY') {
-      router.push(`/performance/${performanceId}/lottery/step1?scheduleId=${selectedSchedule.performanceScheduleId}`);
+      router.push(`/performance/${id}/lottery/step1?scheduleId=${selectedSchedule.performanceScheduleId}`);
     } else {
-      router.push(`/performance/${performanceId}/booking/section?scheduleId=${selectedSchedule.performanceScheduleId}`);
+      router.push(`/performance/${id}/booking/section?scheduleId=${selectedSchedule.performanceScheduleId}`);
     }
   };
 

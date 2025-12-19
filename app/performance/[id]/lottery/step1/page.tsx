@@ -1,33 +1,131 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, use } from 'react';
+import { useState, use, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
+import { performanceApi, type PerformanceDetailRes, type PerformanceScheduleListRes } from '@/lib/api/performance';
 
-export default function LotteryStep1({ params }: { params: Promise<{ id: string }> }) {
+function LotteryStep1Content({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const searchParams = useSearchParams();
+  const scheduleIdParam = searchParams.get('scheduleId');
+  
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedRound, setSelectedRound] = useState<string | null>(null);
+  const [performance, setPerformance] = useState<PerformanceDetailRes | null>(null);
+  const [schedules, setSchedules] = useState<PerformanceScheduleListRes[]>([]);
+  const [selectedSchedule, setSelectedSchedule] = useState<PerformanceScheduleListRes | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // 더미 데이터
-  const performance = {
-    id: id,
-    title: '아이유 콘서트',
-    venue: '올림픽공원 올림픽홀',
-    period: '2025.01.15 - 2025.01.20',
-    time: '19:00',
-    age: '만 7세 이상',
-    price: '150,000원 ~ 250,000원',
+  const performanceId = Number(id);
+
+  // 공연 상세 정보 및 일정 조회
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const [performanceResponse, schedulesResponse] = await Promise.all([
+          performanceApi.getPerformance(performanceId),
+          performanceApi.getSchedules(performanceId),
+        ]);
+
+        if (performanceResponse.data) {
+          setPerformance(performanceResponse.data);
+        }
+
+        if (schedulesResponse.data) {
+          setSchedules(schedulesResponse.data);
+        }
+      } catch (err) {
+        console.error('데이터 조회 실패:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (performanceId && !isNaN(performanceId)) {
+      fetchData();
+    }
+  }, [performanceId]);
+
+  // scheduleId 파라미터가 있으면 해당 스케줄 선택
+  useEffect(() => {
+    if (scheduleIdParam && schedules.length > 0) {
+      const schedule = schedules.find(
+        (s) => s.performanceScheduleId === Number(scheduleIdParam)
+      );
+      if (schedule && schedule.startAt) {
+        const scheduleDate = new Date(schedule.startAt);
+        const dateStr = scheduleDate.toISOString().split('T')[0];
+        setSelectedDate(dateStr);
+        setSelectedSchedule(schedule);
+        setSelectedRound(`${schedule.roundNo}회 ${scheduleDate.toLocaleTimeString('ko-KR', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false,
+        })}`);
+      }
+    }
+  }, [scheduleIdParam, schedules]);
+
+  // 날짜 포맷팅
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
   };
 
-  const dates = ['2025.01.15', '2025.01.16', '2025.01.17', '2025.01.18', '2025.01.19', '2025.01.20'];
-  const rounds = ['1회차 19:00', '2회차 21:00'];
+  // 일정 그룹화 (날짜별)
+  const groupedSchedules = schedules.reduce((acc, schedule) => {
+    if (!schedule.startAt) return acc;
+    const dateKey = formatDate(schedule.startAt);
+    if (!acc[dateKey]) {
+      acc[dateKey] = [];
+    }
+    acc[dateKey].push(schedule);
+    return acc;
+  }, {} as Record<string, PerformanceScheduleListRes[]>);
+
+  // 선택된 날짜의 회차 목록
+  const selectedDateRounds = selectedDate
+    ? schedules
+        .filter((schedule) => {
+          if (!schedule.startAt) return false;
+          const scheduleDate = new Date(schedule.startAt);
+          const dateStr = scheduleDate.toISOString().split('T')[0];
+          return dateStr === selectedDate;
+        })
+        .map((schedule) => {
+          const scheduleDate = new Date(schedule.startAt!);
+          return {
+            schedule,
+            label: `${schedule.roundNo}회 ${scheduleDate.toLocaleTimeString('ko-KR', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false,
+            })}`,
+          };
+        })
+    : [];
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-400">로딩 중...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
       <div className="py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Progress Steps */}
         <div className="flex justify-center mb-8">
           <div className="flex items-center space-x-4">
@@ -62,28 +160,26 @@ export default function LotteryStep1({ params }: { params: Promise<{ id: string 
                 <p className="text-gray-400">공연 포스터</p>
               </div>
               
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">{performance.title}</h1>
+              <h1 className="text-2xl font-bold text-gray-900 mb-4">
+                {performance?.title || '공연 정보 없음'}
+              </h1>
               
               <div className="space-y-3 text-gray-700 text-sm">
                 <div className="flex items-start">
                   <span className="font-medium w-20">장소</span>
-                  <span>{performance.venue}</span>
+                  <span>{performance?.venue?.name || '-'}</span>
                 </div>
                 <div className="flex items-start">
                   <span className="font-medium w-20">기간</span>
-                  <span>{performance.period}</span>
+                  <span>
+                    {performance?.startDate && performance?.endDate
+                      ? `${formatDate(performance.startDate)} ~ ${formatDate(performance.endDate)}`
+                      : '-'}
+                  </span>
                 </div>
                 <div className="flex items-start">
-                  <span className="font-medium w-20">시간</span>
-                  <span>{performance.time}</span>
-                </div>
-                <div className="flex items-start">
-                  <span className="font-medium w-20">연령</span>
-                  <span>{performance.age}</span>
-                </div>
-                <div className="flex items-start">
-                  <span className="font-medium w-20">가격</span>
-                  <span className="text-purple-600 font-semibold">{performance.price}</span>
+                  <span className="font-medium w-20">카테고리</span>
+                  <span>{performance?.category || '-'}</span>
                 </div>
               </div>
             </div>
@@ -98,15 +194,21 @@ export default function LotteryStep1({ params }: { params: Promise<{ id: string 
               <div className="mb-6">
                 <h3 className="text-sm font-medium text-gray-700 mb-3">날짜 선택</h3>
                 <div className="grid grid-cols-3 gap-2">
-                  {dates.map((date) => (
+                  {Object.keys(groupedSchedules).map((date) => (
                     <button
                       key={date}
                       onClick={() => {
-                        setSelectedDate(date);
+                        setSelectedDate(
+                          schedules
+                            .find((s) => formatDate(s.startAt) === date)
+                            ?.startAt?.split('T')[0] || null
+                        );
                         setSelectedRound(null);
+                        setSelectedSchedule(null);
                       }}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        selectedDate === date
+                        selectedDate ===
+                        (schedules.find((s) => formatDate(s.startAt) === date)?.startAt?.split('T')[0] || null)
                           ? 'bg-purple-600 text-white'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
@@ -118,30 +220,33 @@ export default function LotteryStep1({ params }: { params: Promise<{ id: string 
               </div>
 
               {/* Round Selection */}
-              {selectedDate && (
+              {selectedDate && selectedDateRounds.length > 0 && (
                 <div className="mb-6">
                   <h3 className="text-sm font-medium text-gray-700 mb-3">회차 선택</h3>
                   <div className="space-y-2">
-                    {rounds.map((round) => (
+                    {selectedDateRounds.map(({ schedule, label }) => (
                       <button
-                        key={round}
-                        onClick={() => setSelectedRound(round)}
+                        key={schedule.performanceScheduleId}
+                        onClick={() => {
+                          setSelectedRound(label);
+                          setSelectedSchedule(schedule);
+                        }}
                         className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                          selectedRound === round
+                          selectedSchedule?.performanceScheduleId === schedule.performanceScheduleId
                             ? 'bg-purple-600 text-white'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                       >
-                        {round}
+                        {label}
                       </button>
                     ))}
                   </div>
                 </div>
               )}
 
-              {selectedDate && selectedRound && (
+              {selectedSchedule && (
                 <Link
-                  href={`/performance/${id}/lottery/step2?scheduleId=1&date=${selectedDate}&round=${selectedRound}`}
+                  href={`/performance/${id}/lottery/step2?scheduleId=${selectedSchedule.performanceScheduleId}`}
                   className="block w-full px-6 py-4 bg-purple-600 text-white rounded-lg font-semibold text-center hover:bg-purple-700 transition-colors"
                 >
                   다음 단계
@@ -150,9 +255,26 @@ export default function LotteryStep1({ params }: { params: Promise<{ id: string 
             </div>
           </div>
         </div>
-      </div>
+        </div>
       </div>
     </div>
+  );
+}
+
+export default function LotteryStep1({ params }: { params: Promise<{ id: string }> }) {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50">
+          <Header />
+          <div className="flex items-center justify-center py-20">
+            <div className="text-gray-400">로딩 중...</div>
+          </div>
+        </div>
+      }
+    >
+      <LotteryStep1Content params={params} />
+    </Suspense>
   );
 }
 

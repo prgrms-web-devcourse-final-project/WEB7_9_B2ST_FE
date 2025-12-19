@@ -6,9 +6,10 @@ import Header from '@/components/Header';
 import ProfileTab from './ProfileTab';
 import { reservationApi, type ReservationDetailRes } from '@/lib/api/reservation';
 import { lotteryApi, type LotteryEntry } from '@/lib/api/lottery';
+import { tradeApi, type Ticket } from '@/lib/api/trade';
 
 export default function MyPage() {
-  const [activeTab, setActiveTab] = useState<'reservations' | 'profile' | 'trades' | 'lottery'>('reservations');
+  const [activeTab, setActiveTab] = useState<'reservations' | 'profile' | 'trades' | 'lottery' | 'tickets'>('reservations');
   const [periodFilter, setPeriodFilter] = useState('1month');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState<'bookingDate' | 'viewingDate'>('bookingDate');
@@ -19,6 +20,9 @@ export default function MyPage() {
   const [lotteryEntries, setLotteryEntries] = useState<LotteryEntry[]>([]);
   const [isLoadingLottery, setIsLoadingLottery] = useState(false);
   const [lotteryError, setLotteryError] = useState('');
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [isLoadingTickets, setIsLoadingTickets] = useState(false);
+  const [ticketsError, setTicketsError] = useState('');
 
   // 예매내역 조회
   useEffect(() => {
@@ -71,6 +75,33 @@ export default function MyPage() {
       };
 
       fetchLotteryEntries();
+    }
+  }, [activeTab]);
+
+  // 내 티켓 목록 조회
+  useEffect(() => {
+    if (activeTab === 'tickets') {
+      const fetchTickets = async () => {
+        setIsLoadingTickets(true);
+        setTicketsError('');
+
+        try {
+          const response = await tradeApi.getMyTickets();
+          if (response.data) {
+            setTickets(response.data);
+          }
+        } catch (err) {
+          if (err instanceof Error) {
+            setTicketsError(err.message);
+          } else {
+            setTicketsError('티켓 목록을 불러오는데 실패했습니다.');
+          }
+        } finally {
+          setIsLoadingTickets(false);
+        }
+      };
+
+      fetchTickets();
     }
   }, [activeTab]);
 
@@ -246,6 +277,16 @@ export default function MyPage() {
               }`}
             >
               추첨 응모
+            </button>
+            <button
+              onClick={() => setActiveTab('tickets')}
+              className={`px-6 py-4 font-medium transition-colors ${
+                activeTab === 'tickets'
+                  ? 'text-purple-600 border-b-2 border-purple-600'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              내 티켓
             </button>
             <button
               onClick={() => setActiveTab('profile')}
@@ -494,6 +535,111 @@ export default function MyPage() {
                           <p className="text-sm text-green-800 font-medium">
                             🎉 당첨되었습니다! 결제를 진행해주세요.
                           </p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tickets Tab */}
+        {activeTab === 'tickets' && (
+          <div>
+            {/* 에러 메시지 */}
+            {ticketsError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+                {ticketsError}
+              </div>
+            )}
+
+            {/* 로딩 상태 */}
+            {isLoadingTickets && (
+              <div className="text-center py-12 text-gray-400">티켓 목록을 불러오는 중...</div>
+            )}
+
+            {/* 티켓이 없는 경우 */}
+            {!isLoadingTickets && !ticketsError && tickets.length === 0 && (
+              <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+                <p className="text-gray-400">보유한 티켓이 없습니다.</p>
+              </div>
+            )}
+
+            {/* 티켓 카드 */}
+            {!isLoadingTickets && !ticketsError && tickets.length > 0 && (
+              <div className="space-y-4">
+                {tickets.map((ticket) => {
+                  const getStatusLabel = (status?: string) => {
+                    switch (status) {
+                      case 'ISSUED':
+                        return '발급됨';
+                      case 'USED':
+                        return '사용됨';
+                      case 'CANCELED':
+                        return '취소됨';
+                      case 'EXCHANGED':
+                        return '교환됨';
+                      case 'TRANSFERRED':
+                        return '양도됨';
+                      case 'EXPIRED':
+                        return '만료됨';
+                      default:
+                        return status || '알 수 없음';
+                    }
+                  };
+
+                  const getStatusColor = (status?: string) => {
+                    switch (status) {
+                      case 'ISSUED':
+                        return 'bg-green-100 text-green-800';
+                      case 'USED':
+                        return 'bg-blue-100 text-blue-800';
+                      case 'CANCELED':
+                        return 'bg-red-100 text-red-800';
+                      case 'EXCHANGED':
+                      case 'TRANSFERRED':
+                        return 'bg-purple-100 text-purple-800';
+                      case 'EXPIRED':
+                        return 'bg-gray-100 text-gray-800';
+                      default:
+                        return 'bg-gray-100 text-gray-800';
+                    }
+                  };
+
+                  return (
+                    <div key={ticket.ticketId} className="bg-white rounded-lg shadow-sm p-6">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex-1">
+                          <h3 className="text-xl font-bold text-gray-900 mb-2">티켓 #{ticket.ticketId}</h3>
+                          <div className="space-y-1 text-sm text-gray-600">
+                            {ticket.reservationId && (
+                              <p>예매번호: {ticket.reservationId}</p>
+                            )}
+                            {ticket.seatId && (
+                              <p>좌석 ID: {ticket.seatId}</p>
+                            )}
+                            {ticket.sectionName && (
+                              <p>구역: {ticket.sectionName}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(ticket.status)}`}>
+                            {getStatusLabel(ticket.status)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {ticket.reservationId && (
+                        <div className="border-t pt-4">
+                          <Link
+                            href={`/my-page/reservations/${ticket.reservationId}`}
+                            className="text-sm text-red-600 hover:text-red-700 font-medium"
+                          >
+                            예매 내역 보기 →
+                          </Link>
                         </div>
                       )}
                     </div>

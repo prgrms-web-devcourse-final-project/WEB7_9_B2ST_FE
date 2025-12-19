@@ -467,46 +467,30 @@ export default function PerformanceDetail({ params }: { params: Promise<{ id: st
                       <h3 className="text-sm font-semibold text-gray-700 mb-3">회차</h3>
                       {selectedDateSchedules.length > 0 ? (
                         <div className="space-y-2">
-                          <div className="border border-gray-200 rounded-lg p-3 bg-gray-50 flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-700">
-                              {selectedDateSchedules[0]?.roundNo}회{' '}
-                              {selectedDateSchedules[0]?.startAt &&
-                                new Date(selectedDateSchedules[0].startAt).toLocaleTimeString('ko-KR', {
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                  hour12: false,
-                                })}
-                            </span>
-                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                          </div>
-                          <div className="space-y-2">
-                            {selectedDateSchedules.map((schedule) => (
-                              <button
-                                key={schedule.performanceScheduleId}
-                                onClick={() => setSelectedSchedule(schedule)}
-                                className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-all text-left ${
-                                  selectedSchedule?.performanceScheduleId === schedule.performanceScheduleId
-                                    ? 'bg-red-600 text-white shadow-md'
-                                    : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
-                                }`}
-                              >
-                                <div className="flex items-center justify-between">
-                                  <span>{schedule.roundNo}회</span>
-                                  {schedule.startAt && (
-                                    <span className="text-xs">
-                                      {new Date(schedule.startAt).toLocaleTimeString('ko-KR', {
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                        hour12: false,
-                                      })}
-                                    </span>
-                                  )}
-                                </div>
-                              </button>
-                            ))}
-                          </div>
+                          {selectedDateSchedules.map((schedule) => (
+                            <button
+                              key={schedule.performanceScheduleId}
+                              onClick={() => setSelectedSchedule(schedule)}
+                              className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                                selectedSchedule?.performanceScheduleId === schedule.performanceScheduleId
+                                  ? 'bg-red-600 text-white shadow-md'
+                                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span>{schedule.roundNo}회</span>
+                                {schedule.startAt && (
+                                  <span className={selectedSchedule?.performanceScheduleId === schedule.performanceScheduleId ? 'text-white' : 'text-gray-700'}>
+                                    {new Date(schedule.startAt).toLocaleTimeString('ko-KR', {
+                                      hour: '2-digit',
+                                      minute: '2-digit',
+                                      hour12: false,
+                                    })}
+                                  </span>
+                                )}
+                              </div>
+                            </button>
+                          ))}
                         </div>
                       ) : (
                         <p className="text-sm text-gray-500">선택한 날짜에 예매 가능한 회차가 없습니다.</p>

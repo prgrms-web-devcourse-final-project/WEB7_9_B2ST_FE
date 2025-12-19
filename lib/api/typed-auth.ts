@@ -38,5 +38,16 @@ export const typedAuthApi = {
       200
     >('/api/auth/logout');
   },
+
+  /**
+   * 회원가입
+   */
+  async signup(request: components['schemas']['SignupReq']) {
+    return typedApiClient.post<
+      '/api/members/signup',
+      'post',
+      200
+    >('/api/members/signup', request);
+  },
 };
 

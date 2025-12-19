@@ -6,6 +6,8 @@ export type LoginRequest = components['schemas']['LoginReq'];
 export type LoginResponse = components['schemas']['TokenInfo'];
 export type ReissueRequest = components['schemas']['TokenReissueReq'];
 export type ReissueResponse = components['schemas']['TokenInfo'];
+export type SignupRequest = components['schemas']['SignupReq'];
+export type SignupResponse = number; // memberId
 
 // 기존 인터페이스와의 호환성을 위한 래퍼
 export const authApi = {
@@ -44,6 +46,19 @@ export const authApi = {
       code: 200,
       message: '성공적으로 처리되었습니다',
       data: null,
+    };
+  },
+
+  /**
+   * 회원가입
+   */
+  async signup(request: SignupRequest) {
+    const data = await typedAuthApi.signup(request);
+    // BaseResponseLong의 data는 number (memberId)
+    return {
+      code: 200,
+      message: '성공적으로 생성되었습니다',
+      data: data as SignupResponse,
     };
   },
 };

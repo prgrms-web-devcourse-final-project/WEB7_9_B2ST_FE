@@ -73,14 +73,14 @@ export const typedPerformanceApi = {
   },
 
   /**
-   * 좌석 배치도 조회
+   * 좌석 배치도 조회 (추첨용)
    */
   async getSeatLayout(performanceId: number) {
     return typedApiClient.get<
-      '/api/performances/{performanceId}/seat-layout',
+      '/api/performances/{performanceId}/lottery/section',
       'get',
       200
-    >('/api/performances/{performanceId}/seat-layout', {
+    >('/api/performances/{performanceId}/lottery/section', {
       path: { performanceId },
     });
   },

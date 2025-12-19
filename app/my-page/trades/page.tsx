@@ -75,7 +75,12 @@ export default function MyTradesPage() {
     }
   };
 
-  const handleAccept = async (tradeRequestId: number) => {
+  const handleAccept = async (tradeRequestId: number | undefined) => {
+    if (!tradeRequestId) {
+      alert('신청 ID가 없습니다.');
+      return;
+    }
+
     if (!confirm('이 교환 신청을 수락하시겠습니까?')) {
       return;
     }
@@ -93,7 +98,12 @@ export default function MyTradesPage() {
     }
   };
 
-  const handleReject = async (tradeRequestId: number) => {
+  const handleReject = async (tradeRequestId: number | undefined) => {
+    if (!tradeRequestId) {
+      alert('신청 ID가 없습니다.');
+      return;
+    }
+
     if (!confirm('이 교환 신청을 거절하시겠습니까?')) {
       return;
     }
@@ -111,7 +121,8 @@ export default function MyTradesPage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString('ko-KR', {
       year: 'numeric',
@@ -122,7 +133,15 @@ export default function MyTradesPage() {
     });
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string | undefined) => {
+    if (!status) {
+      return (
+        <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+          알 수 없음
+        </span>
+      );
+    }
+
     const statusMap: Record<string, { label: string; className: string }> = {
       PENDING: { label: '대기중', className: 'bg-yellow-100 text-yellow-800' },
       ACCEPTED: { label: '수락됨', className: 'bg-green-100 text-green-800' },

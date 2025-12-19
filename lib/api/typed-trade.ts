@@ -10,7 +10,8 @@ type CreateTradeRequestReq = components['schemas']['CreateTradeRequestReq'];
 type TradeRequestResponse = components['schemas']['BaseResponseTradeRequestRes'];
 type TradeRequestListResponse = components['schemas']['BaseResponseListTradeRequestRes'];
 type TradeRequestDetailResponse = components['schemas']['BaseResponseTradeRequestRes'];
-type UpdateTradePriceRequest = components['schemas']['UpdateTradePriceReq'];
+// UpdateTradePriceReq 타입이 없으므로 직접 정의
+type UpdateTradePriceRequest = { price: number };
 
 export const typedTradeApi = {
   /**
@@ -28,7 +29,7 @@ export const typedTradeApi = {
       'get',
       200
     >('/api/trades', {
-      query: params,
+      query: params as any,
     });
   },
 

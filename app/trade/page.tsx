@@ -66,7 +66,8 @@ export default function TradePage() {
   }, [activeTab]);
 
   // 날짜 포맷팅
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString('ko-KR', {
       year: 'numeric',
@@ -76,8 +77,8 @@ export default function TradePage() {
   };
 
   // 가격 포맷팅
-  const formatPrice = (price: number | null) => {
-    if (price === null) return '가격 협의';
+  const formatPrice = (price: number | null | undefined) => {
+    if (price === null || price === undefined) return '가격 협의';
     return `${price.toLocaleString()}원`;
   };
 

@@ -4,7 +4,7 @@ import type { components } from '@/types/api';
 // 타입 재export (하위 호환성)
 type SectionLayoutRes = components['schemas']['SectionLayoutRes'];
 type AppliedLotteryInfo = components['schemas']['AppliedLotteryInfo'];
-type CreateLotteryEntryReq = components['schemas']['CreateLotteryEntryReq'];
+type RegisterLotteryEntryReq = components['schemas']['RegisterLotteryEntryReq'];
 type LotteryEntryInfo = components['schemas']['LotteryEntryInfo'];
 
 export interface LotterySection {
@@ -19,7 +19,7 @@ export interface LotteryGrade {
 
 export interface CreateLotteryEntryRequest {
   scheduleId: number;
-  seatGradeId: number;
+  grade: string; // API는 grade를 요구하므로 변경
   quantity: number;
 }
 
@@ -55,7 +55,7 @@ export const lotteryApi = {
     const sections: LotterySection[] = Array.isArray(data) 
       ? data.map((section) => ({
           sectionName: section.sectionName || '',
-          grades: (section.grades || []).map((grade) => ({
+          grades: (section.grades || []).map((grade: any) => ({
             grade: grade.grade || '',
             rows: grade.rows || [],
           })),
@@ -73,7 +73,13 @@ export const lotteryApi = {
    * 선택한 추첨 응모 정보 저장
    */
   async createLotteryEntry(performanceId: number, request: CreateLotteryEntryRequest) {
-    const data = await typedLotteryApi.createLotteryEntry(performanceId, request);
+    // API는 RegisterLotteryEntryReq를 요구 (grade 사용)
+    const apiRequest = {
+      scheduleId: request.scheduleId,
+      grade: request.grade,
+      quantity: request.quantity,
+    };
+    const data = await typedLotteryApi.createLotteryEntry(performanceId, apiRequest);
     return {
       code: 201,
       message: '성공적으로 생성되었습니다',

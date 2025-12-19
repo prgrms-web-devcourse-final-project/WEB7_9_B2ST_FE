@@ -2,11 +2,11 @@
 
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { tradeApi, type Ticket, type CreateTradeRequest } from '@/lib/api/trade';
 import Header from '@/components/Header';
 
-export default function TradeRegisterStep2() {
+function TradeRegisterStep2Content() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tradeType = searchParams.get('type') || 'exchange';
@@ -47,7 +47,9 @@ export default function TradeRegisterStep2() {
     fetchMyTickets();
   }, []);
 
-  const handleTicketToggle = (ticketId: number) => {
+  const handleTicketToggle = (ticketId: number | undefined) => {
+    if (!ticketId) return;
+    
     if (tradeType === 'exchange') {
       // 교환은 1개만 선택 가능
       setSelectedTicketIds([ticketId]);
@@ -81,9 +83,8 @@ export default function TradeRegisterStep2() {
       if (tradeType === 'exchange') {
         // 교환: 1개 티켓만
         request = {
-          ticketId: selectedTicketIds[0],
+          ticketIds: [selectedTicketIds[0]],
           type: 'EXCHANGE',
-          totalCount: 1,
         };
       } else {
         // 양도: 여러 티켓 가능
@@ -181,7 +182,7 @@ export default function TradeRegisterStep2() {
                         key={ticket.ticketId}
                         onClick={() => handleTicketToggle(ticket.ticketId)}
                         className={`w-full p-4 text-left rounded-lg border-2 transition-colors ${
-                          selectedTicketIds.includes(ticket.ticketId)
+                          ticket.ticketId !== undefined && selectedTicketIds.includes(ticket.ticketId)
                             ? 'border-purple-600 bg-purple-50'
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
@@ -191,7 +192,7 @@ export default function TradeRegisterStep2() {
                             <p className="font-medium text-gray-900">티켓 ID: {ticket.ticketId}</p>
                             <p className="text-sm text-gray-600">예약 ID: {ticket.reservationId}</p>
                           </div>
-                          {selectedTicketIds.includes(ticket.ticketId) && (
+                          {ticket.ticketId !== undefined && selectedTicketIds.includes(ticket.ticketId) && (
                             <div className="w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center">
                               <div className="w-2 h-2 bg-white rounded-full"></div>
                             </div>
@@ -246,5 +247,22 @@ export default function TradeRegisterStep2() {
       </div>
       </div>
     </div>
+  );
+}
+
+export default function TradeRegisterStep2() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex justify-center items-center py-20">
+            <div className="text-gray-400">로딩 중...</div>
+          </div>
+        </div>
+      </div>
+    }>
+      <TradeRegisterStep2Content />
+    </Suspense>
   );
 }

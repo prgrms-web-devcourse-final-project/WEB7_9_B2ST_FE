@@ -30,14 +30,15 @@ export default function BookingPayment({ params }: { params: Promise<{ id: strin
       <div className="min-h-screen bg-gray-50">
         <Header />
         <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="bg-white rounded-lg shadow-lg p-12 text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+          <div className="bg-white rounded-lg shadow-lg p-12 text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">결제 완료</h2>
+            <p className="text-gray-600">예매가 완료되었습니다.</p>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">결제 완료</h2>
-          <p className="text-gray-600">예매가 완료되었습니다.</p>
         </div>
       </div>
     );
@@ -47,7 +48,7 @@ export default function BookingPayment({ params }: { params: Promise<{ id: strin
     <div className="min-h-screen bg-gray-50">
       <Header />
       <div className="py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">결제</h1>
 
         <div className="grid lg:grid-cols-3 gap-8">
@@ -205,7 +206,7 @@ export default function BookingPayment({ params }: { params: Promise<{ id: strin
             </button>
           </div>
         </div>
-      </div>
+        </div>
       </div>
     </div>
   );

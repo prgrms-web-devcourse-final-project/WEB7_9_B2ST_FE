@@ -16,7 +16,6 @@ type PageTradeRes = components['schemas']['PageTradeRes'];
 type CreateTradeRes = components['schemas']['CreateTradeRes'];
 type CreateTradeReq = components['schemas']['CreateTradeReq'];
 type CreateTradeRequestReq = components['schemas']['CreateTradeRequestReq'];
-type UpdateTradePriceReq = components['schemas']['UpdateTradePriceReq'];
 
 // 하위 호환성을 위한 타입
 export type Trade = TradeRes;

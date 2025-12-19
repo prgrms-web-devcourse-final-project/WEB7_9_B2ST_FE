@@ -1,7 +1,7 @@
 import { typedApiClient } from './typed-client';
 import type { components } from '@/types/api';
 
-type CreateLotteryEntryRequest = components['schemas']['CreateLotteryEntryReq'];
+type RegisterLotteryEntryRequest = components['schemas']['RegisterLotteryEntryReq'];
 
 export const typedLotteryApi = {
   /**
@@ -20,7 +20,7 @@ export const typedLotteryApi = {
   /**
    * 선택한 추첨 응모 정보 저장
    */
-  async createLotteryEntry(performanceId: number, request: CreateLotteryEntryRequest) {
+  async createLotteryEntry(performanceId: number, request: RegisterLotteryEntryRequest) {
     return typedApiClient.post<
       '/api/performances/{performanceId}/lottery/entry',
       'post',

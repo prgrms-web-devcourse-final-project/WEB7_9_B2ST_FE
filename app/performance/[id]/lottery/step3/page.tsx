@@ -12,7 +12,7 @@ export default function LotteryStep3({ params }: { params: Promise<{ id: string 
   const router = useRouter();
   const performanceId = Number(id);
   const scheduleId = parseInt(searchParams.get('scheduleId') || '0');
-  const seatGradeId = parseInt(searchParams.get('seatGradeId') || '0');
+  const grade = searchParams.get('grade') || '';
   const quantity = parseInt(searchParams.get('quantity') || '1');
   
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'bank' | 'kakao'>('card');
@@ -21,7 +21,7 @@ export default function LotteryStep3({ params }: { params: Promise<{ id: string 
   const [error, setError] = useState('');
 
   const handleSubmit = async () => {
-    if (!scheduleId || !seatGradeId) {
+    if (!scheduleId || !grade) {
       setError('필수 정보가 누락되었습니다.');
       return;
     }
@@ -32,7 +32,7 @@ export default function LotteryStep3({ params }: { params: Promise<{ id: string 
     try {
       const response = await lotteryApi.createLotteryEntry(performanceId, {
         scheduleId,
-        seatGradeId,
+        grade,
         quantity,
       });
 
@@ -55,21 +55,22 @@ export default function LotteryStep3({ params }: { params: Promise<{ id: string 
       <div className="min-h-screen bg-gray-50">
         <Header />
         <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="bg-white rounded-lg shadow-lg p-12 text-center max-w-md">
-          <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+          <div className="bg-white rounded-lg shadow-lg p-12 text-center max-w-md">
+            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">응모 완료</h2>
+            <p className="text-gray-600 mb-4">추첨 결과는 발표일자에 알려드립니다.</p>
+            <p className="text-sm text-gray-500 mb-6">당첨 시에만 결제가 진행됩니다.</p>
+            <button
+              onClick={() => router.push('/my-page')}
+              className="px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
+            >
+              마이페이지로 이동
+            </button>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">응모 완료</h2>
-          <p className="text-gray-600 mb-4">추첨 결과는 발표일자에 알려드립니다.</p>
-          <p className="text-sm text-gray-500 mb-6">당첨 시에만 결제가 진행됩니다.</p>
-          <button
-            onClick={() => router.push('/my-page')}
-            className="px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
-          >
-            마이페이지로 이동
-          </button>
         </div>
       </div>
     );
@@ -79,7 +80,7 @@ export default function LotteryStep3({ params }: { params: Promise<{ id: string 
     <div className="min-h-screen bg-gray-50">
       <Header />
       <div className="py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Progress Steps */}
         <div className="flex justify-center mb-8">
           <div className="flex items-center space-x-4">
@@ -205,7 +206,7 @@ export default function LotteryStep3({ params }: { params: Promise<{ id: string 
             </div>
           </div>
         </div>
-      </div>
+        </div>
       </div>
     </div>
   );

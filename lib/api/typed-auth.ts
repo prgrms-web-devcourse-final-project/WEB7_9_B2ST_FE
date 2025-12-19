@@ -25,7 +25,7 @@ export const typedAuthApi = {
       '/api/auth/reissue',
       'post',
       200
-    >('/api/auth/reissue', tokens);
+    >('/api/auth/reissue', tokens as any);
   },
 
   /**

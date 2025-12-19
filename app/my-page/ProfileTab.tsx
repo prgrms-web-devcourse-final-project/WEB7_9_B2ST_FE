@@ -139,7 +139,7 @@ export default function ProfileTab() {
 
     try {
       await mypageApi.setRefundAccount({
-        bankCode: accountForm.bankCode,
+        bankCode: accountForm.bankCode as "004" | "023" | "027" | "081" | "088" | "089" | "090" | "092" | "020" | "003" | "011" | "045" | "048" | "071",
         accountNumber: accountForm.accountNumber,
         holderName: accountForm.holderName,
       });

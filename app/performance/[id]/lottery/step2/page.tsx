@@ -206,7 +206,7 @@ export default function LotteryStep2({ params }: { params: Promise<{ id: string 
                   </Link>
                   {selectedGrade && scheduleId && (
                     <Link
-                      href={`/performance/${id}/lottery/step3?scheduleId=${scheduleId}&seatGradeId=${selectedGrade.seatGradeId}&quantity=${ticketCount}`}
+                      href={`/performance/${id}/lottery/step3?scheduleId=${scheduleId}&grade=${encodeURIComponent(selectedGrade.grade)}&quantity=${ticketCount}`}
                       className="flex-1 px-6 py-4 bg-purple-600 text-white rounded-lg font-semibold text-center hover:bg-purple-700 transition-colors"
                     >
                       다음 단계

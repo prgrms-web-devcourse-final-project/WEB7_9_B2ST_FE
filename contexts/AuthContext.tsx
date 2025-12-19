@@ -27,10 +27,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await authApi.login(credentials);
       
-      if (response.data) {
+      if (response.data && response.data.accessToken) {
         tokenManager.setAccessToken(response.data.accessToken);
-        if (response.data.refreshToken) {
-          tokenManager.setRefreshToken(response.data.refreshToken);
+        const refreshToken = 'refreshToken' in response.data ? response.data.refreshToken : undefined;
+        if (refreshToken && typeof refreshToken === 'string') {
+          tokenManager.setRefreshToken(refreshToken);
         }
         setIsAuthenticated(true);
       }

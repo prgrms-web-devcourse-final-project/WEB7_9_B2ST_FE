@@ -19,9 +19,12 @@ export async function reissueToken(): Promise<boolean> {
       refreshToken,
     });
 
-    if (response.data) {
+    if (response.data && response.data.accessToken) {
       tokenManager.setAccessToken(response.data.accessToken);
-      tokenManager.setRefreshToken(response.data.refreshToken);
+      const refreshToken = 'refreshToken' in response.data ? response.data.refreshToken : undefined;
+      if (refreshToken && typeof refreshToken === 'string') {
+        tokenManager.setRefreshToken(refreshToken);
+      }
       return true;
     }
 

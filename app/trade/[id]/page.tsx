@@ -18,7 +18,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
   // 교환 신청 관련 상태
   const [showExchangeModal, setShowExchangeModal] = useState(false);
   const [myTickets, setMyTickets] = useState<Ticket[]>([]);
-  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
+  const [selectedTicketId, setSelectedTicketId] = useState<number | null | undefined>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFetchingTickets, setIsFetchingTickets] = useState(false);
   
@@ -113,7 +113,8 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString('ko-KR', {
       year: 'numeric',
@@ -124,8 +125,8 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
     });
   };
 
-  const formatPrice = (price: number | null) => {
-    if (price === null) return '가격 협의';
+  const formatPrice = (price: number | null | undefined) => {
+    if (price === null || price === undefined) return '가격 협의';
     return `${price.toLocaleString()}원`;
   };
 
@@ -134,8 +135,9 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
       <div className="min-h-screen bg-gray-50">
         <Header />
         <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <p className="text-gray-500">로딩 중...</p>
+          <div className="text-center">
+            <p className="text-gray-500">로딩 중...</p>
+          </div>
         </div>
       </div>
     );
@@ -146,14 +148,15 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
       <div className="min-h-screen bg-gray-50">
         <Header />
         <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{error || '거래를 찾을 수 없습니다.'}</p>
-          <Link
-            href="/trade"
-            className="px-6 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
-          >
-            목록으로 돌아가기
-          </Link>
+          <div className="text-center">
+            <p className="text-red-600 mb-4">{error || '거래를 찾을 수 없습니다.'}</p>
+            <Link
+              href="/trade"
+              className="px-6 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
+            >
+              목록으로 돌아가기
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -357,7 +360,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                       {myTickets.map((ticket) => (
                         <button
                           key={ticket.ticketId}
-                          onClick={() => setSelectedTicketId(ticket.ticketId)}
+                          onClick={() => setSelectedTicketId(ticket.ticketId ?? null)}
                           className={`w-full p-4 text-left rounded-lg border-2 transition-colors ${
                             selectedTicketId === ticket.ticketId
                               ? 'border-purple-600 bg-purple-50'

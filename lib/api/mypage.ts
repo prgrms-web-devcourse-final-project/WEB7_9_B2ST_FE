@@ -25,14 +25,31 @@ export const mypageApi = {
 
   /**
    * 환불 계좌 조회
+   * 404는 계좌가 없는 정상적인 상태이므로 null을 반환
    */
-  async getRefundAccount(): Promise<ApiResponse<RefundAccountRes>> {
-    const data = await typedMyPageApi.getRefundAccount();
-    return {
-      code: 200,
-      message: '성공적으로 처리되었습니다',
-      data: data,
-    };
+  async getRefundAccount(): Promise<ApiResponse<RefundAccountRes | null>> {
+    try {
+      const data = await typedMyPageApi.getRefundAccount();
+      return {
+        code: 200,
+        message: '성공적으로 처리되었습니다',
+        data: data,
+      };
+    } catch (err) {
+      // 404는 계좌가 없는 정상적인 상태
+      if (err instanceof Error && (
+        err.message.includes('404') || 
+        err.message.includes('등록된 환불 계좌가 없습니다')
+      )) {
+        return {
+          code: 404,
+          message: '등록된 환불 계좌가 없습니다.',
+          data: null,
+        };
+      }
+      // 다른 에러는 그대로 throw
+      throw err;
+    }
   },
 
   /**

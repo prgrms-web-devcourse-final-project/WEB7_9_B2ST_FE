@@ -43,22 +43,16 @@ export default function ProfileTab() {
         }
 
         // 환불 계좌 조회
-        try {
-          const accountResponse = await mypageApi.getRefundAccount();
-          if (accountResponse.data) {
-            setRefundAccount(accountResponse.data);
-            setAccountForm({
-              bankCode: accountResponse.data.bankCode || '',
-              accountNumber: accountResponse.data.accountNumber || '',
-              holderName: accountResponse.data.holderName || '',
-            });
-          }
-        } catch (err) {
-          // 404는 계좌가 없는 것이므로 정상
-          if (err instanceof Error && !err.message.includes('404')) {
-            console.error('환불 계좌 조회 실패:', err);
-          }
+        const accountResponse = await mypageApi.getRefundAccount();
+        if (accountResponse.data) {
+          setRefundAccount(accountResponse.data);
+          setAccountForm({
+            bankCode: accountResponse.data.bankCode || '',
+            accountNumber: accountResponse.data.accountNumber || '',
+            holderName: accountResponse.data.holderName || '',
+          });
         }
+        // 404는 계좌가 없는 정상적인 상태이므로 에러로 처리하지 않음
 
         // 은행 목록 조회
         const banksResponse = await mypageApi.getBankList();

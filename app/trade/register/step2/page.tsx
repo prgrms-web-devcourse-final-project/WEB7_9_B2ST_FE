@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { tradeApi, type Ticket, type CreateTradeRequest } from '@/lib/api/trade';
+import Header from '@/components/Header';
 
 export default function TradeRegisterStep2() {
   const searchParams = useSearchParams();
@@ -110,7 +111,9 @@ export default function TradeRegisterStep2() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Progress Steps */}
         <div className="flex justify-center mb-8">
@@ -240,6 +243,7 @@ export default function TradeRegisterStep2() {
             )}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

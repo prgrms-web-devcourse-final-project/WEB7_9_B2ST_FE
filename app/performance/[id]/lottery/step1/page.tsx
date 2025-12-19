@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState, use } from 'react';
+import Header from '@/components/Header';
 
 export default function LotteryStep1({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -23,7 +24,9 @@ export default function LotteryStep1({ params }: { params: Promise<{ id: string 
   const rounds = ['1회차 19:00', '2회차 21:00'];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Progress Steps */}
         <div className="flex justify-center mb-8">
@@ -147,6 +150,7 @@ export default function LotteryStep1({ params }: { params: Promise<{ id: string 
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

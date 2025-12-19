@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Header from '@/components/Header';
 
 export default function MyPage() {
   const [activeTab, setActiveTab] = useState<'reservations' | 'profile' | 'trades' | 'lottery'>('reservations');
@@ -42,6 +43,7 @@ export default function MyPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Header />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">마이페이지</h1>
 

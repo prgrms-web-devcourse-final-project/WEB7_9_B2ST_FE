@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, use } from 'react';
 import { lotteryApi } from '@/lib/api/lottery';
+import Header from '@/components/Header';
 
 export default function LotteryStep3({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -51,7 +52,9 @@ export default function LotteryStep3({ params }: { params: Promise<{ id: string 
 
   if (isComplete) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center min-h-[60vh]">
         <div className="bg-white rounded-lg shadow-lg p-12 text-center max-w-md">
           <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -73,7 +76,9 @@ export default function LotteryStep3({ params }: { params: Promise<{ id: string 
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Progress Steps */}
         <div className="flex justify-center mb-8">
@@ -200,6 +205,7 @@ export default function LotteryStep3({ params }: { params: Promise<{ id: string 
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useState, useEffect, use } from 'react';
 import { lotteryApi, type LotterySection } from '@/lib/api/lottery';
+import Header from '@/components/Header';
 
 export default function LotteryStep2({ params }: { params: Promise<{ id: string }> }) {
   const searchParams = useSearchParams();
@@ -44,7 +45,9 @@ export default function LotteryStep2({ params }: { params: Promise<{ id: string 
   }, [performanceId]);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Progress Steps */}
         <div className="flex justify-center mb-8">
@@ -214,6 +217,7 @@ export default function LotteryStep2({ params }: { params: Promise<{ id: string 
             )}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

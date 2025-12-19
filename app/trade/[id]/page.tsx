@@ -4,6 +4,7 @@ import { useState, useEffect, use } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { tradeApi, type Trade, type Ticket } from '@/lib/api/trade';
 import Link from 'next/link';
+import Header from '@/components/Header';
 
 export default function TradeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -130,7 +131,9 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <p className="text-gray-500">로딩 중...</p>
         </div>
@@ -140,7 +143,9 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
 
   if (error && !trade) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <p className="text-red-600 mb-4">{error || '거래를 찾을 수 없습니다.'}</p>
           <Link
@@ -157,8 +162,9 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
   if (!trade) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Link
           href="/trade"
           className="text-purple-600 hover:text-purple-700 font-medium mb-6 inline-block"

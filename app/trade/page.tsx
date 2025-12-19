@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { tradeApi, type Trade, type TradeType, type TradeStatus } from '@/lib/api/trade';
 import { useAuth } from '@/contexts/AuthContext';
+import Header from '@/components/Header';
 
 export default function TradePage() {
   const { isAuthenticated } = useAuth();
@@ -82,24 +83,20 @@ export default function TradePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-100 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-gray-900">티켓 교환/양도</h1>
-            {isAuthenticated && (
-              <Link
-                href="/trade/register/step1"
-                className="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors shadow-md"
-              >
-                티켓 등록
-              </Link>
-            )}
-          </div>
-        </div>
-      </header>
+      <Header activeTab="trade" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold text-gray-900">티켓 교환/양도</h1>
+          {isAuthenticated && (
+            <Link
+              href="/trade/register/step1"
+              className="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors shadow-md"
+            >
+              티켓 등록
+            </Link>
+          )}
+        </div>
         <div className="grid lg:grid-cols-4 gap-8">
           {/* Left: Filters */}
           <div className="lg:col-span-1">

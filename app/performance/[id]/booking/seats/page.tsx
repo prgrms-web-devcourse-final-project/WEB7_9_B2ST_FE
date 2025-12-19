@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useState, use } from 'react';
+import Header from '@/components/Header';
 
 export default function BookingSeats({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -36,7 +37,9 @@ export default function BookingSeats({ params }: { params: Promise<{ id: string 
   const totalPrice = selectedSeats.length * (section === 'vip' ? 250000 : section === 'r' ? 200000 : section === 's' ? 180000 : 150000);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">좌석 선택</h1>
 
@@ -130,6 +133,7 @@ export default function BookingSeats({ params }: { params: Promise<{ id: string 
             )}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

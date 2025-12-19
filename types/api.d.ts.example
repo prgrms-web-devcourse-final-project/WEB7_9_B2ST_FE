@@ -1,0 +1,66 @@
+/**
+ * 이 파일은 예시입니다.
+ * 실제 타입을 생성하려면 다음 명령어를 실행하세요:
+ * 
+ * pnpm generate:types
+ * 
+ * 또는
+ * 
+ * pnpm generate:types:domain
+ */
+
+// 생성된 타입은 다음과 같은 구조를 가집니다:
+// 
+// export interface paths {
+//   '/api/auth/login': {
+//     post: {
+//       requestBody: {
+//         content: {
+//           'application/json': {
+//             email: string;
+//             password: string;
+//           };
+//         };
+//       };
+//       responses: {
+//         200: {
+//           content: {
+//             'application/json': {
+//               code: number;
+//               message: string;
+//               data: {
+//                 grantType: string;
+//                 accessToken: string;
+//               } | null;
+//             };
+//           };
+//         };
+//         401: {
+//           content: {
+//             'application/json': {
+//               code: number;
+//               message: string;
+//               data: null;
+//             };
+//           };
+//         };
+//       };
+//     };
+//   };
+//   // ... 더 많은 API 경로들
+// }
+//
+// export interface components {
+//   schemas: {
+//     LoginRequest: {
+//       email: string;
+//       password: string;
+//     };
+//     LoginResponse: {
+//       grantType: string;
+//       accessToken: string;
+//     };
+//     // ... 더 많은 스키마들
+//   };
+// }
+

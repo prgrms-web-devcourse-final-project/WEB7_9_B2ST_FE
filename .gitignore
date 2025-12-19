@@ -36,3 +36,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# generated types (선택사항 - 커밋하려면 제거)
+# types/api.d.ts

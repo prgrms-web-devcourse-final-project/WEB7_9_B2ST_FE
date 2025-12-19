@@ -53,6 +53,30 @@ pnpm build
 pnpm start
 ```
 
+### Swagger 타입 생성
+
+Swagger 문서에서 TypeScript 타입을 자동으로 생성할 수 있습니다:
+
+```bash
+# openapi-typescript 패키지 설치 (처음 한 번만)
+pnpm add -D openapi-typescript
+
+# 타입 생성 (IP 주소 사용)
+pnpm generate:types
+
+# 또는 도메인 사용
+pnpm generate:types:domain
+```
+
+생성된 타입은 `types/api.d.ts`에 저장되며, 프로젝트에서 다음과 같이 사용할 수 있습니다:
+
+```typescript
+import type { paths } from '@/types/api';
+
+// API 응답 타입 사용 예시
+type LoginResponse = paths['/api/auth/login']['post']['responses']['200']['content']['application/json'];
+```
+
 ## 프로젝트 구조
 
 ```

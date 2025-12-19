@@ -6,7 +6,9 @@
     "dev": "next dev -p 1216",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "generate:types": "openapi-typescript http://15.165.115.135:8080/v3/api-docs -o types/api.d.ts",
+    "generate:types:domain": "openapi-typescript https://api.b2st.doncrytt.online/v3/api-docs -o types/api.d.ts"
   },
   "dependencies": {
     "react": "^19.0.0",
@@ -22,6 +24,7 @@
     "postcss": "^8.4.0",
     "autoprefixer": "^10.4.0",
     "eslint": "^8.57.0",
-    "eslint-config-next": "^15.0.0"
+    "eslint-config-next": "^15.0.0",
+    "openapi-typescript": "^7.0.0"
   }
 }

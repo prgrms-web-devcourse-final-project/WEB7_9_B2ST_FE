@@ -27,5 +27,16 @@ export const typedReservationApi = {
       path: { reservationId },
     });
   },
+
+  /**
+   * 내 예매 목록 조회 (상세)
+   */
+  async getMyReservations() {
+    return typedApiClient.get<
+      '/api/reservations/me',
+      'get',
+      200
+    >('/api/reservations/me');
+  },
 };
 

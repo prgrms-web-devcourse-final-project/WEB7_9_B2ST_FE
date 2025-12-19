@@ -24,6 +24,7 @@ export { performanceApi } from './performance';
 export { tradeApi } from './trade';
 export { lotteryApi } from './lottery';
 export { mypageApi } from './mypage';
+export { reservationApi } from './reservation';
 
 // 타입 export
 export type { paths, components } from '@/types/api';

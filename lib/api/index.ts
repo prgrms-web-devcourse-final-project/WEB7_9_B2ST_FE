@@ -6,6 +6,7 @@
 // Typed API 클라이언트 (Swagger 타입 기반)
 export { typedApiClient } from './typed-client';
 export { typedAuthApi } from './typed-auth';
+export { typedEmailApi } from './typed-email';
 export { typedTradeApi } from './typed-trade';
 export { typedPerformanceApi } from './typed-performance';
 export { typedReservationApi } from './typed-reservation';
@@ -18,6 +19,7 @@ export { typedBanksApi } from './typed-banks';
 // 기존 API 클라이언트 (하위 호환성)
 export { apiClient } from './client';
 export { authApi } from './auth';
+export { emailApi } from './email';
 export { tradeApi } from './trade';
 export { lotteryApi } from './lottery';
 

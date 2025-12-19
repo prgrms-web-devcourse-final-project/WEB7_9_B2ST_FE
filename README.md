@@ -15,17 +15,29 @@
 
 프로젝트 루트에 `.env.local` 파일을 생성하고 다음 내용을 추가하세요:
 
+**옵션 1: 프록시 사용 (CORS 에러 해결, 개발 환경 권장)**
 ```bash
+NEXT_PUBLIC_USE_PROXY=true
+NEXT_PUBLIC_API_BASE_URL=http://15.165.115.135:8080
+```
+
+**옵션 2: 직접 연결 (서버에서 CORS 설정된 경우)**
+```bash
+NEXT_PUBLIC_USE_PROXY=false
+NEXT_PUBLIC_API_BASE_URL=http://15.165.115.135:8080
+```
+
+**프로덕션 환경:**
+```bash
+NEXT_PUBLIC_USE_PROXY=false
 NEXT_PUBLIC_API_BASE_URL=https://api.b2st.doncrytt.online
 ```
 
-또는 IP 주소를 사용할 경우:
-
-```bash
-NEXT_PUBLIC_API_BASE_URL=http://15.165.115.135
-```
-
-**참고:** API 기본 URL은 `lib/api/client.ts`에서 기본값으로 설정되어 있습니다. 환경 변수를 설정하지 않으면 기본값이 사용됩니다.
+**참고:** 
+- `NEXT_PUBLIC_USE_PROXY=true`로 설정하면 Next.js 프록시를 통해 API를 호출하여 CORS 에러를 우회할 수 있습니다.
+- 개발 환경에서는 기본값으로 `http://15.165.115.135:8080`이 사용됩니다.
+- 프로덕션 환경에서는 기본값으로 `https://api.b2st.doncrytt.online`이 사용됩니다.
+- **권장:** 프로덕션 환경에서는 서버 측에서 CORS를 설정하는 것이 좋습니다.
 
 ### 설치
 

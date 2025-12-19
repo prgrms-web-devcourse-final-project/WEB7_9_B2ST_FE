@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import ProfileTab from './ProfileTab';
 import { reservationApi, type ReservationDetailRes } from '@/lib/api/reservation';
+import { lotteryApi, type LotteryEntry } from '@/lib/api/lottery';
 
 export default function MyPage() {
   const [activeTab, setActiveTab] = useState<'reservations' | 'profile' | 'trades' | 'lottery'>('reservations');
@@ -15,6 +16,9 @@ export default function MyPage() {
   const [reservations, setReservations] = useState<ReservationDetailRes[]>([]);
   const [isLoadingReservations, setIsLoadingReservations] = useState(false);
   const [reservationsError, setReservationsError] = useState('');
+  const [lotteryEntries, setLotteryEntries] = useState<LotteryEntry[]>([]);
+  const [isLoadingLottery, setIsLoadingLottery] = useState(false);
+  const [lotteryError, setLotteryError] = useState('');
 
   // 예매내역 조회
   useEffect(() => {
@@ -40,6 +44,33 @@ export default function MyPage() {
       };
 
       fetchReservations();
+    }
+  }, [activeTab]);
+
+  // 추첨 응모 내역 조회
+  useEffect(() => {
+    if (activeTab === 'lottery') {
+      const fetchLotteryEntries = async () => {
+        setIsLoadingLottery(true);
+        setLotteryError('');
+
+        try {
+          const response = await lotteryApi.getMyLotteryEntries();
+          if (response.data) {
+            setLotteryEntries(response.data);
+          }
+        } catch (err) {
+          if (err instanceof Error) {
+            setLotteryError(err.message);
+          } else {
+            setLotteryError('응모 내역을 불러오는데 실패했습니다.');
+          }
+        } finally {
+          setIsLoadingLottery(false);
+        }
+      };
+
+      fetchLotteryEntries();
     }
   }, [activeTab]);
 
@@ -391,16 +422,85 @@ export default function MyPage() {
 
         {/* Lottery Tab */}
         {activeTab === 'lottery' && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <Link
-              href="/my-page/lottery"
-              className="text-xl font-bold text-gray-900 mb-4 block hover:text-purple-600"
-            >
-              내 추첨 응모 →
-            </Link>
-            <div className="text-center py-12 text-gray-400">
-              <p>응모 내역이 없습니다.</p>
-            </div>
+          <div>
+
+            {/* 에러 메시지 */}
+            {lotteryError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+                {lotteryError}
+              </div>
+            )}
+
+            {/* 로딩 상태 */}
+            {isLoadingLottery && (
+              <div className="text-center py-12 text-gray-400">응모 내역을 불러오는 중...</div>
+            )}
+
+            {/* 응모 내역이 없는 경우 */}
+            {!isLoadingLottery && !lotteryError && lotteryEntries.length === 0 && (
+              <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+                <p className="text-gray-400">응모 내역이 없습니다.</p>
+              </div>
+            )}
+
+            {/* 응모 내역 카드 */}
+            {!isLoadingLottery && !lotteryError && lotteryEntries.length > 0 && (
+              <div className="space-y-4">
+                {lotteryEntries.map((entry) => {
+                  const getStatusBadge = (status: string) => {
+                    const statusMap: Record<string, { label: string; className: string }> = {
+                      APPLIED: { label: '응모완료', className: 'bg-blue-100 text-blue-800' },
+                      WIN: { label: '당첨', className: 'bg-green-100 text-green-800' },
+                      LOSE: { label: '낙첨', className: 'bg-gray-100 text-gray-800' },
+                      CANCELLED: { label: '취소됨', className: 'bg-red-100 text-red-800' },
+                    };
+
+                    const statusInfo = statusMap[status] || { label: status, className: 'bg-gray-100 text-gray-800' };
+                    return (
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusInfo.className}`}>
+                        {statusInfo.label}
+                      </span>
+                    );
+                  };
+
+                  const formatDateTime = (dateString: string) => {
+                    const date = new Date(dateString);
+                    return date.toLocaleString('ko-KR', {
+                      year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    });
+                  };
+
+                  return (
+                    <div key={entry.lotteryEntryId} className="bg-white rounded-lg shadow-sm p-6">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex-1">
+                          <h3 className="text-xl font-bold text-gray-900 mb-2">{entry.title}</h3>
+                          <div className="space-y-1 text-sm text-gray-600">
+                            <p>공연일시: {formatDateTime(entry.startAt)}</p>
+                            <p>회차: {entry.roundNo}회차</p>
+                            <p>등급: {entry.gradeType}</p>
+                            <p>매수: {entry.quantity}매</p>
+                          </div>
+                        </div>
+                        <div>{getStatusBadge(entry.status)}</div>
+                      </div>
+
+                      {entry.status === 'WIN' && (
+                        <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                          <p className="text-sm text-green-800 font-medium">
+                            🎉 당첨되었습니다! 결제를 진행해주세요.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 

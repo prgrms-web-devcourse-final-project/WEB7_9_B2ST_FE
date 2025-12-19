@@ -36,7 +36,7 @@ export const typedAuthApi = {
       '/api/auth/logout',
       'post',
       200
-    >('/api/auth/logout');
+    >('/api/auth/logout', undefined);
   },
 
   /**

@@ -41,7 +41,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
+      console.log('Logout API 호출 시작');
       await authApi.logout();
+      console.log('Logout API 호출 성공');
     } catch (error) {
       // 로그아웃 API 실패해도 클라이언트에서는 토큰 제거
       console.error('Logout error:', error);

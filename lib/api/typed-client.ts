@@ -82,17 +82,30 @@ class TypedApiClient {
         headers,
       });
 
-      const jsonData = await response.json();
+      // 응답이 비어있는 경우 처리 (로그아웃 등)
+      const contentType = response.headers.get('content-type');
+      const isJson = contentType && contentType.includes('application/json');
+      
+      let jsonData: any = null;
+      if (isJson) {
+        const text = await response.text();
+        jsonData = text ? JSON.parse(text) : null;
+      }
 
       if (!response.ok) {
         // 에러 응답 처리
-        if ('message' in jsonData) {
+        if (jsonData && 'message' in jsonData) {
           throw new Error(jsonData.message as string);
         }
         throw new Error(`요청에 실패했습니다. (${response.status})`);
       }
 
       // 성공 응답 처리
+      // 응답이 없는 경우 (204 No Content 등)
+      if (!jsonData) {
+        return null as T;
+      }
+
       // BaseResponse 형태인 경우 data 필드 추출
       if (
         jsonData &&

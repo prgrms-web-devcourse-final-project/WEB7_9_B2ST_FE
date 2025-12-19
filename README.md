@@ -11,6 +11,22 @@
 
 ## 시작하기
 
+### 환경 변수 설정
+
+프로젝트 루트에 `.env.local` 파일을 생성하고 다음 내용을 추가하세요:
+
+```bash
+NEXT_PUBLIC_API_BASE_URL=https://api.b2st.doncrytt.online
+```
+
+또는 IP 주소를 사용할 경우:
+
+```bash
+NEXT_PUBLIC_API_BASE_URL=http://15.165.115.135
+```
+
+**참고:** API 기본 URL은 `lib/api/client.ts`에서 기본값으로 설정되어 있습니다. 환경 변수를 설정하지 않으면 기본값이 사용됩니다.
+
 ### 설치
 
 ```bash

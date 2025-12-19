@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Header from '@/components/Header';
+import ProfileTab from './ProfileTab';
 
 export default function MyPage() {
   const [activeTab, setActiveTab] = useState<'reservations' | 'profile' | 'trades' | 'lottery'>('reservations');
@@ -242,82 +243,7 @@ export default function MyPage() {
 
         {/* Profile Tab */}
         {activeTab === 'profile' && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">회원정보</h2>
-            
-            <div className="space-y-6 max-w-2xl">
-              {/* Nickname */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">닉네임</label>
-                <div className="flex gap-3">
-                  <input
-                    type="text"
-                    defaultValue="사용자123"
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
-                  <button className="px-6 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors">
-                    변경
-                  </button>
-                </div>
-              </div>
-
-              {/* Identity Verification */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">본인인증</label>
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div>
-                    <p className="font-medium text-gray-900">인증 상태</p>
-                    <p className="text-sm text-gray-600">미인증</p>
-                  </div>
-                  <button className="px-6 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors">
-                    본인인증하기
-                  </button>
-                </div>
-              </div>
-
-              {/* Password Change */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">비밀번호</label>
-                <button className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors">
-                  비밀번호 변경
-                </button>
-              </div>
-
-              {/* Refund Account */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">환불계좌 관리</label>
-                <div className="space-y-3">
-                  <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    <option value="">은행 선택</option>
-                    <option value="kb">국민은행</option>
-                    <option value="shinhan">신한은행</option>
-                    <option value="woori">우리은행</option>
-                    <option value="hana">하나은행</option>
-                  </select>
-                  <input
-                    type="text"
-                    placeholder="계좌번호"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
-                  <input
-                    type="text"
-                    placeholder="예금주명"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
-                  <button className="w-full px-6 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors">
-                    계좌 등록/수정
-                  </button>
-                </div>
-              </div>
-
-              {/* Withdrawal */}
-              <div className="border-t pt-6">
-                <button className="px-6 py-2 border border-red-300 text-red-600 rounded-lg font-medium hover:bg-red-50 transition-colors">
-                  회원 탈퇴
-                </button>
-              </div>
-            </div>
-          </div>
+          <ProfileTab />
         )}
       </div>
     </div>

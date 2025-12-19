@@ -23,6 +23,7 @@ export { emailApi } from './email';
 export { performanceApi } from './performance';
 export { tradeApi } from './trade';
 export { lotteryApi } from './lottery';
+export { mypageApi } from './mypage';
 
 // 타입 export
 export type { paths, components } from '@/types/api';

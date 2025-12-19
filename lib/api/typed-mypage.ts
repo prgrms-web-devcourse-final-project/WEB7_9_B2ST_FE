@@ -1,8 +1,8 @@
 import { typedApiClient } from './typed-client';
 import type { components } from '@/types/api';
 
-type ChangePasswordRequest = components['schemas']['ChangePasswordReq'];
-type UpdateAccountRequest = components['schemas']['UpdateAccountReq'];
+type ChangePasswordRequest = components['schemas']['PasswordChangeReq'];
+type RefundAccountRequest = components['schemas']['RefundAccountReq'];
 
 export const typedMyPageApi = {
   /**
@@ -28,12 +28,23 @@ export const typedMyPageApi = {
   },
 
   /**
-   * 계정 정보 수정
+   * 환불 계좌 조회
    */
-  async updateAccount(request: UpdateAccountRequest) {
-    return typedApiClient.patch<
+  async getRefundAccount() {
+    return typedApiClient.get<
       '/api/mypage/account',
-      'patch',
+      'get',
+      200
+    >('/api/mypage/account');
+  },
+
+  /**
+   * 환불 계좌 등록/수정
+   */
+  async setRefundAccount(request: RefundAccountRequest) {
+    return typedApiClient.post<
+      '/api/mypage/account',
+      'post',
       200
     >('/api/mypage/account', request);
   },

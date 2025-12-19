@@ -38,5 +38,31 @@ export const typedReservationApi = {
       200
     >('/api/reservations/me');
   },
+
+  /**
+   * 예매 상세 조회
+   */
+  async getReservationDetail(reservationId: number) {
+    return typedApiClient.get<
+      '/api/reservations/{reservationId}',
+      'get',
+      200
+    >('/api/reservations/{reservationId}', {
+      path: { reservationId },
+    });
+  },
+
+  /**
+   * 예매 취소
+   */
+  async cancelReservation(reservationId: number) {
+    return typedApiClient.delete<
+      '/api/reservations/{reservationId}',
+      'delete',
+      200
+    >('/api/reservations/{reservationId}', {
+      path: { reservationId },
+    });
+  },
 };
 

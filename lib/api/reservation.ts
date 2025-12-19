@@ -23,5 +23,30 @@ export const reservationApi = {
       data: (Array.isArray(reservations) ? reservations : []) as ReservationDetailRes[],
     };
   },
+
+  /**
+   * 예매 상세 조회
+   */
+  async getReservationDetail(reservationId: number): Promise<ApiResponse<ReservationDetailRes>> {
+    const data = await typedReservationApi.getReservationDetail(reservationId);
+    // typedApiClient는 이미 data 필드를 추출해서 반환
+    return {
+      code: 200,
+      message: '성공적으로 처리되었습니다',
+      data: data as ReservationDetailRes,
+    };
+  },
+
+  /**
+   * 예매 취소
+   */
+  async cancelReservation(reservationId: number): Promise<ApiResponse<null>> {
+    await typedReservationApi.cancelReservation(reservationId);
+    return {
+      code: 200,
+      message: '예매가 취소되었습니다',
+      data: null,
+    };
+  },
 };
 

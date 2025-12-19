@@ -310,50 +310,53 @@ export default function MyPage() {
             {!isLoadingReservations && !reservationsError && filteredAndSortedReservations.length > 0 && (
               <div className="space-y-4">
                 {filteredAndSortedReservations.map((reservation) => (
-                  <div key={reservation.reservationId} className="bg-white rounded-lg shadow-sm p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">
-                          {reservation.performance?.title || '공연 정보 없음'}
-                        </h3>
-                        <div className="space-y-1 text-sm text-gray-600">
-                          <p>예매번호: {reservation.reservationId}</p>
-                          {reservation.performance?.startAt && (
-                            <p>관람일시: {formatDateTime(reservation.performance.startAt)}</p>
-                          )}
-                          {reservation.performance?.startDate && (
-                            <p>공연 기간: {formatDate(reservation.performance.startDate)}</p>
-                          )}
-                          {reservation.performance?.category && (
-                            <p>카테고리: {reservation.performance.category}</p>
-                          )}
+                  <div key={reservation.reservationId} className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
+                    <Link 
+                      href={`/my-page/reservations/${reservation.reservationId}`}
+                      className="block"
+                    >
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex-1">
+                          <h3 className="text-xl font-bold text-gray-900 mb-2 hover:text-red-600 transition-colors">
+                            {reservation.performance?.title || '공연 정보 없음'}
+                          </h3>
+                          <div className="space-y-1 text-sm text-gray-600">
+                            <p>예매번호: {reservation.reservationId}</p>
+                            {reservation.performance?.startAt && (
+                              <p>관람일시: {formatDateTime(reservation.performance.startAt)}</p>
+                            )}
+                            {reservation.performance?.startDate && (
+                              <p>공연 기간: {formatDate(reservation.performance.startDate)}</p>
+                            )}
+                            {reservation.performance?.category && (
+                              <p>카테고리: {reservation.performance.category}</p>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      <div>
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(reservation.status)}`}>
-                          {getStatusLabel(reservation.status)}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* 좌석 정보 */}
-                    {reservation.seat && (
-                      <div className="border-t pt-4 mb-4">
-                        <h4 className="font-medium text-gray-900 mb-2">좌석 정보</h4>
-                        <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                          <span className="font-medium">
-                            {reservation.seat.sectionName}구역 {reservation.seat.rowLabel}열 {reservation.seat.seatNumber}번
+                        <div>
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(reservation.status)}`}>
+                            {getStatusLabel(reservation.status)}
                           </span>
-                          {(reservation.status === 'PENDING' || reservation.status === 'HOLD') && (
-                            <button className="text-sm text-red-600 hover:text-red-700 font-medium">
-                              취소
-                            </button>
-                          )}
                         </div>
                       </div>
-                    )}
 
-                    {/* 공연 상세 링크 */}
+                      {/* 좌석 정보 */}
+                      {reservation.seat && (
+                        <div className="border-t pt-4 mb-4">
+                          <h4 className="font-medium text-gray-900 mb-2">좌석 정보</h4>
+                          <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                            <span className="font-medium">
+                              {reservation.seat.sectionName}구역 {reservation.seat.rowLabel}열 {reservation.seat.seatNumber}번
+                            </span>
+                            {(reservation.status === 'PENDING' || reservation.status === 'HOLD') && (
+                              <span className="text-sm text-red-600 font-medium">취소 가능</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </Link>
+
+                    {/* 공연 상세 링크 - Link 밖으로 분리 */}
                     {reservation.performance?.performanceId && (
                       <div className="border-t pt-4">
                         <Link

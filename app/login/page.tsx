@@ -23,15 +23,14 @@ export default function LoginPage() {
     try {
       await login(formData);
       router.push('/');
-      router.refresh();
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
         setError('로그인에 실패했습니다. 다시 시도해주세요.');
       }
-    } finally {
       setIsLoading(false);
+      // 에러 발생 시 새로고침하지 않고 에러 상태 유지
     }
   };
 

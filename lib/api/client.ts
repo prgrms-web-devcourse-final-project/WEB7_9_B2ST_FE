@@ -51,8 +51,20 @@ class ApiClient {
       ...(options.headers as Record<string, string>),
     };
 
-    // 토큰이 있으면 헤더에 추가
-    if (typeof window !== "undefined") {
+    // 인증이 필요 없는 엔드포인트 목록
+    const publicEndpoints = [
+      "/api/auth/login",
+      "/api/auth/reissue",
+      "/api/members/signup",
+      "/api/email/verification",
+      "/api/email/verify",
+      "/api/email/check-duplicate",
+    ];
+
+    // 인증이 필요한 엔드포인트에만 토큰 추가
+    const isPublicEndpoint = publicEndpoints.some((path) => endpoint.includes(path));
+    
+    if (!isPublicEndpoint && typeof window !== "undefined") {
       const accessToken = tokenManager.getAccessToken();
       if (accessToken) {
         headers["Authorization"] = `Bearer ${accessToken}`;
@@ -71,8 +83,11 @@ class ApiClient {
       if (!response.ok && response.status === 401 && retryOn401 && !this.isReissuing) {
         // 재발급 API 자체가 401이면 재시도하지 않음
         const isReissueEndpoint = endpoint.includes("/api/auth/reissue");
+        // 로그인, 회원가입 등 인증이 필요 없는 엔드포인트는 재발급 시도하지 않음
+        const isPublicEndpoint = endpoint.includes("/api/auth/login") || 
+                                 endpoint.includes("/api/members/signup");
 
-        if (!isReissueEndpoint) {
+        if (!isReissueEndpoint && !isPublicEndpoint) {
           this.isReissuing = true;
           const reissueSuccess = await reissueToken();
           this.isReissuing = false;

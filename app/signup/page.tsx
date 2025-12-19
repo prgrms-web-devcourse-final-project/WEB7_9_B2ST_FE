@@ -100,6 +100,7 @@ export default function SignupPage() {
   useEffect(() => {
     if (!formData.email || validateEmail(formData.email)) {
       setIsEmailAvailable(null);
+      setErrors((prev) => ({ ...prev, email: '' }));
       return;
     }
 
@@ -109,15 +110,11 @@ export default function SignupPage() {
         const response = await emailApi.checkDuplicate({ email: formData.email });
         if (response.data) {
           setIsEmailAvailable(response.data.available || false);
-          if (!response.data.available) {
-            setErrors({ ...errors, email: '이미 사용 중인 이메일입니다.' });
-          } else {
-            setErrors({ ...errors, email: '' });
-          }
+          // 에러는 UI에서 표시하므로 여기서는 설정하지 않음
         }
       } catch (err) {
         if (err instanceof Error) {
-          setErrors({ ...errors, email: err.message });
+          setErrors((prev) => ({ ...prev, email: err.message }));
         }
       } finally {
         setIsCheckingEmail(false);
@@ -312,7 +309,7 @@ export default function SignupPage() {
                 <button
                   type="button"
                   onClick={handleSendVerificationCode}
-                  disabled={isSendingCode || isEmailVerified || resendTimer > 0 || isCheckingEmail || isEmailAvailable === false}
+                  disabled={isSendingCode || isEmailVerified || resendTimer > 0 || isCheckingEmail || isEmailAvailable !== true}
                   className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                 >
                   {isSendingCode ? '발송 중...' : resendTimer > 0 ? formatTimer(resendTimer) : '인증 코드 발송'}
@@ -321,16 +318,16 @@ export default function SignupPage() {
               {isCheckingEmail && (
                 <p className="mt-1 text-sm text-gray-500">이메일 확인 중...</p>
               )}
-              {isEmailAvailable === false && (
+              {!isCheckingEmail && isEmailAvailable === false && (
                 <p className="mt-1 text-sm text-red-600">이미 사용 중인 이메일입니다.</p>
               )}
-              {isEmailAvailable === true && !isEmailVerified && (
+              {!isCheckingEmail && isEmailAvailable === true && !isEmailVerified && (
                 <p className="mt-1 text-sm text-green-600">사용 가능한 이메일입니다.</p>
               )}
               {isEmailVerified && (
                 <p className="mt-1 text-sm text-green-600">✓ 이메일 인증이 완료되었습니다.</p>
               )}
-              {errors.email && (
+              {errors.email && isEmailAvailable !== false && (
                 <p className="mt-1 text-sm text-red-600">{errors.email}</p>
               )}
             </div>

@@ -1,38 +1,49 @@
-import { apiClient, type LoginResponse, type ReissueResponse } from './client';
+import { typedAuthApi } from './typed-auth';
+import type { components } from '@/types/api';
 
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
+// 타입 재export (하위 호환성)
+export type LoginRequest = components['schemas']['LoginReq'];
+export type LoginResponse = components['schemas']['TokenInfo'];
+export type ReissueRequest = components['schemas']['TokenReissueReq'];
+export type ReissueResponse = components['schemas']['TokenInfo'];
 
-export interface ReissueRequest {
-  accessToken: string;
-  refreshToken: string;
-}
-
+// 기존 인터페이스와의 호환성을 위한 래퍼
 export const authApi = {
   /**
    * 로그인
    */
   async login(credentials: LoginRequest) {
-    const response = await apiClient.post<LoginResponse>('/api/auth/login', credentials);
-    return response;
+    const data = await typedAuthApi.login(credentials);
+    // TokenInfo 타입을 LoginResponse로 변환
+    return {
+      code: 200,
+      message: '성공적으로 처리되었습니다',
+      data: data as LoginResponse,
+    };
   },
 
   /**
    * 토큰 재발급
    */
   async reissue(tokens: ReissueRequest) {
-    const response = await apiClient.post<ReissueResponse>('/api/auth/reissue', tokens);
-    return response;
+    const data = await typedAuthApi.reissue(tokens);
+    // TokenInfo 타입을 ReissueResponse로 변환
+    return {
+      code: 200,
+      message: '성공적으로 처리되었습니다',
+      data: data as ReissueResponse,
+    };
   },
 
   /**
    * 로그아웃
    */
   async logout() {
-    const response = await apiClient.post<null>('/api/auth/logout');
-    return response;
+    await typedAuthApi.logout();
+    return {
+      code: 200,
+      message: '성공적으로 처리되었습니다',
+      data: null,
+    };
   },
 };
-

@@ -3,9 +3,7 @@ import type { components } from '@/types/api';
 
 // 타입 별칭
 type LoginRequest = components['schemas']['LoginReq'];
-type LoginResponse = components['schemas']['BaseResponseLoginRes'];
-type ReissueRequest = components['schemas']['ReissueReq'];
-type ReissueResponse = components['schemas']['BaseResponseReissueRes'];
+type ReissueRequest = components['schemas']['TokenReissueReq'];
 
 export const typedAuthApi = {
   /**

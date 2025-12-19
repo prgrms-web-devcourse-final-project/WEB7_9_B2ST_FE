@@ -274,8 +274,8 @@ export default function ProfileTab() {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
             >
               <option value="">은행 선택</option>
-              {banks.map((bank) => (
-                <option key={bank.bankCode} value={bank.bankCode}>
+              {banks.map((bank, index) => (
+                <option key={bank.bankCode || `bank-${index}`} value={bank.bankCode || ''}>
                   {bank.bankName}
                 </option>
               ))}

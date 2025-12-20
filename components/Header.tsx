@@ -1,14 +1,15 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useState, FormEvent, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
-import { performanceApi, type PerformanceListRes } from '@/lib/api/performance';
+import Link from "next/link";
+import Image from "next/image";
+import { useState, FormEvent, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { performanceApi, type PerformanceListRes } from "@/lib/api/performance";
 
 interface HeaderProps {
-  activeTab?: 'ticket' | 'trade';
-  onTabChange?: (tab: 'ticket' | 'trade') => void;
+  activeTab?: "ticket" | "trade";
+  onTabChange?: (tab: "ticket" | "trade") => void;
   showCategoryTabs?: boolean;
   activeCategory?: string;
   categories?: string[];
@@ -25,7 +26,7 @@ export default function Header({
 }: HeaderProps) {
   const { isAuthenticated, logout } = useAuth();
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<PerformanceListRes[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -50,7 +51,7 @@ export default function Header({
         const response = await performanceApi.searchPerformances(searchQuery.trim(), {
           page: 0,
           size: 5, // 드롭다운에는 최대 5개만 표시
-          sort: ['createdAt,desc'],
+          sort: ["createdAt,desc"],
         });
 
         if (response.data?.content) {
@@ -83,9 +84,9 @@ export default function Header({
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -99,21 +100,21 @@ export default function Header({
 
   const handleResultClick = (performanceId: number) => {
     setShowDropdown(false);
-    setSearchQuery('');
+    setSearchQuery("");
     router.push(`/performance/${performanceId}`);
   };
 
   const formatDateRange = (startDate?: string, endDate?: string) => {
-    if (!startDate || !endDate) return '';
-    const start = new Date(startDate).toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
+    if (!startDate || !endDate) return "";
+    const start = new Date(startDate).toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
     });
-    const end = new Date(endDate).toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
+    const end = new Date(endDate).toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
     });
     return `${start} ~ ${end}`;
   };
@@ -123,8 +124,15 @@ export default function Header({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link href="/" className="text-3xl font-bold text-gray-900 tracking-tight">
-            TT
+          <Link href="/" className="flex items-center">
+            <Image
+              src="/doncrytt-logo2.png"
+              alt="B2ST 로고"
+              width={200}
+              height={80}
+              className="h-16 w-auto"
+              priority
+            />
           </Link>
 
           {/* Search Bar */}
@@ -168,13 +176,13 @@ export default function Header({
                     ></path>
                   </svg>
                 ) : (
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
                   </svg>
                 )}
               </button>
@@ -184,9 +192,7 @@ export default function Header({
             {showDropdown && searchQuery.trim() && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
                 {isSearching ? (
-                  <div className="px-4 py-8 text-center text-gray-500 text-sm">
-                    검색 중...
-                  </div>
+                  <div className="px-4 py-8 text-center text-gray-500 text-sm">검색 중...</div>
                 ) : searchResults.length > 0 ? (
                   <div className="py-2">
                     {searchResults.map((performance) => (
@@ -199,13 +205,23 @@ export default function Header({
                           {performance.posterUrl ? (
                             <img
                               src={performance.posterUrl}
-                              alt={performance.title || 'Performance'}
+                              alt={performance.title || "Performance"}
                               className="w-full h-full object-cover"
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-400">
-                              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                              <svg
+                                className="w-8 h-8"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+                                />
                               </svg>
                             </div>
                           )}
@@ -274,28 +290,24 @@ export default function Header({
               {activeTab !== undefined && (
                 <>
                   <button
-                    onClick={() => onTabChange?.('ticket')}
+                    onClick={() => onTabChange?.("ticket")}
                     className={`px-6 py-4 font-medium text-sm transition-colors relative ${
-                      activeTab === 'ticket'
-                        ? 'text-red-600'
-                        : 'text-gray-600 hover:text-gray-900'
+                      activeTab === "ticket" ? "text-red-600" : "text-gray-600 hover:text-gray-900"
                     }`}
                   >
                     티켓
-                    {activeTab === 'ticket' && (
+                    {activeTab === "ticket" && (
                       <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600"></span>
                     )}
                   </button>
                   <Link
                     href="/trade"
                     className={`px-6 py-4 font-medium text-sm transition-colors relative ${
-                      activeTab === 'trade'
-                        ? 'text-red-600'
-                        : 'text-gray-600 hover:text-gray-900'
+                      activeTab === "trade" ? "text-red-600" : "text-gray-600 hover:text-gray-900"
                     }`}
                   >
                     양도/교환
-                    {activeTab === 'trade' && (
+                    {activeTab === "trade" && (
                       <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600"></span>
                     )}
                   </Link>
@@ -307,7 +319,7 @@ export default function Header({
       )}
 
       {/* Category Tabs (티켓 탭일 때만) */}
-      {showCategoryTabs && activeTab === 'ticket' && categories.length > 0 && (
+      {showCategoryTabs && activeTab === "ticket" && categories.length > 0 && (
         <div className="bg-gray-50 border-t border-gray-100">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center space-x-1 overflow-x-auto">
@@ -317,8 +329,8 @@ export default function Header({
                   onClick={() => onCategoryChange?.(category)}
                   className={`px-4 py-3 font-medium text-sm whitespace-nowrap transition-colors ${
                     activeCategory === category
-                      ? 'text-red-600 border-b-2 border-red-600'
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? "text-red-600 border-b-2 border-red-600"
+                      : "text-gray-600 hover:text-gray-900"
                   }`}
                 >
                   {category}
@@ -331,4 +343,3 @@ export default function Header({
     </header>
   );
 }
-

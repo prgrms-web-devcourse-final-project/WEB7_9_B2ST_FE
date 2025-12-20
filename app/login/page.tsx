@@ -1,33 +1,34 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setIsLoading(true);
 
     try {
       await login(formData);
-      router.push('/');
+      router.push("/");
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError('로그인에 실패했습니다. 다시 시도해주세요.');
+        setError("로그인에 실패했습니다. 다시 시도해주세요.");
       }
       setIsLoading(false);
       // 에러 발생 시 새로고침하지 않고 에러 상태 유지
@@ -39,13 +40,18 @@ export default function LoginPage() {
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <Link href="/" className="inline-block mb-4">
-            <span className="text-4xl font-bold text-gray-900">TT</span>
+            <Image
+              src="/doncrytt-logo2.png"
+              alt="B2ST 로고"
+              width={200}
+              height={80}
+              className="h-16 w-auto mx-auto"
+              priority
+            />
           </Link>
-          <h2 className="text-2xl font-bold text-gray-900">
-            로그인
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900">로그인</h2>
           <p className="mt-2 text-sm text-gray-600">
-            또는{' '}
+            또는{" "}
             <Link href="/signup" className="font-semibold text-red-600 hover:text-red-700">
               회원가입
             </Link>
@@ -98,7 +104,7 @@ export default function LoginPage() {
               disabled={isLoading}
               className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-lg text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
             >
-              {isLoading ? '로그인 중...' : '로그인'}
+              {isLoading ? "로그인 중..." : "로그인"}
             </button>
           </div>
         </form>

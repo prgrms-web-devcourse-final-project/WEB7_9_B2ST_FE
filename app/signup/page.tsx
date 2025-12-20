@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { authApi, type SignupRequest } from "@/lib/api/auth";
 import { emailApi } from "@/lib/api/email";
 
@@ -277,10 +278,22 @@ export default function SignupPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
+          <div className="text-center mb-6">
+            <Link href="/" className="inline-block">
+              <Image
+                src="/doncrytt-logo2.png"
+                alt="B2ST 로고"
+                width={200}
+                height={80}
+                className="h-16 w-auto mx-auto"
+                priority
+              />
+            </Link>
+          </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">회원가입</h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             이미 계정이 있으신가요?{" "}
-            <Link href="/login" className="font-medium text-purple-600 hover:text-purple-500">
+            <Link href="/login" className="font-medium text-red-600 hover:text-red-500">
               로그인
             </Link>
           </p>
@@ -312,7 +325,7 @@ export default function SignupPage() {
                       : isEmailVerified
                       ? "border-green-300 bg-green-50"
                       : "border-gray-300"
-                  } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm disabled:opacity-60`}
+                  } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm disabled:opacity-60`}
                   placeholder="이메일 주소"
                 />
                 <button
@@ -325,7 +338,7 @@ export default function SignupPage() {
                     isCheckingEmail ||
                     isEmailAvailable !== true
                   }
-                  className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                 >
                   {isSendingCode
                     ? "발송 중..."
@@ -376,14 +389,14 @@ export default function SignupPage() {
                     }}
                     className={`flex-1 appearance-none relative block px-3 py-2 border ${
                       errors.verificationCode ? "border-red-300" : "border-gray-300"
-                    } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm`}
+                    } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm`}
                     placeholder="6자리 인증 코드"
                   />
                   <button
                     type="button"
                     onClick={handleVerifyCode}
                     disabled={isVerifyingCode || verificationCode.length !== 6}
-                    className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                   >
                     {isVerifyingCode ? "인증 중..." : "인증 확인"}
                   </button>
@@ -407,7 +420,7 @@ export default function SignupPage() {
                 onChange={(e) => handleChange("name", e.target.value)}
                 className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
                   errors.name ? "border-red-300" : "border-gray-300"
-                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm`}
+                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm`}
                 placeholder="이름 (2~20자, 한글 또는 영문)"
               />
               {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
@@ -426,7 +439,7 @@ export default function SignupPage() {
                 onChange={(e) => handleChange("phone", e.target.value.replace(/[^0-9]/g, ""))}
                 className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
                   errors.phone ? "border-red-300" : "border-gray-300"
-                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm`}
+                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm`}
                 placeholder="전화번호 (하이픈 없이 10~11자리)"
               />
               {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
@@ -446,7 +459,7 @@ export default function SignupPage() {
                 max={new Date().toISOString().split("T")[0]}
                 className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
                   errors.birth ? "border-red-300" : "border-gray-300"
-                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm`}
+                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm`}
               />
               {errors.birth && <p className="mt-1 text-sm text-red-600">{errors.birth}</p>}
             </div>
@@ -465,7 +478,7 @@ export default function SignupPage() {
                 onChange={(e) => handleChange("password", e.target.value)}
                 className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
                   errors.password ? "border-red-300" : "border-gray-300"
-                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm`}
+                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm`}
                 placeholder="비밀번호 (8~30자, 영소문자+숫자+특수기호)"
               />
               {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
@@ -488,7 +501,7 @@ export default function SignupPage() {
                 onChange={(e) => handleChange("passwordConfirm", e.target.value)}
                 className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
                   errors.passwordConfirm ? "border-red-300" : "border-gray-300"
-                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm`}
+                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm`}
                 placeholder="비밀번호 확인"
               />
               {errors.passwordConfirm && (

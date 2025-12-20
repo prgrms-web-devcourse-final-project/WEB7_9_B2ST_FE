@@ -68,7 +68,7 @@ export default function MyTradesPage() {
       if (response.data?.content) {
         // 내 거래만 필터링
         const myRegisteredTrades = response.data.content.filter(
-          (trade) => trade.memberId === currentUserId
+          (trade: Trade) => trade.memberId === currentUserId
         );
         setMyTrades(myRegisteredTrades);
       }
@@ -100,7 +100,7 @@ export default function MyTradesPage() {
       if (myTradesResponse.data?.content) {
         // 내 거래 중에서 내 memberId와 일치하는 것만 필터링
         const myRegisteredTrades = myTradesResponse.data.content.filter(
-          (trade) => trade.memberId === currentUserId
+          (trade: Trade) => trade.memberId === currentUserId
         );
 
         setMyTrades(myRegisteredTrades);

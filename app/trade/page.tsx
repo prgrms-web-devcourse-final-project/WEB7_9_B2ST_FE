@@ -48,13 +48,10 @@ export default function TradePage() {
         setTotalElements(response.data.totalElements);
 
         // 공연 정보 가져오기 (중복 제거)
-        const uniquePerformanceIds = [
-          ...new Set(
-            response.data.content
-              .map((trade) => trade.performanceId)
-              .filter((id): id is number => id !== undefined && id !== null)
-          ),
-        ];
+        const performanceIds = response.data.content
+          .map((trade: Trade) => trade.performanceId)
+          .filter((id: number | undefined | null): id is number => id !== undefined && id !== null);
+        const uniquePerformanceIds: number[] = Array.from(new Set(performanceIds));
 
         // 공연 정보 병렬 조회
         const performancePromises = uniquePerformanceIds.map(async (performanceId) => {

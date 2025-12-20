@@ -2,47 +2,128 @@
 
 import { useState, useEffect } from 'react';
 import { tradeApi, type TradeRequest, type Trade } from '@/lib/api/trade';
+import { mypageApi } from '@/lib/api/mypage';
 import Link from 'next/link';
 import Header from '@/components/Header';
 
 export default function MyTradesPage() {
   const [activeTab, setActiveTab] = useState<'my-trades' | 'received-requests' | 'sent-requests'>('my-trades');
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [myTrades, setMyTrades] = useState<Trade[]>([]);
   const [receivedRequests, setReceivedRequests] = useState<TradeRequest[]>([]);
   const [sentRequests, setSentRequests] = useState<TradeRequest[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // 내 거래 목록 조회 (더미 - 실제로는 API 필요)
+  // 현재 사용자 ID 조회
   useEffect(() => {
-    // TODO: 내가 등록한 거래 목록 API 필요
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await mypageApi.getMyInfo();
+        if (response.data?.memberId) {
+          setCurrentUserId(response.data.memberId);
+        }
+      } catch (err) {
+        console.error('사용자 정보 조회 실패:', err);
+      }
+    };
+
+    fetchCurrentUser();
   }, []);
+
+  // 내 거래 목록 조회
+  useEffect(() => {
+    if (activeTab === 'my-trades' && currentUserId) {
+      fetchMyTrades();
+    }
+  }, [activeTab, currentUserId]);
 
   // 받은 신청 목록 조회
   useEffect(() => {
-    if (activeTab === 'received-requests') {
+    if (activeTab === 'received-requests' && currentUserId) {
       fetchReceivedRequests();
     }
-  }, [activeTab]);
+  }, [activeTab, currentUserId]);
 
   // 보낸 신청 목록 조회
   useEffect(() => {
-    if (activeTab === 'sent-requests') {
+    if (activeTab === 'sent-requests' && currentUserId) {
       fetchSentRequests();
     }
-  }, [activeTab]);
+  }, [activeTab, currentUserId]);
 
-  const fetchReceivedRequests = async () => {
+  const fetchMyTrades = async () => {
+    if (!currentUserId) return;
+
     setIsLoading(true);
     setError('');
 
     try {
-      // TODO: 현재 사용자 ID를 가져와야 함
-      // 임시로 tradeId를 사용 (실제로는 내 거래 ID 목록을 가져와서 각각 조회)
-      // const response = await tradeApi.getTradeRequestList({ tradeId: 1 });
-      // if (response.data) {
-      //   setReceivedRequests(response.data);
-      // }
+      const response = await tradeApi.getTradeList({
+        status: 'ACTIVE',
+        page: 0,
+        size: 100,
+      });
+
+      if (response.data?.content) {
+        // 내 거래만 필터링
+        const myRegisteredTrades = response.data.content.filter(
+          (trade) => trade.memberId === currentUserId
+        );
+        setMyTrades(myRegisteredTrades);
+      }
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('거래 목록을 불러오는데 실패했습니다.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchReceivedRequests = async () => {
+    if (!currentUserId) return;
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      // 내가 등록한 거래 목록 조회 (ACTIVE 상태만)
+      const myTradesResponse = await tradeApi.getTradeList({
+        status: 'ACTIVE',
+        page: 0,
+        size: 100, // 충분히 큰 값
+      });
+
+      if (myTradesResponse.data?.content) {
+        // 내 거래 중에서 내 memberId와 일치하는 것만 필터링
+        const myRegisteredTrades = myTradesResponse.data.content.filter(
+          (trade) => trade.memberId === currentUserId
+        );
+
+        setMyTrades(myRegisteredTrades);
+
+        // 각 거래에 대한 신청 목록 조회
+        const allRequests: TradeRequest[] = [];
+        for (const trade of myRegisteredTrades) {
+          if (trade.tradeId) {
+            try {
+              const requestsResponse = await tradeApi.getTradeRequestList({
+                tradeId: trade.tradeId,
+              });
+              if (requestsResponse.data) {
+                allRequests.push(...requestsResponse.data);
+              }
+            } catch (err) {
+              console.error(`거래 ${trade.tradeId}의 신청 목록 조회 실패:`, err);
+            }
+          }
+        }
+
+        setReceivedRequests(allRequests);
+      }
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
@@ -55,15 +136,18 @@ export default function MyTradesPage() {
   };
 
   const fetchSentRequests = async () => {
+    if (!currentUserId) return;
+
     setIsLoading(true);
     setError('');
 
     try {
-      // TODO: 현재 사용자 ID를 가져와야 함
-      // const response = await tradeApi.getTradeRequestList({ requesterId: currentUserId });
-      // if (response.data) {
-      //   setSentRequests(response.data);
-      // }
+      const response = await tradeApi.getTradeRequestList({
+        requesterId: currentUserId,
+      });
+      if (response.data) {
+        setSentRequests(response.data);
+      }
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
@@ -207,10 +291,67 @@ export default function MyTradesPage() {
 
         {/* 내 거래 탭 */}
         {activeTab === 'my-trades' && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <p className="text-center py-12 text-gray-400">
-              등록한 거래가 없습니다.
-            </p>
+          <div className="space-y-4">
+            {isLoading ? (
+              <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+                <p className="text-gray-500">로딩 중...</p>
+              </div>
+            ) : myTrades.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+                <p className="text-gray-400">등록한 거래가 없습니다.</p>
+              </div>
+            ) : (
+              myTrades.map((trade) => (
+                <Link
+                  key={trade.tradeId}
+                  href={`/trade/${trade.tradeId}`}
+                  className="block bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-gray-900 mb-2">
+                        거래 #{trade.tradeId}
+                      </h3>
+                      <div className="space-y-1 text-sm text-gray-600">
+                        {trade.section && (
+                          <p>
+                            <span className="font-semibold">구역:</span> {trade.section}
+                          </p>
+                        )}
+                        {trade.row && (
+                          <p>
+                            <span className="font-semibold">열:</span> {trade.row}
+                          </p>
+                        )}
+                        {trade.seatNumber && (
+                          <p>
+                            <span className="font-semibold">좌석:</span> {trade.seatNumber}
+                          </p>
+                        )}
+                        <p>
+                          <span className="font-semibold">매수:</span> {trade.totalCount || 0}매
+                        </p>
+                        <p>
+                          <span className="font-semibold">등록일:</span>{' '}
+                          {formatDate(trade.createdAt)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          trade.type === 'EXCHANGE'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-green-100 text-green-800'
+                        }`}
+                      >
+                        {trade.type === 'EXCHANGE' ? '교환' : '양도'}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))
+            )}
           </div>
         )}
 

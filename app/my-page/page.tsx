@@ -1,35 +1,49 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import Header from '@/components/Header';
-import ProfileTab from './ProfileTab';
-import { reservationApi, type ReservationDetailRes } from '@/lib/api/reservation';
-import { lotteryApi, type LotteryEntry } from '@/lib/api/lottery';
-import { tradeApi, type Ticket } from '@/lib/api/trade';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import Header from "@/components/Header";
+import ProfileTab from "./ProfileTab";
+import { reservationApi, type ReservationDetailRes } from "@/lib/api/reservation";
+import { lotteryApi, type LotteryEntry } from "@/lib/api/lottery";
+import { tradeApi, type Ticket, type TradeRequest, type Trade } from "@/lib/api/trade";
+import { mypageApi } from "@/lib/api/mypage";
 
 export default function MyPage() {
-  const [activeTab, setActiveTab] = useState<'reservations' | 'profile' | 'trades' | 'lottery' | 'tickets'>('reservations');
-  const [periodFilter, setPeriodFilter] = useState('1month');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [sortBy, setSortBy] = useState<'bookingDate' | 'viewingDate'>('bookingDate');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [activeTab, setActiveTab] = useState<
+    "reservations" | "profile" | "trades" | "lottery" | "tickets"
+  >("reservations");
+  const [periodFilter, setPeriodFilter] = useState("1month");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortBy, setSortBy] = useState<"bookingDate" | "viewingDate">("bookingDate");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [reservations, setReservations] = useState<ReservationDetailRes[]>([]);
   const [isLoadingReservations, setIsLoadingReservations] = useState(false);
-  const [reservationsError, setReservationsError] = useState('');
+  const [reservationsError, setReservationsError] = useState("");
   const [lotteryEntries, setLotteryEntries] = useState<LotteryEntry[]>([]);
   const [isLoadingLottery, setIsLoadingLottery] = useState(false);
-  const [lotteryError, setLotteryError] = useState('');
+  const [lotteryError, setLotteryError] = useState("");
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [isLoadingTickets, setIsLoadingTickets] = useState(false);
-  const [ticketsError, setTicketsError] = useState('');
+  const [ticketsError, setTicketsError] = useState("");
+
+  // 교환/양도 관련 상태
+  const [tradesSubTab, setTradesSubTab] = useState<
+    "my-trades" | "received-requests" | "sent-requests"
+  >("my-trades");
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [myTrades, setMyTrades] = useState<Trade[]>([]);
+  const [receivedRequests, setReceivedRequests] = useState<TradeRequest[]>([]);
+  const [sentRequests, setSentRequests] = useState<TradeRequest[]>([]);
+  const [isLoadingTrades, setIsLoadingTrades] = useState(false);
+  const [tradesError, setTradesError] = useState("");
 
   // 예매내역 조회
   useEffect(() => {
-    if (activeTab === 'reservations') {
+    if (activeTab === "reservations") {
       const fetchReservations = async () => {
         setIsLoadingReservations(true);
-        setReservationsError('');
+        setReservationsError("");
 
         try {
           const response = await reservationApi.getMyReservations();
@@ -40,7 +54,7 @@ export default function MyPage() {
           if (err instanceof Error) {
             setReservationsError(err.message);
           } else {
-            setReservationsError('예매내역을 불러오는데 실패했습니다.');
+            setReservationsError("예매내역을 불러오는데 실패했습니다.");
           }
         } finally {
           setIsLoadingReservations(false);
@@ -53,10 +67,10 @@ export default function MyPage() {
 
   // 추첨 응모 내역 조회
   useEffect(() => {
-    if (activeTab === 'lottery') {
+    if (activeTab === "lottery") {
       const fetchLotteryEntries = async () => {
         setIsLoadingLottery(true);
-        setLotteryError('');
+        setLotteryError("");
 
         try {
           const response = await lotteryApi.getMyLotteryEntries();
@@ -67,7 +81,7 @@ export default function MyPage() {
           if (err instanceof Error) {
             setLotteryError(err.message);
           } else {
-            setLotteryError('응모 내역을 불러오는데 실패했습니다.');
+            setLotteryError("응모 내역을 불러오는데 실패했습니다.");
           }
         } finally {
           setIsLoadingLottery(false);
@@ -80,10 +94,10 @@ export default function MyPage() {
 
   // 내 티켓 목록 조회
   useEffect(() => {
-    if (activeTab === 'tickets') {
+    if (activeTab === "tickets") {
       const fetchTickets = async () => {
         setIsLoadingTickets(true);
-        setTicketsError('');
+        setTicketsError("");
 
         try {
           const response = await tradeApi.getMyTickets();
@@ -94,7 +108,7 @@ export default function MyPage() {
           if (err instanceof Error) {
             setTicketsError(err.message);
           } else {
-            setTicketsError('티켓 목록을 불러오는데 실패했습니다.');
+            setTicketsError("티켓 목록을 불러오는데 실패했습니다.");
           }
         } finally {
           setIsLoadingTickets(false);
@@ -105,23 +119,241 @@ export default function MyPage() {
     }
   }, [activeTab]);
 
+  // 현재 사용자 ID 조회
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await mypageApi.getMyInfo();
+        if (response.data?.memberId) {
+          setCurrentUserId(response.data.memberId);
+        }
+      } catch (err) {
+        console.error("사용자 정보 조회 실패:", err);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
+
+  // 교환/양도 관련 데이터 조회
+  useEffect(() => {
+    if (activeTab === "trades" && currentUserId) {
+      if (tradesSubTab === "my-trades") {
+        fetchMyTrades();
+      } else if (tradesSubTab === "received-requests") {
+        fetchReceivedRequests();
+      } else if (tradesSubTab === "sent-requests") {
+        fetchSentRequests();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, tradesSubTab, currentUserId]);
+
+  const fetchMyTrades = async () => {
+    if (!currentUserId) return;
+
+    setIsLoadingTrades(true);
+    setTradesError("");
+
+    try {
+      const response = await tradeApi.getTradeList({
+        status: "ACTIVE",
+        page: 0,
+        size: 100,
+      });
+
+      if (response.data?.content) {
+        const myRegisteredTrades = response.data.content.filter(
+          (trade: Trade) => trade.memberId === currentUserId,
+        );
+        setMyTrades(myRegisteredTrades);
+      }
+    } catch (err) {
+      if (err instanceof Error) {
+        setTradesError(err.message);
+      } else {
+        setTradesError("거래 목록을 불러오는데 실패했습니다.");
+      }
+    } finally {
+      setIsLoadingTrades(false);
+    }
+  };
+
+  const fetchReceivedRequests = async () => {
+    if (!currentUserId) return;
+
+    setIsLoadingTrades(true);
+    setTradesError("");
+
+    try {
+      const myTradesResponse = await tradeApi.getTradeList({
+        status: "ACTIVE",
+        page: 0,
+        size: 100,
+      });
+
+      if (myTradesResponse.data?.content) {
+        const myRegisteredTrades = myTradesResponse.data.content.filter(
+          (trade: Trade) => trade.memberId === currentUserId,
+        );
+
+        setMyTrades(myRegisteredTrades);
+
+        const allRequests: TradeRequest[] = [];
+        for (const trade of myRegisteredTrades) {
+          if (trade.tradeId) {
+            try {
+              const requestsResponse = await tradeApi.getTradeRequestList({
+                tradeId: trade.tradeId,
+              });
+              if (requestsResponse.data) {
+                allRequests.push(...requestsResponse.data);
+              }
+            } catch (err) {
+              console.error(`거래 ${trade.tradeId}의 신청 목록 조회 실패:`, err);
+            }
+          }
+        }
+
+        setReceivedRequests(allRequests);
+      }
+    } catch (err) {
+      if (err instanceof Error) {
+        setTradesError(err.message);
+      } else {
+        setTradesError("신청 목록을 불러오는데 실패했습니다.");
+      }
+    } finally {
+      setIsLoadingTrades(false);
+    }
+  };
+
+  const fetchSentRequests = async () => {
+    if (!currentUserId) return;
+
+    setIsLoadingTrades(true);
+    setTradesError("");
+
+    try {
+      const response = await tradeApi.getTradeRequestList({
+        requesterId: currentUserId,
+      });
+      if (response.data) {
+        setSentRequests(response.data);
+      }
+    } catch (err) {
+      if (err instanceof Error) {
+        setTradesError(err.message);
+      } else {
+        setTradesError("신청 목록을 불러오는데 실패했습니다.");
+      }
+    } finally {
+      setIsLoadingTrades(false);
+    }
+  };
+
+  const handleAccept = async (tradeRequestId: number | undefined) => {
+    if (!tradeRequestId) {
+      alert("신청 ID가 없습니다.");
+      return;
+    }
+
+    if (!confirm("이 교환 신청을 수락하시겠습니까?")) {
+      return;
+    }
+
+    try {
+      await tradeApi.acceptTradeRequest(tradeRequestId);
+      alert("교환 신청이 수락되었습니다.");
+      fetchReceivedRequests();
+    } catch (err) {
+      if (err instanceof Error) {
+        alert(err.message);
+      } else {
+        alert("신청 수락에 실패했습니다.");
+      }
+    }
+  };
+
+  const handleReject = async (tradeRequestId: number | undefined) => {
+    if (!tradeRequestId) {
+      alert("신청 ID가 없습니다.");
+      return;
+    }
+
+    if (!confirm("이 교환 신청을 거절하시겠습니까?")) {
+      return;
+    }
+
+    try {
+      await tradeApi.rejectTradeRequest(tradeRequestId);
+      alert("교환 신청이 거절되었습니다.");
+      fetchReceivedRequests();
+    } catch (err) {
+      if (err instanceof Error) {
+        alert(err.message);
+      } else {
+        alert("신청 거절에 실패했습니다.");
+      }
+    }
+  };
+
+  const formatTradeDate = (dateString: string | undefined) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const getStatusBadge = (status: string | undefined) => {
+    if (!status) {
+      return (
+        <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+          알 수 없음
+        </span>
+      );
+    }
+
+    const statusMap: Record<string, { label: string; className: string }> = {
+      PENDING: { label: "대기중", className: "bg-yellow-100 text-yellow-800" },
+      ACCEPTED: { label: "수락됨", className: "bg-green-100 text-green-800" },
+      REJECTED: { label: "거절됨", className: "bg-red-100 text-red-800" },
+      CANCELLED: { label: "취소됨", className: "bg-gray-100 text-gray-800" },
+    };
+
+    const statusInfo = statusMap[status] || {
+      label: status,
+      className: "bg-gray-100 text-gray-800",
+    };
+    return (
+      <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusInfo.className}`}>
+        {statusInfo.label}
+      </span>
+    );
+  };
+
   // 필터링 및 정렬
   const filteredAndSortedReservations = (() => {
     let filtered = [...reservations];
 
     // 상태 필터
-    if (statusFilter !== 'all') {
+    if (statusFilter !== "all") {
       filtered = filtered.filter((r) => {
         const status = r.status?.toUpperCase();
         switch (statusFilter) {
-          case 'reserved':
-            return status === 'PENDING' || status === 'HOLD';
-          case 'booked':
-            return status === 'CONFIRMED' || status === 'COMPLETED';
-          case 'cancelPending':
-            return status === 'CANCELLING';
-          case 'cancelled':
-            return status === 'CANCELLED';
+          case "reserved":
+            return status === "PENDING" || status === "HOLD";
+          case "booked":
+            return status === "CONFIRMED" || status === "COMPLETED";
+          case "cancelPending":
+            return status === "CANCELLING";
+          case "cancelled":
+            return status === "CANCELLED";
           default:
             return true;
         }
@@ -129,21 +361,21 @@ export default function MyPage() {
     }
 
     // 기간 필터 (클라이언트 사이드에서 처리)
-    if (periodFilter !== 'all') {
+    if (periodFilter !== "all") {
       const now = new Date();
       const periodDate = new Date();
       switch (periodFilter) {
-        case '1month':
+        case "1month":
           periodDate.setMonth(now.getMonth() - 1);
           break;
-        case '3month':
+        case "3month":
           periodDate.setMonth(now.getMonth() - 3);
           break;
-        case '6month':
+        case "6month":
           periodDate.setMonth(now.getMonth() - 6);
           break;
       }
-      if (periodFilter !== 'all') {
+      if (periodFilter !== "all") {
         filtered = filtered.filter((r) => {
           const date = r.performance?.startDate ? new Date(r.performance.startDate) : null;
           return date && date >= periodDate;
@@ -156,7 +388,7 @@ export default function MyPage() {
       let aDate: Date | null = null;
       let bDate: Date | null = null;
 
-      if (sortBy === 'bookingDate') {
+      if (sortBy === "bookingDate") {
         // 예매일은 API에 없으므로 startDate 사용
         aDate = a.performance?.startDate ? new Date(a.performance.startDate) : null;
         bDate = b.performance?.startDate ? new Date(b.performance.startDate) : null;
@@ -171,7 +403,7 @@ export default function MyPage() {
       if (!bDate) return -1;
 
       const comparison = aDate.getTime() - bDate.getTime();
-      return sortOrder === 'asc' ? comparison : -comparison;
+      return sortOrder === "asc" ? comparison : -comparison;
     });
 
     return filtered;
@@ -179,63 +411,63 @@ export default function MyPage() {
 
   // 상태 한글 변환
   const getStatusLabel = (status?: string) => {
-    if (!status) return '알 수 없음';
+    if (!status) return "알 수 없음";
     const statusUpper = status.toUpperCase();
     switch (statusUpper) {
-      case 'PENDING':
-      case 'HOLD':
-        return '예약 대기';
-      case 'CONFIRMED':
-      case 'COMPLETED':
-        return '예매완료';
-      case 'CANCELLING':
-        return '취소 대기';
-      case 'CANCELLED':
-        return '취소완료';
+      case "PENDING":
+      case "HOLD":
+        return "예약 대기";
+      case "CONFIRMED":
+      case "COMPLETED":
+        return "예매완료";
+      case "CANCELLING":
+        return "취소 대기";
+      case "CANCELLED":
+        return "취소완료";
       default:
         return status;
     }
   };
 
   const getStatusColor = (status?: string) => {
-    if (!status) return 'bg-gray-100 text-gray-800';
+    if (!status) return "bg-gray-100 text-gray-800";
     const statusUpper = status.toUpperCase();
     switch (statusUpper) {
-      case 'CONFIRMED':
-      case 'COMPLETED':
-        return 'bg-green-100 text-green-800';
-      case 'PENDING':
-      case 'HOLD':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'CANCELLING':
-        return 'bg-orange-100 text-orange-800';
-      case 'CANCELLED':
-        return 'bg-red-100 text-red-800';
+      case "CONFIRMED":
+      case "COMPLETED":
+        return "bg-green-100 text-green-800";
+      case "PENDING":
+      case "HOLD":
+        return "bg-yellow-100 text-yellow-800";
+      case "CANCELLING":
+        return "bg-orange-100 text-orange-800";
+      case "CANCELLED":
+        return "bg-red-100 text-red-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   // 날짜 포맷팅
   const formatDateTime = (dateString?: string) => {
-    if (!dateString) return '';
+    if (!dateString) return "";
     const date = new Date(dateString);
-    return date.toLocaleString('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
+    return date.toLocaleString("ko-KR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const formatDate = (dateString?: string) => {
-    if (!dateString) return '';
+    if (!dateString) return "";
     const date = new Date(dateString);
-    return date.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
+    return date.toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
     });
   };
 
@@ -249,51 +481,51 @@ export default function MyPage() {
         <div className="bg-white rounded-lg shadow-sm mb-6">
           <div className="flex border-b border-gray-200">
             <button
-              onClick={() => setActiveTab('reservations')}
+              onClick={() => setActiveTab("reservations")}
               className={`px-6 py-4 font-medium transition-colors ${
-                activeTab === 'reservations'
-                  ? 'text-purple-600 border-b-2 border-purple-600'
-                  : 'text-gray-500 hover:text-gray-700'
+                activeTab === "reservations"
+                  ? "text-purple-600 border-b-2 border-purple-600"
+                  : "text-gray-500 hover:text-gray-700"
               }`}
             >
               예매내역
             </button>
             <button
-              onClick={() => setActiveTab('trades')}
+              onClick={() => setActiveTab("trades")}
               className={`px-6 py-4 font-medium transition-colors ${
-                activeTab === 'trades'
-                  ? 'text-purple-600 border-b-2 border-purple-600'
-                  : 'text-gray-500 hover:text-gray-700'
+                activeTab === "trades"
+                  ? "text-purple-600 border-b-2 border-purple-600"
+                  : "text-gray-500 hover:text-gray-700"
               }`}
             >
               나의 교환/양도
             </button>
             <button
-              onClick={() => setActiveTab('lottery')}
+              onClick={() => setActiveTab("lottery")}
               className={`px-6 py-4 font-medium transition-colors ${
-                activeTab === 'lottery'
-                  ? 'text-purple-600 border-b-2 border-purple-600'
-                  : 'text-gray-500 hover:text-gray-700'
+                activeTab === "lottery"
+                  ? "text-purple-600 border-b-2 border-purple-600"
+                  : "text-gray-500 hover:text-gray-700"
               }`}
             >
               추첨 응모
             </button>
             <button
-              onClick={() => setActiveTab('tickets')}
+              onClick={() => setActiveTab("tickets")}
               className={`px-6 py-4 font-medium transition-colors ${
-                activeTab === 'tickets'
-                  ? 'text-purple-600 border-b-2 border-purple-600'
-                  : 'text-gray-500 hover:text-gray-700'
+                activeTab === "tickets"
+                  ? "text-purple-600 border-b-2 border-purple-600"
+                  : "text-gray-500 hover:text-gray-700"
               }`}
             >
               내 티켓
             </button>
             <button
-              onClick={() => setActiveTab('profile')}
+              onClick={() => setActiveTab("profile")}
               className={`px-6 py-4 font-medium transition-colors ${
-                activeTab === 'profile'
-                  ? 'text-purple-600 border-b-2 border-purple-600'
-                  : 'text-gray-500 hover:text-gray-700'
+                activeTab === "profile"
+                  ? "text-purple-600 border-b-2 border-purple-600"
+                  : "text-gray-500 hover:text-gray-700"
               }`}
             >
               회원정보
@@ -302,7 +534,7 @@ export default function MyPage() {
         </div>
 
         {/* Reservations Tab */}
-        {activeTab === 'reservations' && (
+        {activeTab === "reservations" && (
           <div>
             {/* Filters */}
             <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
@@ -338,7 +570,7 @@ export default function MyPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">정렬 기준</label>
                   <select
                     value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as 'bookingDate' | 'viewingDate')}
+                    onChange={(e) => setSortBy(e.target.value as "bookingDate" | "viewingDate")}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                   >
                     <option value="bookingDate">예매일</option>
@@ -349,7 +581,7 @@ export default function MyPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">정렬 순서</label>
                   <select
                     value={sortOrder}
-                    onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                    onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                   >
                     <option value="desc">내림차순</option>
@@ -372,99 +604,311 @@ export default function MyPage() {
             )}
 
             {/* 예매내역이 없는 경우 */}
-            {!isLoadingReservations && !reservationsError && filteredAndSortedReservations.length === 0 && (
-              <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-                <p className="text-gray-400">예매내역이 없습니다.</p>
-              </div>
-            )}
+            {!isLoadingReservations &&
+              !reservationsError &&
+              filteredAndSortedReservations.length === 0 && (
+                <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+                  <p className="text-gray-400">예매내역이 없습니다.</p>
+                </div>
+              )}
 
             {/* Reservation Cards */}
-            {!isLoadingReservations && !reservationsError && filteredAndSortedReservations.length > 0 && (
-              <div className="space-y-4">
-                {filteredAndSortedReservations.map((reservation) => (
-                  <div key={reservation.reservationId} className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
-                    <Link 
-                      href={`/my-page/reservations/${reservation.reservationId}`}
-                      className="block"
+            {!isLoadingReservations &&
+              !reservationsError &&
+              filteredAndSortedReservations.length > 0 && (
+                <div className="space-y-4">
+                  {filteredAndSortedReservations.map((reservation) => (
+                    <div
+                      key={reservation.reservationId}
+                      className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow"
                     >
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex-1">
-                          <h3 className="text-xl font-bold text-gray-900 mb-2 hover:text-red-600 transition-colors">
-                            {reservation.performance?.title || '공연 정보 없음'}
-                          </h3>
-                          <div className="space-y-1 text-sm text-gray-600">
-                            <p>예매번호: {reservation.reservationId}</p>
-                            {reservation.performance?.startAt && (
-                              <p>관람일시: {formatDateTime(reservation.performance.startAt)}</p>
-                            )}
-                            {reservation.performance?.startDate && (
-                              <p>공연 기간: {formatDate(reservation.performance.startDate)}</p>
-                            )}
-                            {reservation.performance?.category && (
-                              <p>카테고리: {reservation.performance.category}</p>
-                            )}
+                      <Link
+                        href={`/my-page/reservations/${reservation.reservationId}`}
+                        className="block"
+                      >
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex-1">
+                            <h3 className="text-xl font-bold text-gray-900 mb-2 hover:text-red-600 transition-colors">
+                              {reservation.performance?.title || "공연 정보 없음"}
+                            </h3>
+                            <div className="space-y-1 text-sm text-gray-600">
+                              <p>예매번호: {reservation.reservationId}</p>
+                              {reservation.performance?.startAt && (
+                                <p>관람일시: {formatDateTime(reservation.performance.startAt)}</p>
+                              )}
+                              {reservation.performance?.startDate && (
+                                <p>공연 기간: {formatDate(reservation.performance.startDate)}</p>
+                              )}
+                              {reservation.performance?.category && (
+                                <p>카테고리: {reservation.performance.category}</p>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                        <div>
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(reservation.status)}`}>
-                            {getStatusLabel(reservation.status)}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* 좌석 정보 */}
-                      {reservation.seat && (
-                        <div className="border-t pt-4 mb-4">
-                          <h4 className="font-medium text-gray-900 mb-2">좌석 정보</h4>
-                          <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                            <span className="font-medium">
-                              {reservation.seat.sectionName}구역 {reservation.seat.rowLabel}열 {reservation.seat.seatNumber}번
+                          <div>
+                            <span
+                              className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                                reservation.status,
+                              )}`}
+                            >
+                              {getStatusLabel(reservation.status)}
                             </span>
-                            {(reservation.status === 'PENDING' || reservation.status === 'HOLD') && (
-                              <span className="text-sm text-red-600 font-medium">취소 가능</span>
-                            )}
                           </div>
+                        </div>
+
+                        {/* 좌석 정보 */}
+                        {reservation.seat && (
+                          <div className="border-t pt-4 mb-4">
+                            <h4 className="font-medium text-gray-900 mb-2">좌석 정보</h4>
+                            <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                              <span className="font-medium">
+                                {reservation.seat.sectionName}구역 {reservation.seat.rowLabel}열{" "}
+                                {reservation.seat.seatNumber}번
+                              </span>
+                              {(reservation.status === "PENDING" ||
+                                reservation.status === "HOLD") && (
+                                <span className="text-sm text-red-600 font-medium">취소 가능</span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </Link>
+
+                      {/* 공연 상세 링크 - Link 밖으로 분리 */}
+                      {reservation.performance?.performanceId && (
+                        <div className="border-t pt-4">
+                          <Link
+                            href={`/performance/${reservation.performance.performanceId}`}
+                            className="text-sm text-red-600 hover:text-red-700 font-medium"
+                          >
+                            공연 상세 보기 →
+                          </Link>
                         </div>
                       )}
-                    </Link>
-
-                    {/* 공연 상세 링크 - Link 밖으로 분리 */}
-                    {reservation.performance?.performanceId && (
-                      <div className="border-t pt-4">
-                        <Link
-                          href={`/performance/${reservation.performance.performanceId}`}
-                          className="text-sm text-red-600 hover:text-red-700 font-medium"
-                        >
-                          공연 상세 보기 →
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+                    </div>
+                  ))}
+                </div>
+              )}
           </div>
         )}
 
         {/* Trades Tab */}
-        {activeTab === 'trades' && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <Link
-              href="/my-page/trades"
-              className="text-xl font-bold text-gray-900 mb-4 block hover:text-purple-600"
-            >
-              나의 교환/양도 →
-            </Link>
-            <div className="text-center py-12 text-gray-400">
-              <p>등록된 교환/양도 내역이 없습니다.</p>
+        {activeTab === "trades" && (
+          <div>
+            {/* 서브 탭 */}
+            <div className="bg-white rounded-lg shadow-sm mb-6">
+              <div className="flex border-b border-gray-200">
+                <button
+                  onClick={() => setTradesSubTab("my-trades")}
+                  className={`px-6 py-4 font-medium transition-colors ${
+                    tradesSubTab === "my-trades"
+                      ? "text-red-600 border-b-2 border-red-600"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  내 거래
+                </button>
+                <button
+                  onClick={() => setTradesSubTab("received-requests")}
+                  className={`px-6 py-4 font-medium transition-colors ${
+                    tradesSubTab === "received-requests"
+                      ? "text-red-600 border-b-2 border-red-600"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  받은 신청
+                </button>
+                <button
+                  onClick={() => setTradesSubTab("sent-requests")}
+                  className={`px-6 py-4 font-medium transition-colors ${
+                    tradesSubTab === "sent-requests"
+                      ? "text-red-600 border-b-2 border-red-600"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  보낸 신청
+                </button>
+              </div>
             </div>
+
+            {tradesError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+                {tradesError}
+              </div>
+            )}
+
+            {/* 내 거래 서브 탭 */}
+            {tradesSubTab === "my-trades" && (
+              <div className="space-y-4">
+                {isLoadingTrades ? (
+                  <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+                    <p className="text-gray-500">로딩 중...</p>
+                  </div>
+                ) : myTrades.length === 0 ? (
+                  <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+                    <p className="text-gray-400">등록한 거래가 없습니다.</p>
+                  </div>
+                ) : (
+                  myTrades.map((trade) => (
+                    <Link
+                      key={trade.tradeId}
+                      href={`/trade/${trade.tradeId}`}
+                      className="block bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-bold text-gray-900 mb-2">
+                            거래 #{trade.tradeId}
+                          </h3>
+                          <div className="space-y-1 text-sm text-gray-600">
+                            {trade.section && (
+                              <p>
+                                <span className="font-semibold">구역:</span> {trade.section}
+                              </p>
+                            )}
+                            {trade.row && (
+                              <p>
+                                <span className="font-semibold">열:</span> {trade.row}
+                              </p>
+                            )}
+                            {trade.seatNumber && (
+                              <p>
+                                <span className="font-semibold">좌석:</span> {trade.seatNumber}
+                              </p>
+                            )}
+                            <p>
+                              <span className="font-semibold">매수:</span> {trade.totalCount || 0}매
+                            </p>
+                            <p>
+                              <span className="font-semibold">등록일:</span>{" "}
+                              {formatTradeDate(trade.createdAt)}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="ml-4">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                              trade.type === "EXCHANGE"
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-green-100 text-green-800"
+                            }`}
+                          >
+                            {trade.type === "EXCHANGE" ? "교환" : "양도"}
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))
+                )}
+              </div>
+            )}
+
+            {/* 받은 신청 서브 탭 */}
+            {tradesSubTab === "received-requests" && (
+              <div className="space-y-4">
+                {isLoadingTrades ? (
+                  <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+                    <p className="text-gray-500">로딩 중...</p>
+                  </div>
+                ) : receivedRequests.length === 0 ? (
+                  <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+                    <p className="text-gray-400">받은 신청이 없습니다.</p>
+                  </div>
+                ) : (
+                  receivedRequests.map((request) => (
+                    <div key={request.tradeRequestId} className="bg-white rounded-lg shadow-sm p-6">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h3 className="text-lg font-bold text-gray-900 mb-2">
+                            교환 신청 #{request.tradeRequestId}
+                          </h3>
+                          <div className="space-y-1 text-sm text-gray-600">
+                            <p>거래 ID: {request.tradeId}</p>
+                            <p>신청자 ID: {request.requesterId}</p>
+                            <p>신청자 티켓 ID: {request.requesterTicketId}</p>
+                            <p>신청일: {formatTradeDate(request.createdAt)}</p>
+                          </div>
+                        </div>
+                        {getStatusBadge(request.status)}
+                      </div>
+
+                      {request.status === "PENDING" && (
+                        <div className="flex gap-3 pt-4 border-t">
+                          <button
+                            onClick={() => handleAccept(request.tradeRequestId)}
+                            className="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
+                          >
+                            수락
+                          </button>
+                          <button
+                            onClick={() => handleReject(request.tradeRequestId)}
+                            className="px-6 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+                          >
+                            거절
+                          </button>
+                          <Link
+                            href={`/trade/${request.tradeId}`}
+                            className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                          >
+                            거래 보기
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {/* 보낸 신청 서브 탭 */}
+            {tradesSubTab === "sent-requests" && (
+              <div className="space-y-4">
+                {isLoadingTrades ? (
+                  <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+                    <p className="text-gray-500">로딩 중...</p>
+                  </div>
+                ) : sentRequests.length === 0 ? (
+                  <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+                    <p className="text-gray-400">보낸 신청이 없습니다.</p>
+                  </div>
+                ) : (
+                  sentRequests.map((request) => (
+                    <div key={request.tradeRequestId} className="bg-white rounded-lg shadow-sm p-6">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h3 className="text-lg font-bold text-gray-900 mb-2">
+                            교환 신청 #{request.tradeRequestId}
+                          </h3>
+                          <div className="space-y-1 text-sm text-gray-600">
+                            <p>거래 ID: {request.tradeId}</p>
+                            <p>내 티켓 ID: {request.requesterTicketId}</p>
+                            <p>신청일: {formatTradeDate(request.createdAt)}</p>
+                            {request.modifiedAt !== request.createdAt && (
+                              <p>수정일: {formatTradeDate(request.modifiedAt)}</p>
+                            )}
+                          </div>
+                        </div>
+                        {getStatusBadge(request.status)}
+                      </div>
+
+                      <div className="pt-4 border-t">
+                        <Link
+                          href={`/trade/${request.tradeId}`}
+                          className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors inline-block"
+                        >
+                          거래 보기
+                        </Link>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
         )}
 
         {/* Lottery Tab */}
-        {activeTab === 'lottery' && (
+        {activeTab === "lottery" && (
           <div>
-
             {/* 에러 메시지 */}
             {lotteryError && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
@@ -490,15 +934,20 @@ export default function MyPage() {
                 {lotteryEntries.map((entry) => {
                   const getStatusBadge = (status: string) => {
                     const statusMap: Record<string, { label: string; className: string }> = {
-                      APPLIED: { label: '응모완료', className: 'bg-blue-100 text-blue-800' },
-                      WIN: { label: '당첨', className: 'bg-green-100 text-green-800' },
-                      LOSE: { label: '낙첨', className: 'bg-gray-100 text-gray-800' },
-                      CANCELLED: { label: '취소됨', className: 'bg-red-100 text-red-800' },
+                      APPLIED: { label: "응모완료", className: "bg-blue-100 text-blue-800" },
+                      WIN: { label: "당첨", className: "bg-green-100 text-green-800" },
+                      LOSE: { label: "낙첨", className: "bg-gray-100 text-gray-800" },
+                      CANCELLED: { label: "취소됨", className: "bg-red-100 text-red-800" },
                     };
 
-                    const statusInfo = statusMap[status] || { label: status, className: 'bg-gray-100 text-gray-800' };
+                    const statusInfo = statusMap[status] || {
+                      label: status,
+                      className: "bg-gray-100 text-gray-800",
+                    };
                     return (
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusInfo.className}`}>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${statusInfo.className}`}
+                      >
                         {statusInfo.label}
                       </span>
                     );
@@ -506,12 +955,12 @@ export default function MyPage() {
 
                   const formatDateTime = (dateString: string) => {
                     const date = new Date(dateString);
-                    return date.toLocaleString('ko-KR', {
-                      year: 'numeric',
-                      month: '2-digit',
-                      day: '2-digit',
-                      hour: '2-digit',
-                      minute: '2-digit',
+                    return date.toLocaleString("ko-KR", {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
                     });
                   };
 
@@ -530,7 +979,7 @@ export default function MyPage() {
                         <div>{getStatusBadge(entry.status)}</div>
                       </div>
 
-                      {entry.status === 'WIN' && (
+                      {entry.status === "WIN" && (
                         <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
                           <p className="text-sm text-green-800 font-medium">
                             🎉 당첨되었습니다! 결제를 진행해주세요.
@@ -546,7 +995,7 @@ export default function MyPage() {
         )}
 
         {/* Tickets Tab */}
-        {activeTab === 'tickets' && (
+        {activeTab === "tickets" && (
           <div>
             {/* 에러 메시지 */}
             {ticketsError && (
@@ -573,38 +1022,38 @@ export default function MyPage() {
                 {tickets.map((ticket) => {
                   const getStatusLabel = (status?: string) => {
                     switch (status) {
-                      case 'ISSUED':
-                        return '발급됨';
-                      case 'USED':
-                        return '사용됨';
-                      case 'CANCELED':
-                        return '취소됨';
-                      case 'EXCHANGED':
-                        return '교환됨';
-                      case 'TRANSFERRED':
-                        return '양도됨';
-                      case 'EXPIRED':
-                        return '만료됨';
+                      case "ISSUED":
+                        return "발급됨";
+                      case "USED":
+                        return "사용됨";
+                      case "CANCELED":
+                        return "취소됨";
+                      case "EXCHANGED":
+                        return "교환됨";
+                      case "TRANSFERRED":
+                        return "양도됨";
+                      case "EXPIRED":
+                        return "만료됨";
                       default:
-                        return status || '알 수 없음';
+                        return status || "알 수 없음";
                     }
                   };
 
                   const getStatusColor = (status?: string) => {
                     switch (status) {
-                      case 'ISSUED':
-                        return 'bg-green-100 text-green-800';
-                      case 'USED':
-                        return 'bg-blue-100 text-blue-800';
-                      case 'CANCELED':
-                        return 'bg-red-100 text-red-800';
-                      case 'EXCHANGED':
-                      case 'TRANSFERRED':
-                        return 'bg-purple-100 text-purple-800';
-                      case 'EXPIRED':
-                        return 'bg-gray-100 text-gray-800';
+                      case "ISSUED":
+                        return "bg-green-100 text-green-800";
+                      case "USED":
+                        return "bg-blue-100 text-blue-800";
+                      case "CANCELED":
+                        return "bg-red-100 text-red-800";
+                      case "EXCHANGED":
+                      case "TRANSFERRED":
+                        return "bg-purple-100 text-purple-800";
+                      case "EXPIRED":
+                        return "bg-gray-100 text-gray-800";
                       default:
-                        return 'bg-gray-100 text-gray-800';
+                        return "bg-gray-100 text-gray-800";
                     }
                   };
 
@@ -612,21 +1061,21 @@ export default function MyPage() {
                     <div key={ticket.ticketId} className="bg-white rounded-lg shadow-sm p-6">
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex-1">
-                          <h3 className="text-xl font-bold text-gray-900 mb-2">티켓 #{ticket.ticketId}</h3>
+                          <h3 className="text-xl font-bold text-gray-900 mb-2">
+                            티켓 #{ticket.ticketId}
+                          </h3>
                           <div className="space-y-1 text-sm text-gray-600">
-                            {ticket.reservationId && (
-                              <p>예매번호: {ticket.reservationId}</p>
-                            )}
-                            {ticket.seatId && (
-                              <p>좌석 ID: {ticket.seatId}</p>
-                            )}
-                            {ticket.sectionName && (
-                              <p>구역: {ticket.sectionName}</p>
-                            )}
+                            {ticket.reservationId && <p>예매번호: {ticket.reservationId}</p>}
+                            {ticket.seatId && <p>좌석 ID: {ticket.seatId}</p>}
+                            {ticket.sectionName && <p>구역: {ticket.sectionName}</p>}
                           </div>
                         </div>
                         <div>
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(ticket.status)}`}>
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                              ticket.status,
+                            )}`}
+                          >
                             {getStatusLabel(ticket.status)}
                           </span>
                         </div>
@@ -651,11 +1100,8 @@ export default function MyPage() {
         )}
 
         {/* Profile Tab */}
-        {activeTab === 'profile' && (
-          <ProfileTab />
-        )}
+        {activeTab === "profile" && <ProfileTab />}
       </div>
     </div>
   );
 }
-

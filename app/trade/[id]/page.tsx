@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { tradeApi, type Trade, type Ticket } from '@/lib/api/trade';
+import { performanceApi, type PerformanceDetailRes, type PerformanceScheduleListRes } from '@/lib/api/performance';
 import Link from 'next/link';
 import Header from '@/components/Header';
 
@@ -12,6 +13,8 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
   const tradeId = Number(id);
   
   const [trade, setTrade] = useState<Trade | null>(null);
+  const [performance, setPerformance] = useState<PerformanceDetailRes | null>(null);
+  const [schedule, setSchedule] = useState<PerformanceScheduleListRes | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   
@@ -36,6 +39,35 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
         const response = await tradeApi.getTradeDetail(tradeId);
         if (response.data) {
           setTrade(response.data);
+
+          // 공연 정보 조회
+          if (response.data.performanceId) {
+            try {
+              const perfResponse = await performanceApi.getPerformance(response.data.performanceId);
+              if (perfResponse.data) {
+                setPerformance(perfResponse.data);
+              }
+            } catch (err) {
+              console.error('공연 정보 조회 실패:', err);
+            }
+          }
+
+          // 일정 정보 조회
+          if (response.data.performanceId && response.data.scheduleId) {
+            try {
+              const schedulesResponse = await performanceApi.getSchedules(response.data.performanceId);
+              if (schedulesResponse.data) {
+                const foundSchedule = schedulesResponse.data.find(
+                  (s) => s.performanceScheduleId === response.data.scheduleId
+                );
+                if (foundSchedule) {
+                  setSchedule(foundSchedule);
+                }
+              }
+            } catch (err) {
+              console.error('일정 정보 조회 실패:', err);
+            }
+          }
         }
       } catch (err) {
         if (err instanceof Error) {
@@ -130,6 +162,33 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
     return `${price.toLocaleString()}원`;
   };
 
+  const formatDateRange = (startDate?: string, endDate?: string) => {
+    if (!startDate || !endDate) return '';
+    const start = new Date(startDate).toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+    const end = new Date(endDate).toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+    return `${start} ~ ${end}`;
+  };
+
+  const formatDateTime = (dateString?: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -194,55 +253,114 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
           )}
 
           <div className="space-y-6">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">기본 정보</h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-600">거래 ID</p>
-                  <p className="font-medium text-gray-900">{trade.tradeId}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">상태</p>
-                  <p className="font-medium text-gray-900">
-                    {trade.status === 'ACTIVE' ? '진행중' : 
-                     trade.status === 'COMPLETED' ? '완료' : '취소됨'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">공연 ID</p>
-                  <p className="font-medium text-gray-900">{trade.performanceId}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">일정 ID</p>
-                  <p className="font-medium text-gray-900">{trade.scheduleId}</p>
+            {/* 공연 정보 */}
+            {performance && (
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">공연 정보</h2>
+                <div className="flex gap-6 p-4 bg-gray-50 rounded-lg">
+                  {performance.posterUrl && (
+                    <img
+                      src={performance.posterUrl}
+                      alt={performance.title || '공연 포스터'}
+                      className="w-32 h-44 object-cover rounded-lg"
+                    />
+                  )}
+                  <div className="flex-1">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">{performance.title}</h3>
+                    <div className="space-y-2 text-sm text-gray-600">
+                      {performance.venue?.name && (
+                        <p>
+                          <span className="font-semibold text-gray-700">장소:</span>{' '}
+                          {performance.venue.name}
+                        </p>
+                      )}
+                      {performance.startDate && performance.endDate && (
+                        <p>
+                          <span className="font-semibold text-gray-700">공연 기간:</span>{' '}
+                          {formatDateRange(performance.startDate, performance.endDate)}
+                        </p>
+                      )}
+                      {performance.category && (
+                        <p>
+                          <span className="font-semibold text-gray-700">카테고리:</span>{' '}
+                          {performance.category}
+                        </p>
+                      )}
+                    </div>
+                    {performance.performanceId && (
+                      <Link
+                        href={`/performance/${performance.performanceId}`}
+                        className="inline-block mt-4 text-sm text-red-600 hover:text-red-700 font-medium"
+                      >
+                        공연 상세 보기 →
+                      </Link>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
+            {/* 일정 정보 */}
+            {schedule && (
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">일정 정보</h2>
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <div className="space-y-2 text-sm text-gray-600">
+                    {schedule.roundNo && (
+                      <p>
+                        <span className="font-semibold text-gray-700">회차:</span> {schedule.roundNo}회
+                      </p>
+                    )}
+                    {schedule.startAt && (
+                      <p>
+                        <span className="font-semibold text-gray-700">공연일시:</span>{' '}
+                        {formatDateTime(schedule.startAt)}
+                      </p>
+                    )}
+                    {schedule.bookingType && (
+                      <p>
+                        <span className="font-semibold text-gray-700">예매 유형:</span>{' '}
+                        {schedule.bookingType === 'FIRST_COME' ? '선착순' :
+                         schedule.bookingType === 'LOTTERY' ? '추첨' : '지정석'}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 좌석 정보 */}
             <div>
               <h2 className="text-lg font-semibold text-gray-900 mb-4">좌석 정보</h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-600">구역</p>
-                  <p className="font-medium text-gray-900">{trade.section}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">열</p>
-                  <p className="font-medium text-gray-900">{trade.row}</p>
-                </div>
-                {trade.seatNumber && (
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <div className="grid grid-cols-2 gap-4">
+                  {trade.section && (
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">구역</p>
+                      <p className="font-semibold text-gray-900 text-lg">{trade.section}</p>
+                    </div>
+                  )}
+                  {trade.row && (
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">열</p>
+                      <p className="font-semibold text-gray-900 text-lg">{trade.row}</p>
+                    </div>
+                  )}
+                  {trade.seatNumber && (
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">좌석 번호</p>
+                      <p className="font-semibold text-gray-900 text-lg">{trade.seatNumber}</p>
+                    </div>
+                  )}
                   <div>
-                    <p className="text-sm text-gray-600">좌석 번호</p>
-                    <p className="font-medium text-gray-900">{trade.seatNumber}</p>
+                    <p className="text-sm text-gray-600 mb-1">매수</p>
+                    <p className="font-semibold text-gray-900 text-lg">{trade.totalCount || 0}매</p>
                   </div>
-                )}
-                <div>
-                  <p className="text-sm text-gray-600">매수</p>
-                  <p className="font-medium text-gray-900">{trade.totalCount}매</p>
                 </div>
               </div>
             </div>
 
+            {/* 가격 정보 (양도만) */}
             {trade.type === 'TRANSFER' && (
               <div>
                 <div className="flex justify-between items-center mb-4">
@@ -253,33 +371,50 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                         setShowPriceEditModal(true);
                         setNewPrice(trade.price?.toString() || '');
                       }}
-                      className="text-sm text-purple-600 hover:text-purple-700 font-medium"
+                      className="text-sm text-red-600 hover:text-red-700 font-medium"
                     >
                       가격 수정
                     </button>
                   )}
                 </div>
-                <p className="text-2xl font-bold text-purple-600">{formatPrice(trade.price)}</p>
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-3xl font-bold text-red-600">{formatPrice(trade.price)}</p>
+                </div>
               </div>
             )}
 
+            {/* 거래 상태 */}
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">등록 정보</h2>
-              <p className="text-sm text-gray-600">등록일시</p>
-              <p className="font-medium text-gray-900">{formatDate(trade.createdAt)}</p>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">거래 상태</h2>
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">상태</p>
+                    <p className="font-semibold text-gray-900">
+                      {trade.status === 'ACTIVE' ? '진행중' : 
+                       trade.status === 'COMPLETED' ? '완료' : '취소됨'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">등록일시</p>
+                    <p className="font-semibold text-gray-900">{formatDate(trade.createdAt)}</p>
+                  </div>
+                </div>
+              </div>
             </div>
+
 
             <div className="flex gap-3 pt-6 border-t">
               {trade.type === 'EXCHANGE' && trade.status === 'ACTIVE' && (
                 <button
                   onClick={handleOpenExchangeModal}
-                  className="px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
+                  className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
                 >
                   교환 신청하기
                 </button>
               )}
               {trade.type === 'TRANSFER' && trade.status === 'ACTIVE' && (
-                <button className="px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors">
+                <button className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors">
                   구매하기
                 </button>
               )}
@@ -363,17 +498,32 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                           onClick={() => setSelectedTicketId(ticket.ticketId ?? null)}
                           className={`w-full p-4 text-left rounded-lg border-2 transition-colors ${
                             selectedTicketId === ticket.ticketId
-                              ? 'border-purple-600 bg-purple-50'
+                              ? 'border-red-600 bg-red-50'
                               : 'border-gray-200 hover:border-gray-300'
                           }`}
                         >
                           <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-medium text-gray-900">티켓 ID: {ticket.ticketId}</p>
-                              <p className="text-sm text-gray-600">예약 ID: {ticket.reservationId}</p>
+                            <div className="flex-1">
+                              {ticket.sectionName && ticket.rowLabel && ticket.seatNumber ? (
+                                <>
+                                  <p className="font-semibold text-gray-900 mb-1">
+                                    {ticket.sectionName}구역 {ticket.rowLabel}열 {ticket.seatNumber}번
+                                  </p>
+                                  {ticket.reservationId && (
+                                    <p className="text-xs text-gray-500">예약번호: {ticket.reservationId}</p>
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  <p className="font-medium text-gray-900">티켓 ID: {ticket.ticketId}</p>
+                                  {ticket.reservationId && (
+                                    <p className="text-sm text-gray-600">예약 ID: {ticket.reservationId}</p>
+                                  )}
+                                </>
+                              )}
                             </div>
                             {selectedTicketId === ticket.ticketId && (
-                              <div className="w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center">
+                              <div className="w-5 h-5 bg-red-600 rounded-full flex items-center justify-center ml-4">
                                 <div className="w-2 h-2 bg-white rounded-full"></div>
                               </div>
                             )}
@@ -398,7 +548,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                   <button
                     onClick={handleSubmitExchange}
                     disabled={!selectedTicketId || isSubmitting}
-                    className="flex-1 px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmitting ? '신청 중...' : '신청하기'}
                   </button>
@@ -493,7 +643,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                       }
                     }}
                     disabled={isUpdatingPrice}
-                    className="flex-1 px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isUpdatingPrice ? '수정 중...' : '수정하기'}
                   </button>

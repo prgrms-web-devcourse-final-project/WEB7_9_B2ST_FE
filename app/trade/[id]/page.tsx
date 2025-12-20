@@ -4,6 +4,7 @@ import { useState, useEffect, use } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { tradeApi, type Trade, type Ticket } from '@/lib/api/trade';
 import { performanceApi, type PerformanceDetailRes, type PerformanceScheduleListRes } from '@/lib/api/performance';
+import { mypageApi } from '@/lib/api/mypage';
 import Link from 'next/link';
 import Header from '@/components/Header';
 
@@ -15,6 +16,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
   const [trade, setTrade] = useState<Trade | null>(null);
   const [performance, setPerformance] = useState<PerformanceDetailRes | null>(null);
   const [schedule, setSchedule] = useState<PerformanceScheduleListRes | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   
@@ -29,6 +31,9 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
   const [showPriceEditModal, setShowPriceEditModal] = useState(false);
   const [newPrice, setNewPrice] = useState('');
   const [isUpdatingPrice, setIsUpdatingPrice] = useState(false);
+  
+  // 삭제 관련 상태
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const fetchTradeDetail = async () => {
@@ -36,6 +41,17 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
       setError('');
 
       try {
+        // 현재 사용자 정보 조회
+        try {
+          const myInfoResponse = await mypageApi.getMyInfo();
+          if (myInfoResponse.data?.memberId) {
+            setCurrentUserId(myInfoResponse.data.memberId);
+          }
+        } catch (err) {
+          // 로그인하지 않은 경우 무시
+          console.log('사용자 정보 조회 실패 (로그인 필요):', err);
+        }
+
         const response = await tradeApi.getTradeDetail(tradeId);
         if (response.data) {
           setTrade(response.data);
@@ -405,7 +421,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
 
 
             <div className="flex gap-3 pt-6 border-t">
-              {trade.type === 'EXCHANGE' && trade.status === 'ACTIVE' && (
+              {trade.type === 'EXCHANGE' && trade.status === 'ACTIVE' && currentUserId !== trade.memberId && (
                 <button
                   onClick={handleOpenExchangeModal}
                   className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
@@ -413,38 +429,54 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                   교환 신청하기
                 </button>
               )}
-              {trade.type === 'TRANSFER' && trade.status === 'ACTIVE' && (
+              {trade.type === 'TRANSFER' && trade.status === 'ACTIVE' && currentUserId !== trade.memberId && (
                 <button className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors">
                   구매하기
                 </button>
               )}
-              {trade.status === 'ACTIVE' && (
+              {trade.status === 'ACTIVE' && currentUserId === trade.memberId && (
                 <button
                   onClick={async () => {
                     if (!confirm('정말로 이 거래를 삭제하시겠습니까?\n대기 중인 신청이 있으면 삭제할 수 없습니다.')) {
                       return;
                     }
 
-                    setIsLoading(true);
+                    setIsDeleting(true);
                     setError('');
 
                     try {
                       await tradeApi.deleteTrade(tradeId);
                       alert('거래가 삭제되었습니다.');
                       router.push('/trade');
-                    } catch (err) {
+                    } catch (err: any) {
+                      // API 에러 메시지 추출
+                      let errorMessage = '거래 삭제에 실패했습니다.';
+                      
                       if (err instanceof Error) {
-                        setError(err.message);
-                      } else {
-                        setError('거래 삭제에 실패했습니다.');
+                        errorMessage = err.message;
+                      } else if (err && typeof err === 'object') {
+                        // API 응답에서 메시지 추출 시도
+                        if ('message' in err) {
+                          errorMessage = String(err.message);
+                        } else if ('response' in err && err.response) {
+                          const response = err.response as any;
+                          if (response.data && response.data.message) {
+                            errorMessage = response.data.message;
+                          } else if (response.message) {
+                            errorMessage = response.message;
+                          }
+                        }
                       }
+
+                      setError(errorMessage);
                     } finally {
-                      setIsLoading(false);
+                      setIsDeleting(false);
                     }
                   }}
-                  className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+                  disabled={isDeleting}
+                  className="px-6 py-3 border-2 border-red-600 text-red-600 rounded-lg font-medium hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  거래 삭제
+                  {isDeleting ? '삭제 중...' : '거래 삭제'}
                 </button>
               )}
             </div>

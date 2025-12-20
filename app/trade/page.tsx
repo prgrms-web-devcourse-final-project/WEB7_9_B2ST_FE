@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { tradeApi, type Trade, type TradeType, type TradeStatus } from '@/lib/api/trade';
+import { performanceApi, type PerformanceDetailRes } from '@/lib/api/performance';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
 
@@ -10,6 +11,7 @@ export default function TradePage() {
   const { isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState<'exchange' | 'transfer'>('exchange');
   const [trades, setTrades] = useState<Trade[]>([]);
+  const [performanceMap, setPerformanceMap] = useState<Record<number, PerformanceDetailRes>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [page, setPage] = useState(0);
@@ -44,6 +46,35 @@ export default function TradePage() {
         setTrades(response.data.content);
         setTotalPages(response.data.totalPages);
         setTotalElements(response.data.totalElements);
+
+        // 공연 정보 가져오기 (중복 제거)
+        const uniquePerformanceIds = [
+          ...new Set(
+            response.data.content
+              .map((trade) => trade.performanceId)
+              .filter((id): id is number => id !== undefined && id !== null)
+          ),
+        ];
+
+        // 공연 정보 병렬 조회
+        const performancePromises = uniquePerformanceIds.map(async (performanceId) => {
+          try {
+            const perfResponse = await performanceApi.getPerformance(performanceId);
+            return { performanceId, performance: perfResponse.data };
+          } catch (err) {
+            console.error(`공연 ${performanceId} 정보 조회 실패:`, err);
+            return { performanceId, performance: null };
+          }
+        });
+
+        const performanceResults = await Promise.all(performancePromises);
+        const newPerformanceMap: Record<number, PerformanceDetailRes> = {};
+        performanceResults.forEach(({ performanceId, performance }) => {
+          if (performance) {
+            newPerformanceMap[performanceId] = performance;
+          }
+        });
+        setPerformanceMap((prev) => ({ ...prev, ...newPerformanceMap }));
       }
     } catch (err) {
       if (err instanceof Error) {
@@ -80,6 +111,22 @@ export default function TradePage() {
   const formatPrice = (price: number | null | undefined) => {
     if (price === null || price === undefined) return '가격 협의';
     return `${price.toLocaleString()}원`;
+  };
+
+  // 날짜 범위 포맷팅
+  const formatDateRange = (startDate?: string, endDate?: string) => {
+    if (!startDate || !endDate) return '';
+    const start = new Date(startDate).toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+    const end = new Date(endDate).toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+    return `${start} ~ ${end}`;
   };
 
   return (
@@ -235,60 +282,116 @@ export default function TradePage() {
                       <p className="text-gray-500">등록된 거래가 없습니다.</p>
                     </div>
                   ) : (
-                    trades.map((trade) => (
-                      <Link
-                        key={trade.tradeId}
-                        href={`/trade/${trade.tradeId}`}
-                        className="block bg-white rounded-xl shadow-sm p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h3 className="text-xl font-bold text-gray-900 mb-3">
-                              거래 #{trade.tradeId}
-                            </h3>
-                            <div className="space-y-2 text-sm text-gray-600">
-                              <p className="flex items-center gap-2">
-                                <span className="font-semibold text-gray-700">구역:</span>
-                                <span>{trade.section}</span>
-                              </p>
-                              <p className="flex items-center gap-2">
-                                <span className="font-semibold text-gray-700">열:</span>
-                                <span>{trade.row}</span>
-                              </p>
-                              {activeTab === 'exchange' && trade.seatNumber && (
-                                <p className="flex items-center gap-2">
-                                  <span className="font-semibold text-gray-700">좌석:</span>
-                                  <span>{trade.seatNumber}</span>
-                                </p>
-                              )}
+                    trades.map((trade) => {
+                      const performance = trade.performanceId
+                        ? performanceMap[trade.performanceId]
+                        : null;
+
+                      return (
+                        <Link
+                          key={trade.tradeId}
+                          href={`/trade/${trade.tradeId}`}
+                          className="block bg-white rounded-xl shadow-sm p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                        >
+                          <div className="flex gap-6">
+                            {/* 공연 포스터 */}
+                            {performance?.posterUrl && (
+                              <div className="flex-shrink-0">
+                                <img
+                                  src={performance.posterUrl}
+                                  alt={performance.title || '공연 포스터'}
+                                  className="w-24 h-32 object-cover rounded-lg"
+                                />
+                              </div>
+                            )}
+
+                            {/* 거래 정보 */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex-1 min-w-0">
+                                  {performance ? (
+                                    <>
+                                      <h3 className="text-xl font-bold text-gray-900 mb-1 truncate">
+                                        {performance.title}
+                                      </h3>
+                                      <p className="text-sm text-gray-600 mb-2">
+                                        {performance.venue?.name || '장소 정보 없음'}
+                                      </p>
+                                      {performance.startDate && performance.endDate && (
+                                        <p className="text-xs text-gray-500 mb-2">
+                                          {formatDateRange(performance.startDate, performance.endDate)}
+                                        </p>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <h3 className="text-xl font-bold text-gray-900 mb-3">
+                                      거래 #{trade.tradeId}
+                                    </h3>
+                                  )}
+                                </div>
+                                <div className="ml-4 flex-shrink-0">
+                                  <span
+                                    className={`px-4 py-2 rounded-full text-xs font-semibold ${
+                                      trade.type === 'EXCHANGE'
+                                        ? 'bg-blue-100 text-blue-800'
+                                        : 'bg-green-100 text-green-800'
+                                    }`}
+                                  >
+                                    {trade.type === 'EXCHANGE' ? '교환' : '양도'}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* 좌석 정보 */}
+                              <div className="bg-gray-50 rounded-lg p-4 mb-3">
+                                <h4 className="text-sm font-semibold text-gray-700 mb-2">좌석 정보</h4>
+                                <div className="space-y-1 text-sm text-gray-600">
+                                  {trade.section && (
+                                    <p className="flex items-center gap-2">
+                                      <span className="font-medium text-gray-700">구역:</span>
+                                      <span>{trade.section}</span>
+                                    </p>
+                                  )}
+                                  {trade.row && (
+                                    <p className="flex items-center gap-2">
+                                      <span className="font-medium text-gray-700">열:</span>
+                                      <span>{trade.row}</span>
+                                    </p>
+                                  )}
+                                  {trade.seatNumber && (
+                                    <p className="flex items-center gap-2">
+                                      <span className="font-medium text-gray-700">좌석:</span>
+                                      <span>{trade.seatNumber}</span>
+                                    </p>
+                                  )}
+                                  <p className="flex items-center gap-2">
+                                    <span className="font-medium text-gray-700">매수:</span>
+                                    <span>{trade.totalCount || 0}매</span>
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* 가격 정보 (양도만) */}
                               {activeTab === 'transfer' && (
-                                <p className="flex items-center gap-2">
-                                  <span className="font-semibold text-gray-700">가격:</span>
-                                  <span className="text-red-600 font-bold">{formatPrice(trade.price)}</span>
-                                </p>
+                                <div className="mb-3">
+                                  <p className="flex items-center gap-2 text-lg">
+                                    <span className="font-semibold text-gray-700">가격:</span>
+                                    <span className="text-red-600 font-bold">
+                                      {formatPrice(trade.price)}
+                                    </span>
+                                  </p>
+                                </div>
                               )}
-                              <p className="flex items-center gap-2">
-                                <span className="font-semibold text-gray-700">매수:</span>
-                                <span>{trade.totalCount}매</span>
-                              </p>
-                              <p className="flex items-center gap-2 text-gray-400">
-                                <span>등록일:</span>
-                                <span>{formatDate(trade.createdAt)}</span>
+
+                              {/* 등록일 */}
+                              <p className="text-xs text-gray-400">
+                                등록일: {formatDate(trade.createdAt)}
                               </p>
                             </div>
                           </div>
-                          <div className="ml-4">
-                            <span className={`px-4 py-2 rounded-full text-xs font-semibold ${
-                              trade.type === 'EXCHANGE'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-green-100 text-green-800'
-                            }`}>
-                              {trade.type === 'EXCHANGE' ? '교환' : '양도'}
-                            </span>
-                          </div>
-                        </div>
-                      </Link>
-                    ))
+                        </Link>
+                      );
+                    })
                   )}
                 </div>
 

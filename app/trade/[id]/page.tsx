@@ -336,11 +336,12 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
               <div>
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-lg font-semibold text-gray-900">가격 정보</h2>
-                  {trade.status === 'ACTIVE' && (
+                  {trade.status === 'ACTIVE' && currentUserId === trade.memberId && (
                     <button
                       onClick={() => {
                         setShowPriceEditModal(true);
                         setNewPrice(trade.price?.toString() || '');
+                        setError('');
                       }}
                       className="text-sm text-red-600 hover:text-red-700 font-medium"
                     >
@@ -523,12 +524,26 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                         if (tradeResponse.data) {
                           setTrade(tradeResponse.data);
                         }
-                      } catch (err) {
+                      } catch (err: any) {
+                        // API 에러 메시지 추출
+                        let errorMessage = '가격 수정에 실패했습니다.';
+                        
                         if (err instanceof Error) {
-                          setError(err.message);
-                        } else {
-                          setError('가격 수정에 실패했습니다.');
+                          errorMessage = err.message;
+                        } else if (err && typeof err === 'object') {
+                          if ('message' in err) {
+                            errorMessage = String(err.message);
+                          } else if ('response' in err && err.response) {
+                            const response = err.response as any;
+                            if (response.data && response.data.message) {
+                              errorMessage = response.data.message;
+                            } else if (response.message) {
+                              errorMessage = response.message;
+                            }
+                          }
                         }
+
+                        setError(errorMessage);
                       } finally {
                         setIsUpdatingPrice(false);
                       }

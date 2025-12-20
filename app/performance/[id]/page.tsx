@@ -260,7 +260,7 @@ export default function PerformanceDetail({ params }: { params: Promise<{ id: st
             <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
               <div className="flex items-center gap-2 mb-4">
                 {performance.status === 'ON_SALE' && (
-                  <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded">
+                  <span className="px-3 py-1 bg-red-100 text-red-700 text-xs font-medium rounded">
                     단독판매
                   </span>
                 )}
@@ -415,7 +415,7 @@ export default function PerformanceDetail({ params }: { params: Promise<{ id: st
                           <div
                             key={day}
                             className={`text-center text-xs font-medium py-1 ${
-                              idx === 0 ? 'text-red-500' : idx === 6 ? 'text-blue-500' : 'text-gray-600'
+                              idx === 0 ? 'text-red-500' : idx === 6 ? 'text-red-500' : 'text-gray-600'
                             }`}
                           >
                             {day}
@@ -447,9 +447,9 @@ export default function PerformanceDetail({ params }: { params: Promise<{ id: st
                                   : !hasSchedule
                                   ? 'text-gray-300 cursor-not-allowed hover:bg-gray-50'
                                   : isSelected
-                                  ? 'bg-blue-500 text-white font-semibold'
+                                  ? 'bg-red-500 text-white font-semibold'
                                   : isToday
-                                  ? 'bg-blue-50 text-blue-600 font-semibold hover:bg-blue-100'
+                                  ? 'bg-red-50 text-red-600 font-semibold hover:bg-red-100'
                                   : 'text-gray-700 hover:bg-gray-100'
                               }`}
                             >
@@ -502,11 +502,7 @@ export default function PerformanceDetail({ params }: { params: Promise<{ id: st
                   {selectedSchedule && (
                     <button
                       onClick={handleBooking}
-                      className={`w-full px-6 py-4 rounded-lg font-bold text-center transition-colors shadow-lg ${
-                        selectedSchedule.bookingType === 'LOTTERY'
-                          ? 'bg-purple-600 text-white hover:bg-purple-700'
-                          : 'bg-blue-600 text-white hover:bg-blue-700'
-                      }`}
+                      className="w-full px-6 py-4 rounded-lg font-bold text-center transition-colors shadow-lg bg-red-600 text-white hover:bg-red-700"
                     >
                       {selectedSchedule.bookingType === 'LOTTERY' ? '응모하기 (추첨)' : '예매하기'}
                     </button>

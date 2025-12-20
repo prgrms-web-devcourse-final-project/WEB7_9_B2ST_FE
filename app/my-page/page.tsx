@@ -10,9 +10,30 @@ import { tradeApi, type Ticket, type TradeRequest, type Trade } from "@/lib/api/
 import { mypageApi } from "@/lib/api/mypage";
 
 export default function MyPage() {
+  // 세션 스토리지에서 탭 상태 복원
+  const getInitialTab = (): "reservations" | "profile" | "trades" | "lottery" | "tickets" => {
+    if (typeof window !== "undefined") {
+      const saved = sessionStorage.getItem("mypage-active-tab");
+      if (saved && ["reservations", "profile", "trades", "lottery", "tickets"].includes(saved)) {
+        return saved as "reservations" | "profile" | "trades" | "lottery" | "tickets";
+      }
+    }
+    return "reservations";
+  };
+
+  const getInitialTradesSubTab = (): "my-trades" | "received-requests" | "sent-requests" => {
+    if (typeof window !== "undefined") {
+      const saved = sessionStorage.getItem("mypage-trades-sub-tab");
+      if (saved && ["my-trades", "received-requests", "sent-requests"].includes(saved)) {
+        return saved as "my-trades" | "received-requests" | "sent-requests";
+      }
+    }
+    return "my-trades";
+  };
+
   const [activeTab, setActiveTab] = useState<
     "reservations" | "profile" | "trades" | "lottery" | "tickets"
-  >("reservations");
+  >(getInitialTab());
   const [periodFilter, setPeriodFilter] = useState("1month");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState<"bookingDate" | "viewingDate">("bookingDate");
@@ -30,13 +51,26 @@ export default function MyPage() {
   // 교환/양도 관련 상태
   const [tradesSubTab, setTradesSubTab] = useState<
     "my-trades" | "received-requests" | "sent-requests"
-  >("my-trades");
+  >(getInitialTradesSubTab());
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [myTrades, setMyTrades] = useState<Trade[]>([]);
   const [receivedRequests, setReceivedRequests] = useState<TradeRequest[]>([]);
   const [sentRequests, setSentRequests] = useState<TradeRequest[]>([]);
   const [isLoadingTrades, setIsLoadingTrades] = useState(false);
   const [tradesError, setTradesError] = useState("");
+
+  // 탭 상태를 세션 스토리지에 저장
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("mypage-active-tab", activeTab);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("mypage-trades-sub-tab", tradesSubTab);
+    }
+  }, [tradesSubTab]);
 
   // 예매내역 조회
   useEffect(() => {
@@ -484,7 +518,7 @@ export default function MyPage() {
               onClick={() => setActiveTab("reservations")}
               className={`px-6 py-4 font-medium transition-colors ${
                 activeTab === "reservations"
-                  ? "text-purple-600 border-b-2 border-purple-600"
+                  ? "text-red-600 border-b-2 border-red-600"
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
@@ -494,7 +528,7 @@ export default function MyPage() {
               onClick={() => setActiveTab("trades")}
               className={`px-6 py-4 font-medium transition-colors ${
                 activeTab === "trades"
-                  ? "text-purple-600 border-b-2 border-purple-600"
+                  ? "text-red-600 border-b-2 border-red-600"
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
@@ -504,7 +538,7 @@ export default function MyPage() {
               onClick={() => setActiveTab("lottery")}
               className={`px-6 py-4 font-medium transition-colors ${
                 activeTab === "lottery"
-                  ? "text-purple-600 border-b-2 border-purple-600"
+                  ? "text-red-600 border-b-2 border-red-600"
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
@@ -514,7 +548,7 @@ export default function MyPage() {
               onClick={() => setActiveTab("tickets")}
               className={`px-6 py-4 font-medium transition-colors ${
                 activeTab === "tickets"
-                  ? "text-purple-600 border-b-2 border-purple-600"
+                  ? "text-red-600 border-b-2 border-red-600"
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
@@ -524,7 +558,7 @@ export default function MyPage() {
               onClick={() => setActiveTab("profile")}
               className={`px-6 py-4 font-medium transition-colors ${
                 activeTab === "profile"
-                  ? "text-purple-600 border-b-2 border-purple-600"
+                  ? "text-red-600 border-b-2 border-red-600"
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
@@ -544,7 +578,7 @@ export default function MyPage() {
                   <select
                     value={periodFilter}
                     onChange={(e) => setPeriodFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   >
                     <option value="1month">1개월</option>
                     <option value="3month">3개월</option>
@@ -557,7 +591,7 @@ export default function MyPage() {
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   >
                     <option value="all">전체</option>
                     <option value="reserved">예약</option>
@@ -571,7 +605,7 @@ export default function MyPage() {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as "bookingDate" | "viewingDate")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   >
                     <option value="bookingDate">예매일</option>
                     <option value="viewingDate">관람일</option>
@@ -582,7 +616,7 @@ export default function MyPage() {
                   <select
                     value={sortOrder}
                     onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   >
                     <option value="desc">내림차순</option>
                     <option value="asc">오름차순</option>
@@ -788,7 +822,7 @@ export default function MyPage() {
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-semibold ${
                               trade.type === "EXCHANGE"
-                                ? "bg-blue-100 text-blue-800"
+                                ? "bg-red-100 text-red-800"
                                 : "bg-green-100 text-green-800"
                             }`}
                           >
@@ -940,7 +974,7 @@ export default function MyPage() {
                 {lotteryEntries.map((entry) => {
                   const getStatusBadge = (status: string) => {
                     const statusMap: Record<string, { label: string; className: string }> = {
-                      APPLIED: { label: "응모완료", className: "bg-blue-100 text-blue-800" },
+                      APPLIED: { label: "응모완료", className: "bg-red-100 text-red-800" },
                       WIN: { label: "당첨", className: "bg-green-100 text-green-800" },
                       LOSE: { label: "낙첨", className: "bg-gray-100 text-gray-800" },
                       CANCELLED: { label: "취소됨", className: "bg-red-100 text-red-800" },
@@ -1050,12 +1084,12 @@ export default function MyPage() {
                       case "ISSUED":
                         return "bg-green-100 text-green-800";
                       case "USED":
-                        return "bg-blue-100 text-blue-800";
+                        return "bg-red-100 text-red-800";
                       case "CANCELED":
                         return "bg-red-100 text-red-800";
                       case "EXCHANGED":
                       case "TRANSFERRED":
-                        return "bg-purple-100 text-purple-800";
+                        return "bg-red-100 text-red-800";
                       case "EXPIRED":
                         return "bg-gray-100 text-gray-800";
                       default:

@@ -199,7 +199,7 @@ export default function LotteryStep3({ params }: { params: Promise<{ id: string 
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="flex-1 px-6 py-4 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-6 py-4 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? '응모 중...' : '응모 완료'}
               </button>

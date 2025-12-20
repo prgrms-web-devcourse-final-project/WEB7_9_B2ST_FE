@@ -244,9 +244,9 @@ export default function Header({
             <div className="flex items-center gap-4">
               <Link
                 href="/my-page"
-                className="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium text-sm"
+                className="px-4 py-2 text-gray-700 hover:text-red-600 font-medium text-sm transition-colors"
               >
-                내 예약
+                마이페이지
               </Link>
               <button
                 onClick={logout}

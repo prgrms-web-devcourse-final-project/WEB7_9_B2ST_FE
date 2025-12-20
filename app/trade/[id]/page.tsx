@@ -182,7 +182,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
             <p className="text-red-600 mb-4">{error || '거래를 찾을 수 없습니다.'}</p>
             <Link
               href="/trade"
-              className="px-6 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
+              className="px-6 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
             >
               목록으로 돌아가기
             </Link>
@@ -200,7 +200,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Link
           href="/trade"
-          className="text-purple-600 hover:text-purple-700 font-medium mb-6 inline-block"
+          className="text-red-600 hover:text-red-700 font-medium mb-6 inline-block"
         >
           ← 목록으로
         </Link>
@@ -488,7 +488,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                     value={newPrice}
                     onChange={(e) => setNewPrice(e.target.value)}
                     placeholder="예: 50000"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   />
                 </div>
 

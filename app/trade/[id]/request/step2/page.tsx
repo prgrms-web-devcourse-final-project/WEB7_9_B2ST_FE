@@ -284,8 +284,8 @@ function TradeRequestStep2Content({ params }: { params: Promise<{ id: string }> 
             </div>
 
             {/* 안내 사항 */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
-              <p className="text-sm text-blue-800">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
+              <p className="text-sm text-red-800">
                 교환 신청을 확정하면 상대방이 수락할 때까지 대기 상태가 됩니다.
                 <br />
                 상대방이 수락하면 교환이 완료됩니다.

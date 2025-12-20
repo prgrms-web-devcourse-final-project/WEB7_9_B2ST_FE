@@ -317,7 +317,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
                       <p className="font-semibold text-gray-900 text-lg">{trade.row}</p>
                     </div>
                   )}
-                  {trade.seatNumber && (
+                  {trade.seatNumber && trade.type === 'EXCHANGE' && (
                     <div>
                       <p className="text-sm text-gray-600 mb-1">좌석 번호</p>
                       <p className="font-semibold text-gray-900 text-lg">{trade.seatNumber}</p>

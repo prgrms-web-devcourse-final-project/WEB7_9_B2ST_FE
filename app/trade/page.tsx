@@ -358,7 +358,7 @@ export default function TradePage() {
                                       <span>{trade.row}</span>
                                     </p>
                                   )}
-                                  {trade.seatNumber && (
+                                  {trade.seatNumber && trade.type === 'EXCHANGE' && (
                                     <p className="flex items-center gap-2">
                                       <span className="font-medium text-gray-700">좌석:</span>
                                       <span>{trade.seatNumber}</span>

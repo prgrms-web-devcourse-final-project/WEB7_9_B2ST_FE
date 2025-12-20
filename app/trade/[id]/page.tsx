@@ -17,6 +17,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
   const [performance, setPerformance] = useState<PerformanceDetailRes | null>(null);
   const [schedule, setSchedule] = useState<PerformanceScheduleListRes | null>(null);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [myTradeRequest, setMyTradeRequest] = useState<{ tradeRequestId: number } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   
@@ -78,6 +79,25 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
               console.error('일정 정보 조회 실패:', err);
             }
           }
+
+          // 내가 이미 신청했는지 확인
+          if (currentUserId && response.data.type === 'EXCHANGE') {
+            try {
+              const myRequestsResponse = await tradeApi.getTradeRequestList({
+                requesterId: currentUserId,
+              });
+              if (myRequestsResponse.data) {
+                const myRequest = myRequestsResponse.data.find(
+                  (req) => req.tradeId === response.data.tradeId
+                );
+                if (myRequest && myRequest.tradeRequestId) {
+                  setMyTradeRequest({ tradeRequestId: myRequest.tradeRequestId });
+                }
+              }
+            } catch (err) {
+              console.error('내 신청 목록 조회 실패:', err);
+            }
+          }
         }
       } catch (err) {
         if (err instanceof Error) {
@@ -93,7 +113,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
     if (tradeId) {
       fetchTradeDetail();
     }
-  }, [tradeId]);
+  }, [tradeId, currentUserId]);
 
 
   const formatDate = (dateString: string | undefined) => {
@@ -357,12 +377,23 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
 
             <div className="flex gap-3 pt-6 border-t">
               {trade.type === 'EXCHANGE' && trade.status === 'ACTIVE' && currentUserId !== trade.memberId && (
-                <Link
-                  href={`/trade/${tradeId}/request/step1`}
-                  className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors inline-block text-center"
-                >
-                  교환 신청하기
-                </Link>
+                <>
+                  {myTradeRequest ? (
+                    <Link
+                      href={`/my-page/trade-requests/${myTradeRequest.tradeRequestId}`}
+                      className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors inline-block text-center"
+                    >
+                      거래 상세 보기
+                    </Link>
+                  ) : (
+                    <Link
+                      href={`/trade/${tradeId}/request/step1`}
+                      className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors inline-block text-center"
+                    >
+                      교환 신청하기
+                    </Link>
+                  )}
+                </>
               )}
               {trade.type === 'TRANSFER' && trade.status === 'ACTIVE' && currentUserId !== trade.memberId && (
                 <button className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors">

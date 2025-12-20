@@ -816,41 +816,42 @@ export default function MyPage() {
                 ) : (
                   receivedRequests.map((request) => (
                     <div key={request.tradeRequestId} className="bg-white rounded-lg shadow-sm p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h3 className="text-lg font-bold text-gray-900 mb-2">
-                            교환 신청 #{request.tradeRequestId}
-                          </h3>
-                          <div className="space-y-1 text-sm text-gray-600">
-                            <p>거래 ID: {request.tradeId}</p>
-                            <p>신청자 ID: {request.requesterId}</p>
-                            <p>신청자 티켓 ID: {request.requesterTicketId}</p>
-                            <p>신청일: {formatTradeDate(request.createdAt)}</p>
+                      <Link
+                        href={`/my-page/trade-requests/${request.tradeRequestId}`}
+                        className="block"
+                      >
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h3 className="text-lg font-bold text-gray-900 mb-2 hover:text-red-600 transition-colors">
+                              교환 신청 #{request.tradeRequestId}
+                            </h3>
+                            <div className="space-y-1 text-sm text-gray-600">
+                              <p>거래 ID: {request.tradeId}</p>
+                              <p>신청자 ID: {request.requesterId}</p>
+                              <p>신청자 티켓 ID: {request.requesterTicketId}</p>
+                              <p>신청일: {formatTradeDate(request.createdAt)}</p>
+                            </div>
                           </div>
+                          {getStatusBadge(request.status)}
                         </div>
-                        {getStatusBadge(request.status)}
-                      </div>
+                      </Link>
 
                       {request.status === "PENDING" && (
-                        <div className="flex gap-3 pt-4 border-t">
-                          <button
-                            onClick={() => handleAccept(request.tradeRequestId)}
-                            className="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
-                          >
-                            수락
-                          </button>
-                          <button
-                            onClick={() => handleReject(request.tradeRequestId)}
-                            className="px-6 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
-                          >
-                            거절
-                          </button>
-                          <Link
-                            href={`/trade/${request.tradeId}`}
-                            className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
-                          >
-                            거래 보기
-                          </Link>
+                        <div className="pt-4 border-t">
+                          <div className="flex gap-3">
+                            <button
+                              onClick={() => handleAccept(request.tradeRequestId)}
+                              className="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
+                            >
+                              수락
+                            </button>
+                            <button
+                              onClick={() => handleReject(request.tradeRequestId)}
+                              className="px-6 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+                            >
+                              거절
+                            </button>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -873,29 +874,34 @@ export default function MyPage() {
                 ) : (
                   sentRequests.map((request) => (
                     <div key={request.tradeRequestId} className="bg-white rounded-lg shadow-sm p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h3 className="text-lg font-bold text-gray-900 mb-2">
-                            교환 신청 #{request.tradeRequestId}
-                          </h3>
-                          <div className="space-y-1 text-sm text-gray-600">
-                            <p>거래 ID: {request.tradeId}</p>
-                            <p>내 티켓 ID: {request.requesterTicketId}</p>
-                            <p>신청일: {formatTradeDate(request.createdAt)}</p>
-                            {request.modifiedAt !== request.createdAt && (
-                              <p>수정일: {formatTradeDate(request.modifiedAt)}</p>
-                            )}
+                      <Link
+                        href={`/my-page/trade-requests/${request.tradeRequestId}`}
+                        className="block"
+                      >
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h3 className="text-lg font-bold text-gray-900 mb-2 hover:text-red-600 transition-colors">
+                              교환 신청 #{request.tradeRequestId}
+                            </h3>
+                            <div className="space-y-1 text-sm text-gray-600">
+                              <p>거래 ID: {request.tradeId}</p>
+                              <p>내 티켓 ID: {request.requesterTicketId}</p>
+                              <p>신청일: {formatTradeDate(request.createdAt)}</p>
+                              {request.modifiedAt !== request.createdAt && (
+                                <p>수정일: {formatTradeDate(request.modifiedAt)}</p>
+                              )}
+                            </div>
                           </div>
+                          {getStatusBadge(request.status)}
                         </div>
-                        {getStatusBadge(request.status)}
-                      </div>
+                      </Link>
 
                       <div className="pt-4 border-t">
                         <Link
-                          href={`/trade/${request.tradeId}`}
+                          href={`/my-page/trade-requests/${request.tradeRequestId}`}
                           className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors inline-block"
                         >
-                          거래 보기
+                          거래 상세 보기
                         </Link>
                       </div>
                     </div>

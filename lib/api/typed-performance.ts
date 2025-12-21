@@ -107,11 +107,12 @@ export const typedPerformanceApi = {
    */
   async holdSeat(scheduleId: number, seatId: number) {
     const url = `/api/schedules/${scheduleId}/seats/${seatId}/hold`;
-    return typedApiClient.post<
-      '/api/schedules/{scheduleId}/seats/{seatId}/hold',
-      'post',
-      200
-    >(url as '/api/schedules/{scheduleId}/seats/{seatId}/hold', undefined);
+    // 타입 정의에 해당 경로가 없으므로 post 메서드를 any로 캐스팅하여 사용
+    return (typedApiClient.post as any)(
+      url as any,
+      undefined,
+      undefined
+    );
   },
 };
 

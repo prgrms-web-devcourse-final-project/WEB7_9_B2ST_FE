@@ -10,31 +10,11 @@ import { tradeApi, type Ticket, type TradeRequest, type Trade } from "@/lib/api/
 import { mypageApi } from "@/lib/api/mypage";
 
 export default function MyPage() {
-  // 세션 스토리지에서 탭 상태 복원
-  const getInitialTab = (): "reservations" | "profile" | "trades" | "lottery" | "tickets" => {
-    if (typeof window !== "undefined") {
-      const saved = sessionStorage.getItem("mypage-active-tab");
-      if (saved && ["reservations", "profile", "trades", "lottery", "tickets"].includes(saved)) {
-        return saved as "reservations" | "profile" | "trades" | "lottery" | "tickets";
-      }
-    }
-    return "reservations";
-  };
-
-  const getInitialTradesSubTab = (): "my-trades" | "received-requests" | "sent-requests" => {
-    if (typeof window !== "undefined") {
-      const saved = sessionStorage.getItem("mypage-trades-sub-tab");
-      if (saved && ["my-trades", "received-requests", "sent-requests"].includes(saved)) {
-        return saved as "my-trades" | "received-requests" | "sent-requests";
-      }
-    }
-    return "my-trades";
-  };
-
+  // 초기 상태는 항상 동일하게 설정 (서버와 클라이언트 일치)
   const [activeTab, setActiveTab] = useState<
     "reservations" | "profile" | "trades" | "lottery" | "tickets"
-  >(getInitialTab());
-  const [periodFilter, setPeriodFilter] = useState("1month");
+  >("reservations");
+  const [periodFilter, setPeriodFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState<"bookingDate" | "viewingDate">("bookingDate");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
@@ -54,26 +34,44 @@ export default function MyPage() {
   // 교환/양도 관련 상태
   const [tradesSubTab, setTradesSubTab] = useState<
     "my-trades" | "received-requests" | "sent-requests"
-  >(getInitialTradesSubTab());
+  >("my-trades");
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [myTrades, setMyTrades] = useState<Trade[]>([]);
   const [receivedRequests, setReceivedRequests] = useState<TradeRequest[]>([]);
   const [sentRequests, setSentRequests] = useState<TradeRequest[]>([]);
   const [isLoadingTrades, setIsLoadingTrades] = useState(false);
   const [tradesError, setTradesError] = useState("");
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // 클라이언트에서만 세션 스토리지에서 탭 상태 복원
+  useEffect(() => {
+    if (typeof window !== "undefined" && !isHydrated) {
+      const savedTab = sessionStorage.getItem("mypage-active-tab");
+      if (savedTab && ["reservations", "profile", "trades", "lottery", "tickets"].includes(savedTab)) {
+        setActiveTab(savedTab as "reservations" | "profile" | "trades" | "lottery" | "tickets");
+      }
+
+      const savedTradesSubTab = sessionStorage.getItem("mypage-trades-sub-tab");
+      if (savedTradesSubTab && ["my-trades", "received-requests", "sent-requests"].includes(savedTradesSubTab)) {
+        setTradesSubTab(savedTradesSubTab as "my-trades" | "received-requests" | "sent-requests");
+      }
+
+      setIsHydrated(true);
+    }
+  }, [isHydrated]);
 
   // 탭 상태를 세션 스토리지에 저장
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && isHydrated) {
       sessionStorage.setItem("mypage-active-tab", activeTab);
     }
-  }, [activeTab]);
+  }, [activeTab, isHydrated]);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && isHydrated) {
       sessionStorage.setItem("mypage-trades-sub-tab", tradesSubTab);
     }
-  }, [tradesSubTab]);
+  }, [tradesSubTab, isHydrated]);
 
   // 예매내역 조회
   useEffect(() => {

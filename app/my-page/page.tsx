@@ -417,13 +417,15 @@ export default function MyPage() {
         const status = r.status?.toUpperCase();
         switch (statusFilter) {
           case "reserved":
-            return status === "PENDING" || status === "HOLD";
+            const reservedStatus = status?.toUpperCase();
+            return reservedStatus === "PENDING" || reservedStatus === "HOLD" || reservedStatus === "CREATED";
           case "booked":
             return status === "CONFIRMED" || status === "COMPLETED";
           case "cancelPending":
             return status === "CANCELLING";
           case "cancelled":
-            return status === "CANCELLED";
+            const statusUpper = status?.toUpperCase();
+            return statusUpper === "CANCELLED" || statusUpper === "CANCELED";
           default:
             return true;
         }
@@ -485,14 +487,17 @@ export default function MyPage() {
     const statusUpper = status.toUpperCase();
     switch (statusUpper) {
       case "PENDING":
-      case "HOLD":
         return "예약 대기";
+      case "HOLD":
+      case "CREATED":
+        return "예매 확정 대기";
       case "CONFIRMED":
       case "COMPLETED":
         return "예매완료";
       case "CANCELLING":
         return "취소 대기";
       case "CANCELLED":
+      case "CANCELED":
         return "취소완료";
       default:
         return status;
@@ -512,6 +517,7 @@ export default function MyPage() {
       case "CANCELLING":
         return "bg-orange-100 text-orange-800";
       case "CANCELLED":
+      case "CANCELED":
         return "bg-red-100 text-red-800";
       default:
         return "bg-gray-100 text-gray-800";

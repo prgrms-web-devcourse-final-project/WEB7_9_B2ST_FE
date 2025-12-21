@@ -77,16 +77,20 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
 
   // 상태 라벨 및 색상
   const getStatusLabel = (status?: string) => {
-    switch (status) {
+    if (!status) return '알 수 없음';
+    const statusUpper = status.toUpperCase();
+    switch (statusUpper) {
       case 'PENDING':
         return '예매 대기';
       case 'HOLD':
+      case 'CREATED':
         return '예매 확정 대기';
       case 'CONFIRMED':
         return '예매 확정';
       case 'COMPLETED':
         return '예매 완료';
       case 'CANCELLED':
+      case 'CANCELED':
         return '취소됨';
       default:
         return status || '알 수 없음';
@@ -94,20 +98,46 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
   };
 
   const getStatusColor = (status?: string) => {
-    switch (status) {
+    if (!status) return 'bg-gray-100 text-gray-800';
+    const statusUpper = status.toUpperCase();
+    switch (statusUpper) {
       case 'PENDING':
         return 'bg-yellow-100 text-yellow-800';
       case 'HOLD':
+      case 'CREATED':
         return 'bg-blue-100 text-blue-800';
       case 'CONFIRMED':
         return 'bg-green-100 text-green-800';
       case 'COMPLETED':
         return 'bg-green-100 text-green-800';
       case 'CANCELLED':
+      case 'CANCELED':
         return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  // 취소 가능한 상태인지 확인
+  const canCancel = (status?: string) => {
+    if (!status) return false;
+    const statusUpper = status.toUpperCase();
+    // PENDING, HOLD, CREATED, CONFIRMED, COMPLETED 상태 취소 가능 (CANCELLED 제외)
+    return (
+      statusUpper === 'PENDING' ||
+      statusUpper === 'HOLD' ||
+      statusUpper === 'CREATED' ||
+      statusUpper === 'CONFIRMED' ||
+      statusUpper === 'COMPLETED'
+    );
+  };
+
+  // 예매 확정 대기 상태인지 확인
+  const isPendingConfirmation = (status?: string) => {
+    if (!status) return false;
+    const statusUpper = status.toUpperCase();
+    // HOLD, CREATED 상태는 예매 확정 대기
+    return statusUpper === 'HOLD' || statusUpper === 'CREATED';
   };
 
   // 예매 취소
@@ -122,10 +152,14 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
     try {
       await reservationApi.cancelReservation(reservationId);
       alert('예매가 취소되었습니다.');
-      router.push('/my-page');
+      // 예매 정보 다시 조회하여 상태 업데이트
+      const response = await reservationApi.getReservationDetail(reservationId);
+      if (response.data) {
+        setReservation(response.data);
+      }
     } catch (err) {
       if (err instanceof Error) {
-        alert(err.message);
+        alert(err.message || '예매 취소에 실패했습니다.');
       } else {
         alert('예매 취소에 실패했습니다.');
       }
@@ -294,17 +328,27 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
               </section>
             )}
 
-            {/* 취소 버튼 */}
-            {(reservation.status === 'PENDING' || reservation.status === 'HOLD') && (
+            {/* 예매 확정 및 취소 버튼 */}
+            {(isPendingConfirmation(reservation.status) || canCancel(reservation.status)) && (
               <section>
-                <div className="flex justify-end pt-4 border-t">
-                  <button
-                    onClick={handleCancel}
-                    disabled={isCancelling}
-                    className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {isCancelling ? '취소 중...' : '예매 취소'}
-                  </button>
+                <div className="flex justify-end gap-3 pt-4 border-t">
+                  {isPendingConfirmation(reservation.status) && (
+                    <Link
+                      href={`/performance/${reservation.performance?.performanceId}/booking/payment?scheduleId=${reservation.performance?.performanceScheduleId}&reservationIds=${reservationId}`}
+                      className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+                    >
+                      예매 확정
+                    </Link>
+                  )}
+                  {canCancel(reservation.status) && (
+                    <button
+                      onClick={handleCancel}
+                      disabled={isCancelling}
+                      className="px-6 py-3 bg-gray-600 text-white rounded-lg font-medium hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {isCancelling ? '취소 중...' : '예매 취소'}
+                    </button>
+                  )}
                 </div>
               </section>
             )}

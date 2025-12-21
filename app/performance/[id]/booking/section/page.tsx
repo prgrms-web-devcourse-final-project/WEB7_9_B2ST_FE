@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useState, useEffect, use } from "react";
 import Header from "@/components/Header";
 import {
@@ -9,6 +9,7 @@ import {
   type ScheduleSeatViewRes,
   type PerformanceDetailRes,
 } from "@/lib/api/performance";
+import { reservationApi } from "@/lib/api/reservation";
 
 export default function BookingSection({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -19,7 +20,9 @@ export default function BookingSection({ params }: { params: Promise<{ id: strin
   const [selectedSeats, setSelectedSeats] = useState<ScheduleSeatViewRes[]>([]);
   const [performance, setPerformance] = useState<PerformanceDetailRes | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isHolding, setIsHolding] = useState(false);
   const [error, setError] = useState("");
+  const router = useRouter();
 
   // 공연 상세 정보 및 좌석 데이터 로드
   useEffect(() => {
@@ -168,6 +171,55 @@ export default function BookingSection({ params }: { params: Promise<{ id: strin
   };
 
   const totalPrice = selectedSeats.reduce((sum, seat) => sum + getSeatPrice(seat), 0);
+
+  // 예매 홀딩 및 생성 처리
+  const handleBooking = async () => {
+    if (!scheduleId || selectedSeats.length === 0) {
+      alert("좌석을 선택해주세요.");
+      return;
+    }
+
+    setIsHolding(true);
+    setError("");
+
+    try {
+      const reservationIds: number[] = [];
+
+      // 1단계: 모든 좌석에 대해 홀딩
+      for (const seat of selectedSeats) {
+        if (!seat.seatId) {
+          throw new Error("좌석 정보가 올바르지 않습니다.");
+        }
+        // 좌석 홀딩
+        await performanceApi.holdSeat(Number(scheduleId), seat.seatId);
+      }
+
+      // 2단계: 홀딩 성공 후 예매 생성
+      for (const seat of selectedSeats) {
+        if (!seat.seatId) {
+          continue;
+        }
+        const response = await reservationApi.createReservation(Number(scheduleId), seat.seatId);
+        if (response.data?.reservationId) {
+          reservationIds.push(response.data.reservationId);
+        }
+      }
+
+      // 홀딩 및 예매 생성 성공 시 결제 페이지로 이동
+      router.push(
+        `/performance/${id}/booking/payment?scheduleId=${scheduleId}&reservationIds=${reservationIds.join(
+          ",",
+        )}`,
+      );
+    } catch (err) {
+      setIsHolding(false);
+      if (err instanceof Error) {
+        alert(err.message || "좌석 홀딩에 실패했습니다.");
+      } else {
+        alert("좌석 홀딩에 실패했습니다.");
+      }
+    }
+  };
 
   if (isLoading) {
     return (
@@ -335,14 +387,13 @@ export default function BookingSection({ params }: { params: Promise<{ id: strin
                       </span>
                     </div>
 
-                    <Link
-                      href={`/performance/${id}/booking/payment?scheduleId=${scheduleId}&seats=${selectedSeats
-                        .map((s) => s.scheduleSeatId)
-                        .join(",")}`}
-                      className="block w-full px-6 py-4 bg-red-600 text-white rounded-lg font-semibold text-center hover:bg-red-700 transition-colors"
+                    <button
+                      onClick={handleBooking}
+                      disabled={isHolding}
+                      className="w-full px-6 py-4 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
-                      결제하기
-                    </Link>
+                      {isHolding ? "좌석 홀딩 중..." : "결제하기"}
+                    </button>
                   </div>
                 </div>
               ) : (

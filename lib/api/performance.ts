@@ -112,4 +112,18 @@ export const performanceApi = {
       data: Array.isArray(data) ? data as ScheduleSeatViewRes[] : [],
     };
   },
+
+  /**
+   * 좌석 홀딩 (예매 선점)
+   * @param scheduleId 회차 ID
+   * @param seatId 좌석 ID
+   */
+  async holdSeat(scheduleId: number, seatId: number) {
+    await typedPerformanceApi.holdSeat(scheduleId, seatId);
+    return {
+      code: 200,
+      message: '성공적으로 처리되었습니다',
+      data: null,
+    };
+  },
 };

@@ -48,5 +48,32 @@ export const reservationApi = {
       data: null,
     };
   },
+
+  /**
+   * 예매 홀딩 (좌석 선점)
+   */
+  async createReservation(scheduleId: number, seatId: number): Promise<ApiResponse<any>> {
+    const data = await typedReservationApi.createReservation({
+      scheduleId,
+      seatId,
+    });
+    return {
+      code: 201,
+      message: '성공적으로 생성되었습니다',
+      data: data as any,
+    };
+  },
+
+  /**
+   * 예매 확정 (결제 완료)
+   */
+  async completeReservation(reservationId: number): Promise<ApiResponse<null>> {
+    await typedReservationApi.completeReservation(reservationId);
+    return {
+      code: 200,
+      message: '성공적으로 처리되었습니다',
+      data: null,
+    };
+  },
 };
 

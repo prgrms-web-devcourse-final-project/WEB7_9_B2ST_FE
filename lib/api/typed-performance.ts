@@ -99,5 +99,19 @@ export const typedPerformanceApi = {
       200
     >(url as '/api/schedules/{scheduleId}/seats');
   },
+
+  /**
+   * 좌석 홀딩 (예매 선점)
+   * @param scheduleId 회차 ID
+   * @param seatId 좌석 ID
+   */
+  async holdSeat(scheduleId: number, seatId: number) {
+    const url = `/api/schedules/${scheduleId}/seats/${seatId}/hold`;
+    return typedApiClient.post<
+      '/api/schedules/{scheduleId}/seats/{seatId}/hold',
+      'post',
+      200
+    >(url as '/api/schedules/{scheduleId}/seats/{seatId}/hold', undefined);
+  },
 };
 

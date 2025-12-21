@@ -6,6 +6,7 @@ export type PerformanceListRes = components['schemas']['PerformanceListRes'];
 export type PagePerformanceListRes = components['schemas']['PagePerformanceListRes'];
 export type PerformanceDetailRes = components['schemas']['PerformanceDetailRes'];
 export type PerformanceScheduleListRes = components['schemas']['PerformanceScheduleListRes'];
+export type ScheduleSeatViewRes = components['schemas']['ScheduleSeatViewRes'];
 export type Pageable = components['schemas']['Pageable'];
 
 export interface PerformanceListParams {
@@ -89,6 +90,21 @@ export const performanceApi = {
       code: 200,
       message: '성공적으로 처리되었습니다',
       data: [data] as PerformanceScheduleListRes[],
+    };
+  },
+
+  /**
+   * 회차별 좌석 조회
+   * @param scheduleId 회차 ID
+   * @param status 좌석 상태 (선택, AVAILABLE, HOLD, SOLD)
+   */
+  async getScheduleSeats(scheduleId: number, status?: 'AVAILABLE' | 'HOLD' | 'SOLD') {
+    const data = await typedPerformanceApi.getScheduleSeats(scheduleId, status);
+    
+    return {
+      code: 200,
+      message: '성공적으로 처리되었습니다',
+      data: Array.isArray(data) ? data as ScheduleSeatViewRes[] : [],
     };
   },
 };

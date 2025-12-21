@@ -84,5 +84,20 @@ export const typedPerformanceApi = {
       path: { performanceId },
     });
   },
+
+  /**
+   * 회차별 좌석 조회
+   * @param scheduleId 회차 ID
+   * @param status 좌석 상태 (선택, AVAILABLE, HOLD, SOLD)
+   */
+  async getScheduleSeats(scheduleId: number, status?: 'AVAILABLE' | 'HOLD' | 'SOLD') {
+    // 타입 정의에 query 파라미터가 없지만 실제 API는 status 파라미터를 받음
+    const url = `/api/schedules/${scheduleId}/seats${status ? `?status=${status}` : ''}`;
+    return typedApiClient.get<
+      '/api/schedules/{scheduleId}/seats',
+      'get',
+      200
+    >(url as '/api/schedules/{scheduleId}/seats');
+  },
 };
 

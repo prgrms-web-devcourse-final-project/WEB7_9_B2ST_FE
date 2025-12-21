@@ -34,7 +34,7 @@ export interface LotteryEntry {
 }
 
 export interface CreateLotteryEntryResponse {
-  id: number;
+  id: string; // UUID (String)
   memberId: number;
   performanceId: number;
   scheduleId: number;
@@ -79,11 +79,22 @@ export const lotteryApi = {
       grade: request.grade,
       quantity: request.quantity,
     };
-    const data = await typedLotteryApi.createLotteryEntry(performanceId, apiRequest);
+    const response = await typedLotteryApi.createLotteryEntry(performanceId, apiRequest);
+    // API 응답의 id는 UUID (String) 타입
+    // typedApiClient가 반환하는 data는 LotteryEntryInfo 타입이지만, 실제로는 id가 UUID 문자열
+    const responseData = response as any;
     return {
       code: 201,
       message: '성공적으로 생성되었습니다',
-      data: data as CreateLotteryEntryResponse,
+      data: {
+        id: String(responseData?.id || ''), // UUID는 String 타입
+        memberId: responseData?.memberId || 0,
+        performanceId: responseData?.performanceId || 0,
+        scheduleId: responseData?.scheduleId || 0,
+        grade: responseData?.grade || '',
+        quantity: responseData?.quantity || 0,
+        status: responseData?.status || '',
+      } as CreateLotteryEntryResponse,
     };
   },
 

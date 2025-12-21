@@ -4,7 +4,12 @@ import type { components } from '@/types/api';
 // 타입 재export (하위 호환성)
 export type PerformanceListRes = components['schemas']['PerformanceListRes'];
 export type PagePerformanceListRes = components['schemas']['PagePerformanceListRes'];
-export type PerformanceDetailRes = components['schemas']['PerformanceDetailRes'];
+export type PerformanceDetailRes = components['schemas']['PerformanceDetailRes'] & {
+  greadPrices?: Array<{
+    gradeType: string;
+    price: number;
+  }>;
+};
 export type PerformanceScheduleListRes = components['schemas']['PerformanceScheduleListRes'];
 export type ScheduleSeatViewRes = components['schemas']['ScheduleSeatViewRes'];
 export type Pageable = components['schemas']['Pageable'];

@@ -283,6 +283,23 @@ export default function PerformanceDetail({ params }: { params: Promise<{ id: st
                   <span className="font-semibold w-24 text-gray-600">카테고리</span>
                   <span className="flex-1">{performance.category || '-'}</span>
                 </div>
+                {performance.greadPrices && performance.greadPrices.length > 0 && (
+                  <div className="flex items-start">
+                    <span className="font-semibold w-24 text-gray-600">가격</span>
+                    <div className="flex-1">
+                      <div className="flex flex-wrap gap-3">
+                        {performance.greadPrices.map((priceInfo, index) => (
+                          <span
+                            key={index}
+                            className="px-3 py-1 bg-red-50 text-red-700 rounded-lg font-medium"
+                          >
+                            {priceInfo.gradeType}: {priceInfo.price.toLocaleString()}원
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Tabs */}

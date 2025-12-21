@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect, use } from "react";
 import Header from "@/components/Header";
-import { performanceApi, type ScheduleSeatViewRes } from "@/lib/api/performance";
+import {
+  performanceApi,
+  type ScheduleSeatViewRes,
+  type PerformanceDetailRes,
+} from "@/lib/api/performance";
 
 export default function BookingSection({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -13,10 +17,11 @@ export default function BookingSection({ params }: { params: Promise<{ id: strin
 
   const [seats, setSeats] = useState<ScheduleSeatViewRes[]>([]);
   const [selectedSeats, setSelectedSeats] = useState<ScheduleSeatViewRes[]>([]);
+  const [performance, setPerformance] = useState<PerformanceDetailRes | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // 좌석 데이터 로드
+  // 공연 상세 정보 및 좌석 데이터 로드
   useEffect(() => {
     if (!scheduleId) {
       setError("회차 정보가 없습니다.");
@@ -24,29 +29,35 @@ export default function BookingSection({ params }: { params: Promise<{ id: strin
       return;
     }
 
-    const fetchSeats = async () => {
+    const fetchData = async () => {
       setIsLoading(true);
       setError("");
 
       try {
-        const response = await performanceApi.getScheduleSeats(Number(scheduleId));
-        console.log(response);
-        if (response.data) {
-          setSeats(response.data);
+        // 공연 상세 정보 조회 (가격 정보 포함)
+        const performanceResponse = await performanceApi.getPerformance(Number(id));
+        if (performanceResponse.data) {
+          setPerformance(performanceResponse.data);
+        }
+
+        // 좌석 데이터 조회
+        const seatsResponse = await performanceApi.getScheduleSeats(Number(scheduleId));
+        if (seatsResponse.data) {
+          setSeats(seatsResponse.data);
         }
       } catch (err) {
         if (err instanceof Error) {
           setError(err.message);
         } else {
-          setError("좌석 정보를 불러오는데 실패했습니다.");
+          setError("정보를 불러오는데 실패했습니다.");
         }
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchSeats();
-  }, [scheduleId]);
+    fetchData();
+  }, [scheduleId, id]);
 
   // 좌석을 구역별, 행별로 그룹화
   const groupedSeats = seats.reduce((acc, seat) => {
@@ -122,13 +133,38 @@ export default function BookingSection({ params }: { params: Promise<{ id: strin
     return seat.status !== "AVAILABLE";
   };
 
-  // 선택된 좌석의 총 가격 계산 (임시로 구역별 가격 설정)
+  // 선택된 좌석의 총 가격 계산 (공연 상세 정보의 가격 정보 사용)
   const getSeatPrice = (seat: ScheduleSeatViewRes) => {
+    if (!performance?.greadPrices || performance.greadPrices.length === 0) {
+      // 가격 정보가 없으면 기본값 사용
+      const sectionName = seat.sectionName?.toUpperCase() || "";
+      if (sectionName.includes("VIP")) return 250000;
+      if (sectionName.includes("R")) return 200000;
+      if (sectionName.includes("S")) return 180000;
+      return 150000;
+    }
+
+    // 구역명과 gradeType 매칭
     const sectionName = seat.sectionName?.toUpperCase() || "";
-    if (sectionName.includes("VIP")) return 250000;
-    if (sectionName.includes("R")) return 200000;
-    if (sectionName.includes("S")) return 180000;
-    return 150000;
+    const gradeType = sectionName.includes("VIP")
+      ? "VIP"
+      : sectionName.includes("R")
+      ? "R"
+      : sectionName.includes("S")
+      ? "S"
+      : "STANDARD";
+
+    // 가격 정보에서 매칭되는 항목 찾기
+    const priceInfo = performance.greadPrices.find(
+      (p) => p.gradeType.toUpperCase() === gradeType.toUpperCase(),
+    );
+
+    if (priceInfo) {
+      return priceInfo.price;
+    }
+
+    // 매칭되지 않으면 첫 번째 가격 정보 사용
+    return performance.greadPrices[0]?.price || 150000;
   };
 
   const totalPrice = selectedSeats.reduce((sum, seat) => sum + getSeatPrice(seat), 0);

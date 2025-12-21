@@ -1,91 +1,323 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useState, use } from 'react';
-import Header from '@/components/Header';
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useState, useEffect, use } from "react";
+import Header from "@/components/Header";
+import { performanceApi, type ScheduleSeatViewRes } from "@/lib/api/performance";
 
 export default function BookingSection({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const [selectedSection, setSelectedSection] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const scheduleId = searchParams.get("scheduleId");
 
-  const sections = [
-    { id: 'vip', name: 'VIP석', price: '250,000원' },
-    { id: 'r', name: 'R석', price: '200,000원' },
-    { id: 's', name: 'S석', price: '180,000원' },
-    { id: 'a', name: 'A석', price: '150,000원' },
-  ];
+  const [seats, setSeats] = useState<ScheduleSeatViewRes[]>([]);
+  const [selectedSeats, setSelectedSeats] = useState<ScheduleSeatViewRes[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // 좌석 데이터 로드
+  useEffect(() => {
+    if (!scheduleId) {
+      setError("회차 정보가 없습니다.");
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchSeats = async () => {
+      setIsLoading(true);
+      setError("");
+
+      try {
+        const response = await performanceApi.getScheduleSeats(Number(scheduleId));
+        console.log(response);
+        if (response.data) {
+          setSeats(response.data);
+        }
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("좌석 정보를 불러오는데 실패했습니다.");
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSeats();
+  }, [scheduleId]);
+
+  // 좌석을 구역별, 행별로 그룹화
+  const groupedSeats = seats.reduce((acc, seat) => {
+    const sectionName = seat.sectionName || "기타";
+    const rowLabel = seat.rowLabel || "";
+
+    if (!acc[sectionName]) {
+      acc[sectionName] = {};
+    }
+    if (!acc[sectionName][rowLabel]) {
+      acc[sectionName][rowLabel] = [];
+    }
+
+    acc[sectionName][rowLabel].push(seat);
+    return acc;
+  }, {} as Record<string, Record<string, ScheduleSeatViewRes[]>>);
+
+  // 각 행의 좌석을 좌석 번호 순으로 정렬
+  Object.keys(groupedSeats).forEach((sectionName) => {
+    Object.keys(groupedSeats[sectionName]).forEach((rowLabel) => {
+      groupedSeats[sectionName][rowLabel].sort((a, b) => (a.seatNumber || 0) - (b.seatNumber || 0));
+    });
+  });
+
+  // 구역별 색상 매핑
+  const getSectionColor = (sectionName: string) => {
+    const name = sectionName.toUpperCase();
+    if (name.includes("VIP")) return "bg-blue-100 border-blue-300";
+    if (name.includes("R")) return "bg-green-100 border-green-300";
+    if (name.includes("S")) return "bg-yellow-100 border-yellow-300";
+    if (name.includes("A")) return "bg-purple-100 border-purple-300";
+    return "bg-gray-100 border-gray-300";
+  };
+
+  const toggleSeat = (seat: ScheduleSeatViewRes) => {
+    // AVAILABLE 상태인 좌석만 선택 가능
+    if (seat.status !== "AVAILABLE") return;
+
+    setSelectedSeats((prev) => {
+      const isSelected = prev.some((s) => s.scheduleSeatId === seat.scheduleSeatId);
+      if (isSelected) {
+        return prev.filter((s) => s.scheduleSeatId !== seat.scheduleSeatId);
+      } else {
+        return [...prev, seat];
+      }
+    });
+  };
+
+  const getSeatColor = (seat: ScheduleSeatViewRes) => {
+    // 예매 불가한 좌석은 회색으로 표기
+    if (seat.status === "SOLD" || seat.status === "HOLD") {
+      return "bg-gray-400 cursor-not-allowed border-gray-400";
+    }
+
+    const isSelected = selectedSeats.some((s) => s.scheduleSeatId === seat.scheduleSeatId);
+
+    if (isSelected) {
+      // 선택된 좌석은 빨간색
+      return "bg-red-600 text-white border-red-600";
+    }
+
+    // 구역별 기본 색상
+    const sectionName = seat.sectionName || "";
+    const name = sectionName.toUpperCase();
+    if (name.includes("VIP")) return "bg-blue-200 border-blue-400 hover:bg-blue-300";
+    if (name.includes("R")) return "bg-green-200 border-green-400 hover:bg-green-300";
+    if (name.includes("S")) return "bg-yellow-200 border-yellow-400 hover:bg-yellow-300";
+    if (name.includes("A")) return "bg-purple-200 border-purple-400 hover:bg-purple-300";
+    return "bg-gray-200 border-gray-400 hover:bg-gray-300";
+  };
+
+  const isSeatDisabled = (seat: ScheduleSeatViewRes) => {
+    return seat.status !== "AVAILABLE";
+  };
+
+  // 선택된 좌석의 총 가격 계산 (임시로 구역별 가격 설정)
+  const getSeatPrice = (seat: ScheduleSeatViewRes) => {
+    const sectionName = seat.sectionName?.toUpperCase() || "";
+    if (sectionName.includes("VIP")) return 250000;
+    if (sectionName.includes("R")) return 200000;
+    if (sectionName.includes("S")) return 180000;
+    return 150000;
+  };
+
+  const totalPrice = selectedSeats.reduce((sum, seat) => sum + getSeatPrice(seat), 0);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-12 text-gray-400">좌석 정보를 불러오는 중...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            {error}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (seats.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+            <p className="text-gray-400">좌석 정보가 없습니다.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 구역 목록 추출
+  const sections = Array.from(new Set(seats.map((seat) => seat.sectionName).filter(Boolean)));
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
       <div className="py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">구역 선택</h1>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-8">좌석 선택</h1>
 
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Left: Stage Layout */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">무대 배치도</h2>
-            <div className="relative bg-gray-100 rounded-lg p-8 min-h-[500px]">
-              {/* Stage */}
-              <div className="absolute top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-8 py-4 rounded-lg text-center font-bold">
-                STAGE
-              </div>
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Left: Seat Map */}
+            <div className="lg:col-span-2 bg-white rounded-lg shadow-sm p-6">
+              <div className="mb-6">
+                <div className="text-center bg-gray-800 text-white py-4 rounded-lg font-bold mb-4">
+                  STAGE
+                </div>
 
-              {/* Sections */}
-              <div className="grid grid-cols-2 gap-4 mt-32">
-                {sections.map((section) => (
-                  <button
-                    key={section.id}
-                    onClick={() => setSelectedSection(section.id)}
-                    className={`p-6 rounded-lg border-2 transition-all ${
-                      selectedSection === section.id
-                        ? 'border-purple-600 bg-purple-50'
-                        : 'border-gray-300 bg-white hover:border-purple-300'
-                    }`}
-                  >
-                    <div className="text-center">
-                      <h3 className="font-bold text-lg text-gray-900 mb-2">{section.name}</h3>
-                      <p className="text-purple-600 font-semibold">{section.price}</p>
+                {/* Seat Legend */}
+                <div className="flex justify-center gap-4 mb-6 text-sm flex-wrap">
+                  {sections.map((sectionName) => {
+                    const name = sectionName?.toUpperCase() || "";
+                    let color = "bg-gray-200 border-gray-400";
+                    let label = sectionName || "기타";
+
+                    if (name.includes("VIP")) {
+                      color = "bg-blue-200 border-blue-400";
+                      label = "VIP석";
+                    } else if (name.includes("R")) {
+                      color = "bg-green-200 border-green-400";
+                      label = "R석";
+                    } else if (name.includes("S")) {
+                      color = "bg-yellow-200 border-yellow-400";
+                      label = "S석";
+                    } else if (name.includes("A")) {
+                      color = "bg-purple-200 border-purple-400";
+                      label = "A석";
+                    }
+
+                    return (
+                      <div key={sectionName} className="flex items-center gap-2">
+                        <div className={`w-6 h-6 rounded border-2 ${color}`}></div>
+                        <span>{label}</span>
+                      </div>
+                    );
+                  })}
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-red-600 rounded"></div>
+                    <span>선택됨</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-gray-400 rounded"></div>
+                    <span>예매 불가</span>
+                  </div>
+                </div>
+
+                {/* Seat Grid by Section */}
+                {Object.keys(groupedSeats).map((sectionName) => (
+                  <div key={sectionName} className="mb-8">
+                    <div className={`p-3 rounded-lg mb-4 ${getSectionColor(sectionName)}`}>
+                      <h3 className="text-lg font-bold text-gray-900">{sectionName}구역</h3>
                     </div>
-                  </button>
+                    <div className="space-y-2">
+                      {Object.keys(groupedSeats[sectionName])
+                        .sort()
+                        .map((rowLabel) => (
+                          <div key={rowLabel} className="flex items-center gap-2">
+                            <span className="w-12 text-center font-medium text-gray-700">
+                              {rowLabel}열
+                            </span>
+                            <div className="flex gap-1 flex-1 flex-wrap">
+                              {groupedSeats[sectionName][rowLabel].map((seat) => (
+                                <button
+                                  key={seat.scheduleSeatId}
+                                  onClick={() => toggleSeat(seat)}
+                                  className={`w-8 h-8 rounded border-2 text-xs font-medium transition-colors ${getSeatColor(
+                                    seat,
+                                  )}`}
+                                  disabled={isSeatDisabled(seat)}
+                                  title={`${sectionName}구역 ${rowLabel}열 ${seat.seatNumber}번 - ${
+                                    seat.status === "AVAILABLE"
+                                      ? "선택 가능"
+                                      : seat.status === "HOLD"
+                                      ? "예약 중"
+                                      : "판매 완료"
+                                  }`}
+                                >
+                                  {seat.seatNumber}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
-          </div>
 
-          {/* Right: Selected Section Info */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">선택된 구역</h2>
-            
-            {selectedSection ? (
-              <div className="space-y-4">
-                <div className="p-4 bg-purple-50 rounded-lg">
-                  <h3 className="font-bold text-lg text-gray-900 mb-2">
-                    {sections.find(s => s.id === selectedSection)?.name}
-                  </h3>
-                  <p className="text-purple-600 font-semibold">
-                    {sections.find(s => s.id === selectedSection)?.price}
-                  </p>
+            {/* Right: Selected Seats Info */}
+            <div className="bg-white rounded-lg shadow-sm p-6 h-fit sticky top-4">
+              <h2 className="text-xl font-bold text-gray-900 mb-6">선택된 좌석</h2>
+
+              {selectedSeats.length > 0 ? (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    {selectedSeats.map((seat) => (
+                      <div
+                        key={seat.scheduleSeatId}
+                        className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
+                      >
+                        <span className="font-medium">
+                          {seat.sectionName}구역 {seat.rowLabel}열 {seat.seatNumber}번
+                        </span>
+                        <span className="text-red-600 font-semibold">
+                          {getSeatPrice(seat).toLocaleString()}원
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="font-bold text-lg">총 결제금액</span>
+                      <span className="text-2xl font-bold text-red-600">
+                        {totalPrice.toLocaleString()}원
+                      </span>
+                    </div>
+
+                    <Link
+                      href={`/performance/${id}/booking/payment?scheduleId=${scheduleId}&seats=${selectedSeats
+                        .map((s) => s.scheduleSeatId)
+                        .join(",")}`}
+                      className="block w-full px-6 py-4 bg-red-600 text-white rounded-lg font-semibold text-center hover:bg-red-700 transition-colors"
+                    >
+                      결제하기
+                    </Link>
+                  </div>
                 </div>
-
-                <Link
-                  href={`/performance/${id}/booking/seats?section=${selectedSection}`}
-                  className="block w-full px-6 py-4 bg-purple-600 text-white rounded-lg font-semibold text-center hover:bg-purple-700 transition-colors"
-                >
-                  좌석 선택하기
-                </Link>
-              </div>
-            ) : (
-              <div className="text-center py-12 text-gray-400">
-                <p>좌측에서 구역을 선택해주세요</p>
-              </div>
-            )}
+              ) : (
+                <div className="text-center py-12 text-gray-400">
+                  <p>좌석을 선택해주세요</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
       </div>
     </div>
   );
 }
-

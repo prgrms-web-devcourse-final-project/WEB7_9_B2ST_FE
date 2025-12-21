@@ -102,9 +102,11 @@ export default function BookingSection({ params }: { params: Promise<{ id: strin
     setSelectedSeats((prev) => {
       const isSelected = prev.some((s) => s.scheduleSeatId === seat.scheduleSeatId);
       if (isSelected) {
-        return prev.filter((s) => s.scheduleSeatId !== seat.scheduleSeatId);
+        // 이미 선택된 좌석이면 선택 해제
+        return [];
       } else {
-        return [...prev, seat];
+        // 새로운 좌석 선택 시 기존 선택 해제하고 1개만 선택
+        return [seat];
       }
     });
   };

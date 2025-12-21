@@ -282,7 +282,7 @@ export default function SignupPage() {
             <Link href="/" className="inline-block">
               <Image
                 src="/doncrytt-logo2.png"
-                alt="B2ST 로고"
+                alt="doncrytt 로고"
                 width={200}
                 height={80}
                 className="h-16 w-auto mx-auto"

@@ -1,11 +1,11 @@
-import { typedLotteryApi } from './typed-lottery';
-import type { components } from '@/types/api';
+import { typedLotteryApi } from "./typed-lottery";
+import type { components } from "@/types/api";
 
 // 타입 재export (하위 호환성)
-type SectionLayoutRes = components['schemas']['SectionLayoutRes'];
-type AppliedLotteryInfo = components['schemas']['AppliedLotteryInfo'];
-type RegisterLotteryEntryReq = components['schemas']['RegisterLotteryEntryReq'];
-type LotteryEntryInfo = components['schemas']['LotteryEntryInfo'];
+type SectionLayoutRes = components["schemas"]["SectionLayoutRes"];
+type AppliedLotteryInfo = components["schemas"]["AppliedLotteryInfo"];
+type RegisterLotteryEntryReq = components["schemas"]["RegisterLotteryEntryReq"];
+type LotteryEntryInfo = components["schemas"]["LotteryEntryInfo"];
 
 export interface LotterySection {
   sectionName: string;
@@ -30,7 +30,7 @@ export interface LotteryEntry {
   roundNo: number;
   gradeType: string;
   quantity: number;
-  status: 'APPLIED' | 'WIN' | 'LOSE' | 'CANCELLED';
+  status: "APPLIED" | "WIN" | "LOSE" | "CANCELLED";
 }
 
 export interface CreateLotteryEntryResponse {
@@ -50,21 +50,21 @@ export const lotteryApi = {
    */
   async getLotterySections(performanceId: number) {
     const data = await typedLotteryApi.getLotterySections(performanceId);
-    
+
     // SectionLayoutRes[]를 LotterySection[]로 변환
-    const sections: LotterySection[] = Array.isArray(data) 
+    const sections: LotterySection[] = Array.isArray(data)
       ? data.map((section) => ({
-          sectionName: section.sectionName || '',
+          sectionName: section.sectionName || "",
           grades: (section.grades || []).map((grade: any) => ({
-            grade: grade.grade || '',
+            grade: grade.grade || "",
             rows: grade.rows || [],
           })),
         }))
       : [];
-    
+
     return {
       code: 200,
-      message: '성공적으로 처리되었습니다',
+      message: "성공적으로 처리되었습니다",
       data: sections,
     };
   },
@@ -85,41 +85,42 @@ export const lotteryApi = {
     const responseData = response as any;
     return {
       code: 201,
-      message: '성공적으로 생성되었습니다',
+      message: "성공적으로 생성되었습니다",
       data: {
-        id: String(responseData?.id || ''), // UUID는 String 타입
+        id: String(responseData?.id || ""), // UUID는 String 타입
         memberId: responseData?.memberId || 0,
         performanceId: responseData?.performanceId || 0,
         scheduleId: responseData?.scheduleId || 0,
-        grade: responseData?.grade || '',
+        grade: responseData?.grade || "",
         quantity: responseData?.quantity || 0,
-        status: responseData?.status || '',
+        status: responseData?.status || "",
       } as CreateLotteryEntryResponse,
     };
   },
 
   /**
    * 내가 응모한 공연 전체 조회
+   * @param page 페이지 번호 (0부터 시작, 기본값 0)
    */
-  async getMyLotteryEntries() {
-    const data = await typedLotteryApi.getMyLotteryEntries();
-    
+  async getMyLotteryEntries(page: number = 0) {
+    const data = await typedLotteryApi.getMyLotteryEntries(page);
+
     // AppliedLotteryInfo[]를 LotteryEntry[]로 변환
     const entries: LotteryEntry[] = Array.isArray(data)
       ? data.map((entry) => ({
           lotteryEntryId: entry.lotteryEntryId || 0,
-          title: entry.title || '',
-          startAt: entry.startAt || '',
+          title: entry.title || "",
+          startAt: entry.startAt || "",
           roundNo: entry.roundNo || 0,
-          gradeType: entry.gradeType || '',
+          gradeType: entry.gradeType || "",
           quantity: entry.quantity || 0,
-          status: (entry.status || 'APPLIED') as LotteryEntry['status'],
+          status: (entry.status || "APPLIED") as LotteryEntry["status"],
         }))
       : [];
-    
+
     return {
       code: 200,
-      message: '성공적으로 처리되었습니다',
+      message: "성공적으로 처리되었습니다",
       data: entries,
     };
   },

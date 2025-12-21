@@ -44,6 +44,9 @@ export default function MyPage() {
   const [lotteryEntries, setLotteryEntries] = useState<LotteryEntry[]>([]);
   const [isLoadingLottery, setIsLoadingLottery] = useState(false);
   const [lotteryError, setLotteryError] = useState("");
+  const [lotteryCurrentPage, setLotteryCurrentPage] = useState(0);
+  const [lotteryHasMore, setLotteryHasMore] = useState(true);
+  const [isLoadingMoreLottery, setIsLoadingMoreLottery] = useState(false);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [isLoadingTickets, setIsLoadingTickets] = useState(false);
   const [ticketsError, setTicketsError] = useState("");
@@ -99,17 +102,24 @@ export default function MyPage() {
     }
   }, [activeTab]);
 
-  // 추첨 응모 내역 조회
+  // 추첨 응모 내역 조회 (초기 로드)
   useEffect(() => {
     if (activeTab === "lottery") {
+      // 탭 전환 시 초기화
+      setLotteryEntries([]);
+      setLotteryCurrentPage(0);
+      setLotteryHasMore(true);
+
       const fetchLotteryEntries = async () => {
         setIsLoadingLottery(true);
         setLotteryError("");
 
         try {
-          const response = await lotteryApi.getMyLotteryEntries();
+          const response = await lotteryApi.getMyLotteryEntries(0);
           if (response.data) {
             setLotteryEntries(response.data);
+            // 10개 미만이면 더 이상 데이터가 없음
+            setLotteryHasMore(response.data.length >= 10);
           }
         } catch (err) {
           if (err instanceof Error) {
@@ -125,6 +135,34 @@ export default function MyPage() {
       fetchLotteryEntries();
     }
   }, [activeTab]);
+
+  // 더보기 버튼 클릭 핸들러
+  const handleLoadMoreLottery = async () => {
+    if (isLoadingMoreLottery || !lotteryHasMore) return;
+
+    const nextPage = lotteryCurrentPage + 1;
+    setIsLoadingMoreLottery(true);
+    setLotteryError("");
+
+    try {
+      const response = await lotteryApi.getMyLotteryEntries(nextPage);
+      if (response.data) {
+        // 기존 데이터에 추가
+        setLotteryEntries((prev) => [...prev, ...response.data]);
+        setLotteryCurrentPage(nextPage);
+        // 10개 미만이면 더 이상 데이터가 없음
+        setLotteryHasMore(response.data.length >= 10);
+      }
+    } catch (err) {
+      if (err instanceof Error) {
+        setLotteryError(err.message);
+      } else {
+        setLotteryError("응모 내역을 불러오는데 실패했습니다.");
+      }
+    } finally {
+      setIsLoadingMoreLottery(false);
+    }
+  };
 
   // 내 티켓 목록 조회
   useEffect(() => {
@@ -1029,6 +1067,19 @@ export default function MyPage() {
                     </div>
                   );
                 })}
+
+                {/* 더보기 버튼 */}
+                {lotteryHasMore && (
+                  <div className="text-center pt-4">
+                    <button
+                      onClick={handleLoadMoreLottery}
+                      disabled={isLoadingMoreLottery}
+                      className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    >
+                      {isLoadingMoreLottery ? "로딩 중..." : "더보기"}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

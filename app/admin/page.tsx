@@ -21,6 +21,7 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingList, setIsLoadingList] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState("");
 
   const loadPerformances = async () => {
     setIsLoadingList(true);
@@ -33,6 +34,24 @@ export default function AdminPage() {
       }
     } catch (err) {
       console.error("공연 목록 로드 실패:", err);
+    } finally {
+      setIsLoadingList(false);
+    }
+  };
+
+  const handleSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setIsLoadingList(true);
+    try {
+      const response = await performanceApi.searchAdminPerformances({
+        keyword: searchKeyword.trim(),
+        size: 50,
+      });
+      if (response.data?.content) {
+        setList(response.data.content);
+      }
+    } catch (err) {
+      console.error("공연 검색 실패:", err);
     } finally {
       setIsLoadingList(false);
     }
@@ -203,7 +222,34 @@ export default function AdminPage() {
       </section>
 
       <section>
-        <h2 className="text-lg font-semibold mb-3">생성된 공연 목록</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">생성된 공연 목록</h2>
+          <form onSubmit={handleSearch} className="flex gap-2">
+            <input
+              type="text"
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              placeholder="제목 또는 카테고리 검색"
+              className="px-3 py-2 border border-gray-300 rounded text-sm"
+            />
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+            >
+              검색
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSearchKeyword("");
+                loadPerformances();
+              }}
+              className="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300"
+            >
+              전체
+            </button>
+          </form>
+        </div>
         {isLoadingList ? (
           <div className="text-sm text-gray-500">로딩 중...</div>
         ) : list.length === 0 ? (

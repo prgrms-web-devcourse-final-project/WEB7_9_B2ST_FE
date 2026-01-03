@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { authApi, type SignupRequest } from "@/lib/api/auth";
 import { emailApi } from "@/lib/api/email";
+import { useAuth } from "@/contexts/AuthContext";
 
 // 유효성 검사 함수들
 const validateEmail = (email: string): string | null => {
@@ -19,7 +20,8 @@ const validateEmail = (email: string): string | null => {
 const validatePassword = (password: string): string | null => {
   if (!password) return "비밀번호는 필수입니다.";
   // 8~30자, 영소문자+숫자+특수기호(@$!%*?&)
-  const passwordRegex = /^(?=.*[a-z])(?=.*[0-9])(?=.*[@$!%*?&])[a-z0-9@$!%*?&]{8,30}$/;
+  const passwordRegex =
+    /^(?=.*[a-z])(?=.*[0-9])(?=.*[@$!%*?&])[a-z0-9@$!%*?&]{8,30}$/;
   if (!passwordRegex.test(password)) {
     return "비밀번호는 8~30자, 영소문자+숫자+특수기호(@$!%*?&)를 포함해야 합니다.";
   }
@@ -68,7 +70,11 @@ const validateVerificationCode = (code: string): string | null => {
 
 export default function SignupPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState<SignupRequest & { passwordConfirm: string }>({
+  const searchParams = useSearchParams();
+  const { getKakaoAuthorizeUrl, kakaoLogin } = useAuth();
+  const [formData, setFormData] = useState<
+    SignupRequest & { passwordConfirm: string }
+  >({
     email: "",
     password: "",
     passwordConfirm: "",
@@ -78,7 +84,9 @@ export default function SignupPage() {
   });
   const [verificationCode, setVerificationCode] = useState("");
   const [isEmailVerified, setIsEmailVerified] = useState(false);
-  const [isEmailAvailable, setIsEmailAvailable] = useState<boolean | null>(null);
+  const [isEmailAvailable, setIsEmailAvailable] = useState<boolean | null>(
+    null
+  );
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [isVerifyingCode, setIsVerifyingCode] = useState(false);
@@ -87,6 +95,63 @@ export default function SignupPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isKakaoLoading, setIsKakaoLoading] = useState(false);
+
+  const handleKakaoCallback = useCallback(
+    async (code: string, state: string) => {
+      setError("");
+      setIsKakaoLoading(true);
+
+      try {
+        await kakaoLogin({ code });
+        router.push("/");
+      } catch (err) {
+        if (err instanceof Error) {
+          // 이메일 정보 미동의 시 처리
+          if (err.message.includes("이메일 정보 제공에 동의")) {
+            setError(
+              "이메일 정보 제공에 동의해주세요. 카카오 계정 설정에서 동의 후 다시 시도해주세요."
+            );
+          } else {
+            setError(err.message);
+          }
+        } else {
+          setError("카카오 로그인에 실패했습니다. 다시 시도해주세요.");
+        }
+        setIsKakaoLoading(false);
+      }
+    },
+    [kakaoLogin, router]
+  );
+
+  // 카카오 로그인 콜백 처리
+  useEffect(() => {
+    const code = searchParams.get("code");
+    const state = searchParams.get("state");
+
+    if (code && state) {
+      handleKakaoCallback(code, state);
+    }
+  }, [searchParams, handleKakaoCallback]);
+
+  const handleKakaoLoginClick = async () => {
+    setError("");
+    setIsKakaoLoading(true);
+
+    try {
+      // 백엔드에서 카카오 로그인 URL 조회
+      const urlResponse = await getKakaoAuthorizeUrl();
+      // 카카오 로그인 페이지로 리다이렉트
+      window.location.href = urlResponse.authorizeUrl;
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("카카오 로그인 처리 중 오류가 발생했습니다.");
+      }
+      setIsKakaoLoading(false);
+    }
+  };
 
   // 타이머 처리 (이메일 인증 완료 시 타이머 중지)
   useEffect(() => {
@@ -112,7 +177,9 @@ export default function SignupPage() {
     const checkEmailTimer = setTimeout(async () => {
       setIsCheckingEmail(true);
       try {
-        const response = await emailApi.checkDuplicate({ email: formData.email });
+        const response = await emailApi.checkDuplicate({
+          email: formData.email,
+        });
         if (response.data) {
           setIsEmailAvailable(response.data.available || false);
           // 에러는 UI에서 표시하므로 여기서는 설정하지 않음
@@ -188,7 +255,10 @@ export default function SignupPage() {
     setError("");
 
     try {
-      await emailApi.verifyCode({ email: formData.email, code: verificationCode });
+      await emailApi.verifyCode({
+        email: formData.email,
+        code: verificationCode,
+      });
       setIsEmailVerified(true);
       setResendTimer(0); // 인증 완료 시 타이머 리셋
       setErrors({ ...errors, verificationCode: "" });
@@ -197,7 +267,10 @@ export default function SignupPage() {
       if (err instanceof Error) {
         setErrors({ ...errors, verificationCode: err.message });
       } else {
-        setErrors({ ...errors, verificationCode: "인증 코드가 일치하지 않습니다." });
+        setErrors({
+          ...errors,
+          verificationCode: "인증 코드가 일치하지 않습니다.",
+        });
       }
     } finally {
       setIsVerifyingCode(false);
@@ -290,10 +363,15 @@ export default function SignupPage() {
               />
             </Link>
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">회원가입</h2>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            회원가입
+          </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             이미 계정이 있으신가요?{" "}
-            <Link href="/login" className="font-medium text-red-600 hover:text-red-500">
+            <Link
+              href="/login"
+              className="font-medium text-red-600 hover:text-red-500"
+            >
               로그인
             </Link>
           </p>
@@ -304,9 +382,33 @@ export default function SignupPage() {
               {error}
             </div>
           )}
+
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handleKakaoLoginClick}
+              disabled={isLoading || isKakaoLoading}
+              className="flex-1 flex justify-center py-3 px-4 border border-yellow-400 text-sm font-bold rounded-lg text-gray-800 bg-yellow-300 hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+            >
+              {isKakaoLoading ? "카카오 로그인 중..." : "카카오로 가입"}
+            </button>
+          </div>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">또는</span>
+            </div>
+          </div>
+
           <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
                 이메일 <span className="text-red-500">*</span>
               </label>
               <div className="mt-1 flex gap-2">
@@ -347,18 +449,31 @@ export default function SignupPage() {
                     : "인증 코드 발송"}
                 </button>
               </div>
-              {isCheckingEmail && <p className="mt-1 text-sm text-gray-500">이메일 확인 중...</p>}
+              {isCheckingEmail && (
+                <p className="mt-1 text-sm text-gray-500">이메일 확인 중...</p>
+              )}
               {!isCheckingEmail && isEmailAvailable === false && (
-                <p className="mt-1 text-sm text-red-600">이미 사용 중인 이메일입니다.</p>
+                <p className="mt-1 text-sm text-red-600">
+                  이미 사용 중인 이메일입니다.
+                </p>
               )}
-              {!isCheckingEmail && isEmailAvailable === true && !isEmailVerified && !isCodeSent && (
-                <p className="mt-1 text-sm text-green-600">사용 가능한 이메일입니다.</p>
-              )}
+              {!isCheckingEmail &&
+                isEmailAvailable === true &&
+                !isEmailVerified &&
+                !isCodeSent && (
+                  <p className="mt-1 text-sm text-green-600">
+                    사용 가능한 이메일입니다.
+                  </p>
+                )}
               {!isCheckingEmail && isCodeSent && !isEmailVerified && (
-                <p className="mt-1 text-sm text-green-600">이메일이 전송되었습니다.</p>
+                <p className="mt-1 text-sm text-green-600">
+                  이메일이 전송되었습니다.
+                </p>
               )}
               {isEmailVerified && (
-                <p className="mt-1 text-sm text-green-600">✓ 이메일 인증이 완료되었습니다.</p>
+                <p className="mt-1 text-sm text-green-600">
+                  ✓ 이메일 인증이 완료되었습니다.
+                </p>
               )}
               {errors.email && isEmailAvailable !== false && (
                 <p className="mt-1 text-sm text-red-600">{errors.email}</p>
@@ -381,14 +496,18 @@ export default function SignupPage() {
                     maxLength={6}
                     value={verificationCode}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+                      const value = e.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 6);
                       setVerificationCode(value);
                       if (errors.verificationCode) {
                         setErrors({ ...errors, verificationCode: "" });
                       }
                     }}
                     className={`flex-1 appearance-none relative block px-3 py-2 border ${
-                      errors.verificationCode ? "border-red-300" : "border-gray-300"
+                      errors.verificationCode
+                        ? "border-red-300"
+                        : "border-gray-300"
                     } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm`}
                     placeholder="6자리 인증 코드"
                   />
@@ -402,13 +521,18 @@ export default function SignupPage() {
                   </button>
                 </div>
                 {errors.verificationCode && (
-                  <p className="mt-1 text-sm text-red-600">{errors.verificationCode}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.verificationCode}
+                  </p>
                 )}
               </div>
             )}
 
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700"
+              >
                 이름 <span className="text-red-500">*</span>
               </label>
               <input
@@ -423,11 +547,16 @@ export default function SignupPage() {
                 } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm`}
                 placeholder="이름 (2~20자, 한글 또는 영문)"
               />
-              {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+              {errors.name && (
+                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+              )}
             </div>
 
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="phone"
+                className="block text-sm font-medium text-gray-700"
+              >
                 전화번호 <span className="text-red-500">*</span>
               </label>
               <input
@@ -436,17 +565,24 @@ export default function SignupPage() {
                 type="tel"
                 required
                 value={formData.phone}
-                onChange={(e) => handleChange("phone", e.target.value.replace(/[^0-9]/g, ""))}
+                onChange={(e) =>
+                  handleChange("phone", e.target.value.replace(/[^0-9]/g, ""))
+                }
                 className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
                   errors.phone ? "border-red-300" : "border-gray-300"
                 } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm`}
                 placeholder="전화번호 (하이픈 없이 10~11자리)"
               />
-              {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
+              {errors.phone && (
+                <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
+              )}
             </div>
 
             <div>
-              <label htmlFor="birth" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="birth"
+                className="block text-sm font-medium text-gray-700"
+              >
                 생년월일 <span className="text-red-500">*</span>
               </label>
               <input
@@ -461,11 +597,16 @@ export default function SignupPage() {
                   errors.birth ? "border-red-300" : "border-gray-300"
                 } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm`}
               />
-              {errors.birth && <p className="mt-1 text-sm text-red-600">{errors.birth}</p>}
+              {errors.birth && (
+                <p className="mt-1 text-sm text-red-600">{errors.birth}</p>
+              )}
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
                 비밀번호 <span className="text-red-500">*</span>
               </label>
               <input
@@ -481,14 +622,19 @@ export default function SignupPage() {
                 } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm`}
                 placeholder="비밀번호 (8~30자, 영소문자+숫자+특수기호)"
               />
-              {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+              )}
               <p className="mt-1 text-xs text-gray-500">
                 영소문자, 숫자, 특수기호(@$!%*?&)를 포함한 8~30자
               </p>
             </div>
 
             <div>
-              <label htmlFor="passwordConfirm" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="passwordConfirm"
+                className="block text-sm font-medium text-gray-700"
+              >
                 비밀번호 확인 <span className="text-red-500">*</span>
               </label>
               <input
@@ -498,14 +644,18 @@ export default function SignupPage() {
                 autoComplete="new-password"
                 required
                 value={formData.passwordConfirm}
-                onChange={(e) => handleChange("passwordConfirm", e.target.value)}
+                onChange={(e) =>
+                  handleChange("passwordConfirm", e.target.value)
+                }
                 className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
                   errors.passwordConfirm ? "border-red-300" : "border-gray-300"
                 } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm`}
                 placeholder="비밀번호 확인"
               />
               {errors.passwordConfirm && (
-                <p className="mt-1 text-sm text-red-600">{errors.passwordConfirm}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.passwordConfirm}
+                </p>
               )}
             </div>
           </div>
@@ -519,7 +669,9 @@ export default function SignupPage() {
               {isLoading ? "가입 중..." : "회원가입"}
             </button>
             {!isEmailVerified && (
-              <p className="mt-2 text-sm text-center text-red-600">이메일 인증을 완료해주세요.</p>
+              <p className="mt-2 text-sm text-center text-red-600">
+                이메일 인증을 완료해주세요.
+              </p>
             )}
           </div>
         </form>

@@ -146,6 +146,18 @@ export const typedPerformanceApi = {
   },
 
   /**
+   * 관리자 공연 목록 조회
+   */
+  async getAdminPerformances(params: { cursor?: number; size?: number }) {
+    return typedApiClient.get<"/api/admin/performances", "get", 200>(
+      "/api/admin/performances",
+      {
+        query: params,
+      }
+    );
+  },
+
+  /**
    * 관리자 공연 상세 조회
    */
   async getAdminPerformance(performanceId: number) {

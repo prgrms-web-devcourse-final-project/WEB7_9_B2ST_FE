@@ -178,6 +178,27 @@ export const performanceApi = {
   },
 
   /**
+   * 관리자 공연 목록 조회
+   */
+  async getAdminPerformances(
+    params: {
+      cursor?: number;
+      size?: number;
+    } = {}
+  ) {
+    const data = await typedPerformanceApi.getAdminPerformances(params);
+    return {
+      code: 200,
+      message: "성공적으로 처리되었습니다",
+      data: data as {
+        content: PerformanceListRes[];
+        nextCursor: number | null;
+        hasNext: boolean;
+      },
+    };
+  },
+
+  /**
    * 관리자 공연 상세 조회
    */
   async getAdminPerformance(performanceId: number) {

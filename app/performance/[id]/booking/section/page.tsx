@@ -233,12 +233,9 @@ export default function BookingSection({
         }
       }
 
-      // 홀딩 및 예매 생성 성공 시 결제 페이지로 이동
-      router.push(
-        `/performance/${id}/booking/payment?scheduleId=${scheduleId}&reservationIds=${reservationIds.join(
-          ","
-        )}`
-      );
+      // 홀딩 및 예매 생성 성공 시 예매 완료 (결제는 나중에 lottery 당첨 시 진행)
+      // 마이페이지로 리다이렉트
+      router.push("/my-page?tab=lottery");
     } catch (err) {
       setIsHolding(false);
       if (err instanceof Error) {
@@ -445,7 +442,7 @@ export default function BookingSection({
                       disabled={isHolding}
                       className="w-full px-6 py-4 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
-                      {isHolding ? "좌석 홀딩 중..." : "결제하기"}
+                      {isHolding ? "좌석 홀딩 중..." : "예약 완료"}
                     </button>
                   </div>
                 </div>

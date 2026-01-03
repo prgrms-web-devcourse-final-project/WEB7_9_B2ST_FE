@@ -48,11 +48,14 @@ export default function Header({
     setIsSearching(true);
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const response = await performanceApi.searchPerformances(searchQuery.trim(), {
-          page: 0,
-          size: 5, // 드롭다운에는 최대 5개만 표시
-          sort: ["createdAt,desc"],
-        });
+        const response = await performanceApi.searchPerformances(
+          searchQuery.trim(),
+          {
+            page: 0,
+            size: 5, // 드롭다운에는 최대 5개만 표시
+            sort: ["createdAt,desc"],
+          }
+        );
 
         if (response.data?.content) {
           setSearchResults(response.data.content);
@@ -79,7 +82,10 @@ export default function Header({
   // 외부 클릭 시 드롭다운 닫기
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setShowDropdown(false);
       }
     };
@@ -176,7 +182,12 @@ export default function Header({
                     ></path>
                   </svg>
                 ) : (
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -192,13 +203,17 @@ export default function Header({
             {showDropdown && searchQuery.trim() && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
                 {isSearching ? (
-                  <div className="px-4 py-8 text-center text-gray-500 text-sm">검색 중...</div>
+                  <div className="px-4 py-8 text-center text-gray-500 text-sm">
+                    검색 중...
+                  </div>
                 ) : searchResults.length > 0 ? (
                   <div className="py-2">
                     {searchResults.map((performance) => (
                       <button
                         key={performance.performanceId}
-                        onClick={() => handleResultClick(performance.performanceId!)}
+                        onClick={() =>
+                          handleResultClick(performance.performanceId!)
+                        }
                         className="w-full px-4 py-3 hover:bg-gray-50 transition-colors text-left flex items-start gap-3"
                       >
                         <div className="flex-shrink-0 w-16 h-20 bg-gray-100 rounded overflow-hidden">
@@ -230,9 +245,14 @@ export default function Header({
                           <h3 className="text-sm font-semibold text-gray-900 mb-1 truncate">
                             {performance.title}
                           </h3>
-                          <p className="text-xs text-gray-500 mb-1">{performance.venueName}</p>
+                          <p className="text-xs text-gray-500 mb-1">
+                            {performance.venueName}
+                          </p>
                           <p className="text-xs text-gray-400">
-                            {formatDateRange(performance.startDate, performance.endDate)}
+                            {formatDateRange(
+                              performance.startDate,
+                              performance.endDate
+                            )}
                           </p>
                         </div>
                       </button>
@@ -289,21 +309,25 @@ export default function Header({
             <div className="flex items-center space-x-1">
               {activeTab !== undefined && (
                 <>
-                  <button
-                    onClick={() => onTabChange?.("ticket")}
+                  <Link
+                    href="/"
                     className={`px-6 py-4 font-medium text-sm transition-colors relative ${
-                      activeTab === "ticket" ? "text-red-600" : "text-gray-600 hover:text-gray-900"
+                      activeTab === "ticket"
+                        ? "text-red-600"
+                        : "text-gray-600 hover:text-gray-900"
                     }`}
                   >
                     티켓
                     {activeTab === "ticket" && (
                       <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600"></span>
                     )}
-                  </button>
+                  </Link>
                   <Link
                     href="/trade"
                     className={`px-6 py-4 font-medium text-sm transition-colors relative ${
-                      activeTab === "trade" ? "text-red-600" : "text-gray-600 hover:text-gray-900"
+                      activeTab === "trade"
+                        ? "text-red-600"
+                        : "text-gray-600 hover:text-gray-900"
                     }`}
                   >
                     양도/교환

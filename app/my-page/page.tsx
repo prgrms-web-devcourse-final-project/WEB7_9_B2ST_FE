@@ -4,9 +4,17 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import ProfileTab from "./ProfileTab";
-import { reservationApi, type ReservationDetailRes } from "@/lib/api/reservation";
+import {
+  reservationApi,
+  type ReservationDetailRes,
+} from "@/lib/api/reservation";
 import { lotteryApi, type LotteryEntry } from "@/lib/api/lottery";
-import { tradeApi, type Ticket, type TradeRequest, type Trade } from "@/lib/api/trade";
+import {
+  tradeApi,
+  type Ticket,
+  type TradeRequest,
+  type Trade,
+} from "@/lib/api/trade";
 import { mypageApi } from "@/lib/api/mypage";
 
 export default function MyPage() {
@@ -16,7 +24,9 @@ export default function MyPage() {
   >("reservations");
   const [periodFilter, setPeriodFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [sortBy, setSortBy] = useState<"bookingDate" | "viewingDate">("bookingDate");
+  const [sortBy, setSortBy] = useState<"bookingDate" | "viewingDate">(
+    "bookingDate"
+  );
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [reservations, setReservations] = useState<ReservationDetailRes[]>([]);
   const [isLoadingReservations, setIsLoadingReservations] = useState(false);
@@ -47,13 +57,35 @@ export default function MyPage() {
   useEffect(() => {
     if (typeof window !== "undefined" && !isHydrated) {
       const savedTab = sessionStorage.getItem("mypage-active-tab");
-      if (savedTab && ["reservations", "profile", "trades", "lottery", "tickets"].includes(savedTab)) {
-        setActiveTab(savedTab as "reservations" | "profile" | "trades" | "lottery" | "tickets");
+      if (
+        savedTab &&
+        ["reservations", "profile", "trades", "lottery", "tickets"].includes(
+          savedTab
+        )
+      ) {
+        setActiveTab(
+          savedTab as
+            | "reservations"
+            | "profile"
+            | "trades"
+            | "lottery"
+            | "tickets"
+        );
       }
 
       const savedTradesSubTab = sessionStorage.getItem("mypage-trades-sub-tab");
-      if (savedTradesSubTab && ["my-trades", "received-requests", "sent-requests"].includes(savedTradesSubTab)) {
-        setTradesSubTab(savedTradesSubTab as "my-trades" | "received-requests" | "sent-requests");
+      if (
+        savedTradesSubTab &&
+        ["my-trades", "received-requests", "sent-requests"].includes(
+          savedTradesSubTab
+        )
+      ) {
+        setTradesSubTab(
+          savedTradesSubTab as
+            | "my-trades"
+            | "received-requests"
+            | "sent-requests"
+        );
       }
 
       setIsHydrated(true);
@@ -234,7 +266,7 @@ export default function MyPage() {
 
       if (response.data?.content) {
         const myRegisteredTrades = response.data.content.filter(
-          (trade: Trade) => trade.memberId === currentUserId,
+          (trade: Trade) => trade.memberId === currentUserId
         );
         setMyTrades(myRegisteredTrades);
       }
@@ -264,7 +296,7 @@ export default function MyPage() {
 
       if (myTradesResponse.data?.content) {
         const myRegisteredTrades = myTradesResponse.data.content.filter(
-          (trade: Trade) => trade.memberId === currentUserId,
+          (trade: Trade) => trade.memberId === currentUserId
         );
 
         setMyTrades(myRegisteredTrades);
@@ -280,7 +312,10 @@ export default function MyPage() {
                 allRequests.push(...requestsResponse.data);
               }
             } catch (err) {
-              console.error(`거래 ${trade.tradeId}의 신청 목록 조회 실패:`, err);
+              console.error(
+                `거래 ${trade.tradeId}의 신청 목록 조회 실패:`,
+                err
+              );
             }
           }
         }
@@ -401,7 +436,9 @@ export default function MyPage() {
       className: "bg-gray-100 text-gray-800",
     };
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusInfo.className}`}>
+      <span
+        className={`px-3 py-1 rounded-full text-xs font-medium ${statusInfo.className}`}
+      >
         {statusInfo.label}
       </span>
     );
@@ -418,7 +455,11 @@ export default function MyPage() {
         switch (statusFilter) {
           case "reserved":
             const reservedStatus = status?.toUpperCase();
-            return reservedStatus === "PENDING" || reservedStatus === "HOLD" || reservedStatus === "CREATED";
+            return (
+              reservedStatus === "PENDING" ||
+              reservedStatus === "HOLD" ||
+              reservedStatus === "CREATED"
+            );
           case "booked":
             return status === "CONFIRMED" || status === "COMPLETED";
           case "cancelPending":
@@ -449,7 +490,9 @@ export default function MyPage() {
       }
       if (periodFilter !== "all") {
         filtered = filtered.filter((r) => {
-          const date = r.performance?.startDate ? new Date(r.performance.startDate) : null;
+          const date = r.performance?.startDate
+            ? new Date(r.performance.startDate)
+            : null;
           return date && date >= periodDate;
         });
       }
@@ -462,8 +505,12 @@ export default function MyPage() {
 
       if (sortBy === "bookingDate") {
         // 예매일은 API에 없으므로 startDate 사용
-        aDate = a.performance?.startDate ? new Date(a.performance.startDate) : null;
-        bDate = b.performance?.startDate ? new Date(b.performance.startDate) : null;
+        aDate = a.performance?.startDate
+          ? new Date(a.performance.startDate)
+          : null;
+        bDate = b.performance?.startDate
+          ? new Date(b.performance.startDate)
+          : null;
       } else {
         // 관람일
         aDate = a.performance?.startAt ? new Date(a.performance.startAt) : null;
@@ -616,7 +663,9 @@ export default function MyPage() {
             <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
               <div className="grid md:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">기간</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    기간
+                  </label>
                   <select
                     value={periodFilter}
                     onChange={(e) => setPeriodFilter(e.target.value)}
@@ -629,7 +678,9 @@ export default function MyPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">상태</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    상태
+                  </label>
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
@@ -643,10 +694,14 @@ export default function MyPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">정렬 기준</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    정렬 기준
+                  </label>
                   <select
                     value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as "bookingDate" | "viewingDate")}
+                    onChange={(e) =>
+                      setSortBy(e.target.value as "bookingDate" | "viewingDate")
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   >
                     <option value="bookingDate">예매일</option>
@@ -654,10 +709,14 @@ export default function MyPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">정렬 순서</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    정렬 순서
+                  </label>
                   <select
                     value={sortOrder}
-                    onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
+                    onChange={(e) =>
+                      setSortOrder(e.target.value as "asc" | "desc")
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   >
                     <option value="desc">내림차순</option>
@@ -676,7 +735,9 @@ export default function MyPage() {
 
             {/* 로딩 상태 */}
             {isLoadingReservations && (
-              <div className="text-center py-12 text-gray-400">예매내역을 불러오는 중...</div>
+              <div className="text-center py-12 text-gray-400">
+                예매내역을 불러오는 중...
+              </div>
             )}
 
             {/* 예매내역이 없는 경우 */}
@@ -705,25 +766,38 @@ export default function MyPage() {
                         <div className="flex justify-between items-start mb-4">
                           <div className="flex-1">
                             <h3 className="text-xl font-bold text-gray-900 mb-2 hover:text-red-600 transition-colors">
-                              {reservation.performance?.title || "공연 정보 없음"}
+                              {reservation.performance?.title ||
+                                "공연 정보 없음"}
                             </h3>
                             <div className="space-y-1 text-sm text-gray-600">
                               <p>예매번호: {reservation.reservationId}</p>
                               {reservation.performance?.startAt && (
-                                <p>관람일시: {formatDateTime(reservation.performance.startAt)}</p>
+                                <p>
+                                  관람일시:{" "}
+                                  {formatDateTime(
+                                    reservation.performance.startAt
+                                  )}
+                                </p>
                               )}
                               {reservation.performance?.startDate && (
-                                <p>공연 기간: {formatDate(reservation.performance.startDate)}</p>
+                                <p>
+                                  공연 기간:{" "}
+                                  {formatDate(
+                                    reservation.performance.startDate
+                                  )}
+                                </p>
                               )}
                               {reservation.performance?.category && (
-                                <p>카테고리: {reservation.performance.category}</p>
+                                <p>
+                                  카테고리: {reservation.performance.category}
+                                </p>
                               )}
                             </div>
                           </div>
                           <div>
                             <span
                               className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                                reservation.status,
+                                reservation.status
                               )}`}
                             >
                               {getStatusLabel(reservation.status)}
@@ -734,15 +808,20 @@ export default function MyPage() {
                         {/* 좌석 정보 */}
                         {reservation.seat && (
                           <div className="border-t pt-4 mb-4">
-                            <h4 className="font-medium text-gray-900 mb-2">좌석 정보</h4>
+                            <h4 className="font-medium text-gray-900 mb-2">
+                              좌석 정보
+                            </h4>
                             <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
                               <span className="font-medium">
-                                {reservation.seat.sectionName}구역 {reservation.seat.rowLabel}열{" "}
+                                {reservation.seat.sectionName}구역{" "}
+                                {reservation.seat.rowLabel}열{" "}
                                 {reservation.seat.seatNumber}번
                               </span>
                               {(reservation.status === "PENDING" ||
                                 reservation.status === "HOLD") && (
-                                <span className="text-sm text-red-600 font-medium">취소 가능</span>
+                                <span className="text-sm text-red-600 font-medium">
+                                  취소 가능
+                                </span>
                               )}
                             </div>
                           </div>
@@ -838,21 +917,25 @@ export default function MyPage() {
                           <div className="space-y-1 text-sm text-gray-600">
                             {trade.section && (
                               <p>
-                                <span className="font-semibold">구역:</span> {trade.section}
+                                <span className="font-semibold">구역:</span>{" "}
+                                {trade.section}
                               </p>
                             )}
                             {trade.row && (
                               <p>
-                                <span className="font-semibold">열:</span> {trade.row}
+                                <span className="font-semibold">열:</span>{" "}
+                                {trade.row}
                               </p>
                             )}
                             {trade.seatNumber && (
                               <p>
-                                <span className="font-semibold">좌석:</span> {trade.seatNumber}
+                                <span className="font-semibold">좌석:</span>{" "}
+                                {trade.seatNumber}
                               </p>
                             )}
                             <p>
-                              <span className="font-semibold">매수:</span> {trade.totalCount || 0}매
+                              <span className="font-semibold">매수:</span>{" "}
+                              {trade.totalCount || 0}매
                             </p>
                             <p>
                               <span className="font-semibold">등록일:</span>{" "}
@@ -891,7 +974,10 @@ export default function MyPage() {
                   </div>
                 ) : (
                   receivedRequests.map((request) => (
-                    <div key={request.tradeRequestId} className="bg-white rounded-lg shadow-sm p-6">
+                    <div
+                      key={request.tradeRequestId}
+                      className="bg-white rounded-lg shadow-sm p-6"
+                    >
                       <Link
                         href={`/my-page/trade-requests/${request.tradeRequestId}`}
                         className="block"
@@ -905,7 +991,9 @@ export default function MyPage() {
                               <p>거래 ID: {request.tradeId}</p>
                               <p>신청자 ID: {request.requesterId}</p>
                               <p>신청자 티켓 ID: {request.requesterTicketId}</p>
-                              <p>신청일: {formatTradeDate(request.createdAt)}</p>
+                              <p>
+                                신청일: {formatTradeDate(request.createdAt)}
+                              </p>
                             </div>
                           </div>
                           {getStatusBadge(request.status)}
@@ -916,13 +1004,17 @@ export default function MyPage() {
                         <div className="pt-4 border-t">
                           <div className="flex gap-3">
                             <button
-                              onClick={() => handleAccept(request.tradeRequestId)}
+                              onClick={() =>
+                                handleAccept(request.tradeRequestId)
+                              }
                               className="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
                             >
                               수락
                             </button>
                             <button
-                              onClick={() => handleReject(request.tradeRequestId)}
+                              onClick={() =>
+                                handleReject(request.tradeRequestId)
+                              }
                               className="px-6 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
                             >
                               거절
@@ -949,7 +1041,10 @@ export default function MyPage() {
                   </div>
                 ) : (
                   sentRequests.map((request) => (
-                    <div key={request.tradeRequestId} className="bg-white rounded-lg shadow-sm p-6">
+                    <div
+                      key={request.tradeRequestId}
+                      className="bg-white rounded-lg shadow-sm p-6"
+                    >
                       <Link
                         href={`/my-page/trade-requests/${request.tradeRequestId}`}
                         className="block"
@@ -962,9 +1057,13 @@ export default function MyPage() {
                             <div className="space-y-1 text-sm text-gray-600">
                               <p>거래 ID: {request.tradeId}</p>
                               <p>내 티켓 ID: {request.requesterTicketId}</p>
-                              <p>신청일: {formatTradeDate(request.createdAt)}</p>
+                              <p>
+                                신청일: {formatTradeDate(request.createdAt)}
+                              </p>
                               {request.modifiedAt !== request.createdAt && (
-                                <p>수정일: {formatTradeDate(request.modifiedAt)}</p>
+                                <p>
+                                  수정일: {formatTradeDate(request.modifiedAt)}
+                                </p>
                               )}
                             </div>
                           </div>
@@ -1000,92 +1099,121 @@ export default function MyPage() {
 
             {/* 로딩 상태 */}
             {isLoadingLottery && (
-              <div className="text-center py-12 text-gray-400">응모 내역을 불러오는 중...</div>
+              <div className="text-center py-12 text-gray-400">
+                응모 내역을 불러오는 중...
+              </div>
             )}
 
             {/* 응모 내역이 없는 경우 */}
-            {!isLoadingLottery && !lotteryError && lotteryEntries.length === 0 && (
-              <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-                <p className="text-gray-400">응모 내역이 없습니다.</p>
-              </div>
-            )}
+            {!isLoadingLottery &&
+              !lotteryError &&
+              lotteryEntries.length === 0 && (
+                <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+                  <p className="text-gray-400">응모 내역이 없습니다.</p>
+                </div>
+              )}
 
             {/* 응모 내역 카드 */}
-            {!isLoadingLottery && !lotteryError && lotteryEntries.length > 0 && (
-              <div className="space-y-4">
-                {lotteryEntries.map((entry) => {
-                  const getStatusBadge = (status: string) => {
-                    const statusMap: Record<string, { label: string; className: string }> = {
-                      APPLIED: { label: "응모완료", className: "bg-red-100 text-red-800" },
-                      WIN: { label: "당첨", className: "bg-green-100 text-green-800" },
-                      LOSE: { label: "낙첨", className: "bg-gray-100 text-gray-800" },
-                      CANCELLED: { label: "취소됨", className: "bg-red-100 text-red-800" },
+            {!isLoadingLottery &&
+              !lotteryError &&
+              lotteryEntries.length > 0 && (
+                <div className="space-y-4">
+                  {lotteryEntries.map((entry) => {
+                    const getStatusBadge = (status: string) => {
+                      const statusMap: Record<
+                        string,
+                        { label: string; className: string }
+                      > = {
+                        APPLIED: {
+                          label: "응모완료",
+                          className: "bg-red-100 text-red-800",
+                        },
+                        WIN: {
+                          label: "당첨",
+                          className: "bg-green-100 text-green-800",
+                        },
+                        LOSE: {
+                          label: "낙첨",
+                          className: "bg-gray-100 text-gray-800",
+                        },
+                        CANCELLED: {
+                          label: "취소됨",
+                          className: "bg-red-100 text-red-800",
+                        },
+                      };
+
+                      const statusInfo = statusMap[status] || {
+                        label: status,
+                        className: "bg-gray-100 text-gray-800",
+                      };
+                      return (
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${statusInfo.className}`}
+                        >
+                          {statusInfo.label}
+                        </span>
+                      );
                     };
 
-                    const statusInfo = statusMap[status] || {
-                      label: status,
-                      className: "bg-gray-100 text-gray-800",
+                    const formatDateTime = (dateString: string) => {
+                      const date = new Date(dateString);
+                      return date.toLocaleString("ko-KR", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      });
                     };
+
                     return (
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${statusInfo.className}`}
+                      <div
+                        key={entry.lotteryEntryId}
+                        className="bg-white rounded-lg shadow-sm p-6"
                       >
-                        {statusInfo.label}
-                      </span>
-                    );
-                  };
-
-                  const formatDateTime = (dateString: string) => {
-                    const date = new Date(dateString);
-                    return date.toLocaleString("ko-KR", {
-                      year: "numeric",
-                      month: "2-digit",
-                      day: "2-digit",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    });
-                  };
-
-                  return (
-                    <div key={entry.lotteryEntryId} className="bg-white rounded-lg shadow-sm p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex-1">
-                          <h3 className="text-xl font-bold text-gray-900 mb-2">{entry.title}</h3>
-                          <div className="space-y-1 text-sm text-gray-600">
-                            <p>공연일시: {formatDateTime(entry.startAt)}</p>
-                            <p>회차: {entry.roundNo}회차</p>
-                            <p>등급: {entry.gradeType}</p>
-                            <p>매수: {entry.quantity}매</p>
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex-1">
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">
+                              {entry.title}
+                            </h3>
+                            <div className="space-y-1 text-sm text-gray-600">
+                              <p>공연일시: {formatDateTime(entry.startAt)}</p>
+                              <p>회차: {entry.roundNo}회차</p>
+                              <p>등급: {entry.gradeType}</p>
+                              <p>매수: {entry.quantity}매</p>
+                            </div>
                           </div>
+                          <div>{getStatusBadge(entry.status)}</div>
                         </div>
-                        <div>{getStatusBadge(entry.status)}</div>
+
+                        {entry.status === "WIN" && (
+                          <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                            <p className="text-sm text-green-800 font-medium mb-3">
+                              🎉 당첨되었습니다! 결제를 진행해주세요.
+                            </p>
+                            <button className="w-full px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors text-sm">
+                              결제하기
+                            </button>
+                          </div>
+                        )}
                       </div>
+                    );
+                  })}
 
-                      {entry.status === "WIN" && (
-                        <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
-                          <p className="text-sm text-green-800 font-medium">
-                            🎉 당첨되었습니다! 결제를 진행해주세요.
-                          </p>
-                        </div>
-                      )}
+                  {/* 더보기 버튼 */}
+                  {lotteryHasMore && (
+                    <div className="text-center pt-4">
+                      <button
+                        onClick={handleLoadMoreLottery}
+                        disabled={isLoadingMoreLottery}
+                        className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      >
+                        {isLoadingMoreLottery ? "로딩 중..." : "더보기"}
+                      </button>
                     </div>
-                  );
-                })}
-
-                {/* 더보기 버튼 */}
-                {lotteryHasMore && (
-                  <div className="text-center pt-4">
-                    <button
-                      onClick={handleLoadMoreLottery}
-                      disabled={isLoadingMoreLottery}
-                      className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    >
-                      {isLoadingMoreLottery ? "로딩 중..." : "더보기"}
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
+                  )}
+                </div>
+              )}
           </div>
         )}
 
@@ -1101,7 +1229,9 @@ export default function MyPage() {
 
             {/* 로딩 상태 */}
             {isLoadingTickets && (
-              <div className="text-center py-12 text-gray-400">티켓 목록을 불러오는 중...</div>
+              <div className="text-center py-12 text-gray-400">
+                티켓 목록을 불러오는 중...
+              </div>
             )}
 
             {/* 티켓이 없는 경우 */}
@@ -1153,22 +1283,29 @@ export default function MyPage() {
                   };
 
                   return (
-                    <div key={ticket.ticketId} className="bg-white rounded-lg shadow-sm p-6">
+                    <div
+                      key={ticket.ticketId}
+                      className="bg-white rounded-lg shadow-sm p-6"
+                    >
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex-1">
                           <h3 className="text-xl font-bold text-gray-900 mb-2">
                             티켓 #{ticket.ticketId}
                           </h3>
                           <div className="space-y-1 text-sm text-gray-600">
-                            {ticket.reservationId && <p>예매번호: {ticket.reservationId}</p>}
+                            {ticket.reservationId && (
+                              <p>예매번호: {ticket.reservationId}</p>
+                            )}
                             {ticket.seatId && <p>좌석 ID: {ticket.seatId}</p>}
-                            {ticket.sectionName && <p>구역: {ticket.sectionName}</p>}
+                            {ticket.sectionName && (
+                              <p>구역: {ticket.sectionName}</p>
+                            )}
                           </div>
                         </div>
                         <div>
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                              ticket.status,
+                              ticket.status
                             )}`}
                           >
                             {getStatusLabel(ticket.status)}

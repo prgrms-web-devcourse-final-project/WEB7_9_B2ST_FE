@@ -4,28 +4,28 @@
  */
 
 // Typed API 클라이언트 (Swagger 타입 기반)
-export { typedApiClient } from './typed-client';
-export { typedAuthApi } from './typed-auth';
-export { typedEmailApi } from './typed-email';
-export { typedTradeApi } from './typed-trade';
-export { typedPerformanceApi } from './typed-performance';
-export { typedReservationApi } from './typed-reservation';
-export { typedLotteryApi } from './typed-lottery';
-export { typedMyPageApi } from './typed-mypage';
-export { typedTicketsApi } from './typed-tickets';
-export { typedVenuesApi } from './typed-venues';
-export { typedBanksApi } from './typed-banks';
+export { typedApiClient } from "./typed-client";
+export { typedAuthApi } from "./typed-auth";
+export { typedEmailApi } from "./typed-email";
+export { typedTradeApi } from "./typed-trade";
+export { typedPerformanceApi } from "./typed-performance";
+export { typedPrereservationApi } from "./typed-prereservation";
+export { typedReservationApi } from "./typed-reservation";
+export { typedLotteryApi } from "./typed-lottery";
+export { typedMyPageApi } from "./typed-mypage";
+export { typedTicketsApi } from "./typed-tickets";
+export { typedVenuesApi } from "./typed-venues";
+export { typedBanksApi } from "./typed-banks";
 
 // 기존 API 클라이언트 (하위 호환성)
-export { apiClient } from './client';
-export { authApi } from './auth';
-export { emailApi } from './email';
-export { performanceApi } from './performance';
-export { tradeApi } from './trade';
-export { lotteryApi } from './lottery';
-export { mypageApi } from './mypage';
-export { reservationApi } from './reservation';
+export { apiClient } from "./client";
+export { authApi } from "./auth";
+export { emailApi } from "./email";
+export { performanceApi } from "./performance";
+export { tradeApi } from "./trade";
+export { lotteryApi } from "./lottery";
+export { mypageApi } from "./mypage";
+export { reservationApi } from "./reservation";
 
 // 타입 export
-export type { paths, components } from '@/types/api';
-
+export type { paths, components } from "@/types/api";

@@ -9,6 +9,7 @@ import {
   type PerformanceScheduleListRes,
 } from "@/lib/api/performance";
 import Header from "@/components/Header";
+import PrereservationModal from "@/components/PrereservationModal";
 
 type TabType = "info" | "description" | "additional";
 
@@ -31,6 +32,7 @@ export default function PerformanceDetail({
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showPrereservation, setShowPrereservation] = useState(false);
 
   // 공연 상세 정보 조회
   useEffect(() => {
@@ -627,14 +629,22 @@ export default function PerformanceDetail({
 
                   {/* Booking Button */}
                   {selectedSchedule && (
-                    <button
-                      onClick={handleBooking}
-                      className="w-full px-6 py-4 rounded-lg font-bold text-center transition-colors shadow-lg bg-red-600 text-white hover:bg-red-700"
-                    >
-                      {selectedSchedule.bookingType === "LOTTERY"
-                        ? "응모하기 (추첨)"
-                        : "예매하기"}
-                    </button>
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => setShowPrereservation(true)}
+                        className="w-full px-6 py-3 rounded-lg font-medium text-center transition-colors bg-blue-600 text-white hover:bg-blue-700"
+                      >
+                        예매 사전 신청
+                      </button>
+                      <button
+                        onClick={handleBooking}
+                        className="w-full px-6 py-4 rounded-lg font-bold text-center transition-colors shadow-lg bg-red-600 text-white hover:bg-red-700"
+                      >
+                        {selectedSchedule.bookingType === "LOTTERY"
+                          ? "응모하기 (추첨)"
+                          : "예매하기"}
+                      </button>
+                    </div>
                   )}
                 </div>
               ) : (
@@ -668,6 +678,14 @@ export default function PerformanceDetail({
           </div>
         </div>
       </div>
+
+      {/* Prereservation Modal */}
+      {showPrereservation && selectedSchedule && (
+        <PrereservationModal
+          scheduleId={selectedSchedule.performanceScheduleId!}
+          onClose={() => setShowPrereservation(false)}
+        />
+      )}
     </div>
   );
 }

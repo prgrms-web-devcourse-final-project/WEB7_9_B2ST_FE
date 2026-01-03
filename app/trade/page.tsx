@@ -1,47 +1,60 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import { tradeApi, type Trade, type TradeType, type TradeStatus } from '@/lib/api/trade';
-import { performanceApi, type PerformanceDetailRes } from '@/lib/api/performance';
-import { useAuth } from '@/contexts/AuthContext';
-import Header from '@/components/Header';
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import {
+  tradeApi,
+  type Trade,
+  type TradeType,
+  type TradeStatus,
+} from "@/lib/api/trade";
+import {
+  performanceApi,
+  type PerformanceDetailRes,
+} from "@/lib/api/performance";
+import { useAuth } from "@/contexts/AuthContext";
+import Header from "@/components/Header";
 
 export default function TradePage() {
   const { isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState<'exchange' | 'transfer'>('exchange');
+  const [activeTab, setActiveTab] = useState<"exchange" | "transfer">(
+    "exchange"
+  );
   const [trades, setTrades] = useState<Trade[]>([]);
-  const [performanceMap, setPerformanceMap] = useState<Record<number, PerformanceDetailRes>>({});
+  const [performanceMap, setPerformanceMap] = useState<
+    Record<number, PerformanceDetailRes>
+  >({});
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
-  
+
   // 필터 상태
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDate, setSelectedDate] = useState('');
-  const [selectedSection, setSelectedSection] = useState('');
-  const [priceRange, setPriceRange] = useState({ min: '', max: '' });
-  const [ticketCount, setTicketCount] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedSection, setSelectedSection] = useState("");
+  const [priceRange, setPriceRange] = useState({ min: "", max: "" });
+  const [ticketCount, setTicketCount] = useState("");
 
   // API 호출
   const fetchTrades = async () => {
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
-      const type: TradeType = activeTab === 'exchange' ? 'EXCHANGE' : 'TRANSFER';
+      const type: TradeType =
+        activeTab === "exchange" ? "EXCHANGE" : "TRANSFER";
       const params = {
         type,
-        status: 'ACTIVE' as TradeStatus,
+        status: "ACTIVE" as TradeStatus,
         page,
         size: 10,
-        sort: 'createdAt,desc',
+        sort: "createdAt,desc",
       };
 
       const response = await tradeApi.getTradeList(params);
-      
+
       if (response.data) {
         setTrades(response.data.content);
         setTotalPages(response.data.totalPages);
@@ -50,19 +63,28 @@ export default function TradePage() {
         // 공연 정보 가져오기 (중복 제거)
         const performanceIds = response.data.content
           .map((trade: Trade) => trade.performanceId)
-          .filter((id: number | undefined | null): id is number => id !== undefined && id !== null);
-        const uniquePerformanceIds: number[] = Array.from(new Set(performanceIds));
+          .filter(
+            (id: number | undefined | null): id is number =>
+              id !== undefined && id !== null
+          );
+        const uniquePerformanceIds: number[] = Array.from(
+          new Set(performanceIds)
+        );
 
         // 공연 정보 병렬 조회
-        const performancePromises = uniquePerformanceIds.map(async (performanceId) => {
-          try {
-            const perfResponse = await performanceApi.getPerformance(performanceId);
-            return { performanceId, performance: perfResponse.data };
-          } catch (err) {
-            console.error(`공연 ${performanceId} 정보 조회 실패:`, err);
-            return { performanceId, performance: null };
+        const performancePromises = uniquePerformanceIds.map(
+          async (performanceId) => {
+            try {
+              const perfResponse = await performanceApi.getPerformance(
+                performanceId
+              );
+              return { performanceId, performance: perfResponse.data };
+            } catch (err) {
+              console.error(`공연 ${performanceId} 정보 조회 실패:`, err);
+              return { performanceId, performance: null };
+            }
           }
-        });
+        );
 
         const performanceResults = await Promise.all(performancePromises);
         const newPerformanceMap: Record<number, PerformanceDetailRes> = {};
@@ -77,7 +99,7 @@ export default function TradePage() {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError('거래 목록을 불러오는데 실패했습니다.');
+        setError("거래 목록을 불러오는데 실패했습니다.");
       }
     } finally {
       setIsLoading(false);
@@ -95,33 +117,33 @@ export default function TradePage() {
 
   // 날짜 포맷팅
   const formatDate = (dateString: string | undefined) => {
-    if (!dateString) return '';
+    if (!dateString) return "";
     const date = new Date(dateString);
-    return date.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
+    return date.toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
     });
   };
 
   // 가격 포맷팅
   const formatPrice = (price: number | null | undefined) => {
-    if (price === null || price === undefined) return '가격 협의';
+    if (price === null || price === undefined) return "가격 협의";
     return `${price.toLocaleString()}원`;
   };
 
   // 날짜 범위 포맷팅
   const formatDateRange = (startDate?: string, endDate?: string) => {
-    if (!startDate || !endDate) return '';
-    const start = new Date(startDate).toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
+    if (!startDate || !endDate) return "";
+    const start = new Date(startDate).toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
     });
-    const end = new Date(endDate).toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
+    const end = new Date(endDate).toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
     });
     return `${start} ~ ${end}`;
   };
@@ -147,11 +169,13 @@ export default function TradePage() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl shadow-sm p-6 sticky top-4">
               <h2 className="text-lg font-bold text-gray-900 mb-6">필터</h2>
-              
+
               <div className="space-y-5">
                 {/* Search */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">공연 검색</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    공연 검색
+                  </label>
                   <input
                     type="text"
                     value={searchQuery}
@@ -163,7 +187,9 @@ export default function TradePage() {
 
                 {/* Date */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">날짜</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    날짜
+                  </label>
                   <input
                     type="date"
                     value={selectedDate}
@@ -174,7 +200,9 @@ export default function TradePage() {
 
                 {/* Section */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">구역</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    구역
+                  </label>
                   <select
                     value={selectedSection}
                     onChange={(e) => setSelectedSection(e.target.value)}
@@ -190,20 +218,34 @@ export default function TradePage() {
 
                 {/* Price Range */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">가격</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    가격
+                  </label>
                   <div className="flex gap-2">
                     <input
                       type="number"
                       value={priceRange.min}
-                      onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === "" || parseInt(value) >= 0) {
+                          setPriceRange({ ...priceRange, min: value });
+                        }
+                      }}
                       placeholder="최소"
+                      min="0"
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
                     />
                     <input
                       type="number"
                       value={priceRange.max}
-                      onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === "" || parseInt(value) >= 0) {
+                          setPriceRange({ ...priceRange, max: value });
+                        }
+                      }}
                       placeholder="최대"
+                      min="0"
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
                     />
                   </div>
@@ -211,12 +253,20 @@ export default function TradePage() {
 
                 {/* Ticket Count */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">매수</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    매수
+                  </label>
                   <input
                     type="number"
                     value={ticketCount}
-                    onChange={(e) => setTicketCount(e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === "" || parseInt(value) >= 0) {
+                        setTicketCount(value);
+                      }
+                    }}
                     placeholder="매수"
+                    min="0"
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
                   />
                 </div>
@@ -230,28 +280,28 @@ export default function TradePage() {
             <div className="bg-white rounded-xl shadow-sm mb-6">
               <div className="flex border-b border-gray-100">
                 <button
-                  onClick={() => setActiveTab('exchange')}
+                  onClick={() => setActiveTab("exchange")}
                   className={`flex-1 px-6 py-4 font-semibold text-sm transition-colors relative ${
-                    activeTab === 'exchange'
-                      ? 'text-red-600'
-                      : 'text-gray-600 hover:text-gray-900'
+                    activeTab === "exchange"
+                      ? "text-red-600"
+                      : "text-gray-600 hover:text-gray-900"
                   }`}
                 >
                   교환 찾기
-                  {activeTab === 'exchange' && (
+                  {activeTab === "exchange" && (
                     <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600"></span>
                   )}
                 </button>
                 <button
-                  onClick={() => setActiveTab('transfer')}
+                  onClick={() => setActiveTab("transfer")}
                   className={`flex-1 px-6 py-4 font-semibold text-sm transition-colors relative ${
-                    activeTab === 'transfer'
-                      ? 'text-red-600'
-                      : 'text-gray-600 hover:text-gray-900'
+                    activeTab === "transfer"
+                      ? "text-red-600"
+                      : "text-gray-600 hover:text-gray-900"
                   }`}
                 >
                   양도 구매
-                  {activeTab === 'transfer' && (
+                  {activeTab === "transfer" && (
                     <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600"></span>
                   )}
                 </button>
@@ -296,7 +346,7 @@ export default function TradePage() {
                               <div className="flex-shrink-0">
                                 <img
                                   src={performance.posterUrl}
-                                  alt={performance.title || '공연 포스터'}
+                                  alt={performance.title || "공연 포스터"}
                                   className="w-24 h-32 object-cover rounded-lg"
                                 />
                               </div>
@@ -312,13 +362,18 @@ export default function TradePage() {
                                         {performance.title}
                                       </h3>
                                       <p className="text-sm text-gray-600 mb-2">
-                                        {performance.venue?.name || '장소 정보 없음'}
+                                        {performance.venue?.name ||
+                                          "장소 정보 없음"}
                                       </p>
-                                      {performance.startDate && performance.endDate && (
-                                        <p className="text-xs text-gray-500 mb-2">
-                                          {formatDateRange(performance.startDate, performance.endDate)}
-                                        </p>
-                                      )}
+                                      {performance.startDate &&
+                                        performance.endDate && (
+                                          <p className="text-xs text-gray-500 mb-2">
+                                            {formatDateRange(
+                                              performance.startDate,
+                                              performance.endDate
+                                            )}
+                                          </p>
+                                        )}
                                     </>
                                   ) : (
                                     <h3 className="text-xl font-bold text-gray-900 mb-3">
@@ -329,50 +384,65 @@ export default function TradePage() {
                                 <div className="ml-4 flex-shrink-0">
                                   <span
                                     className={`px-4 py-2 rounded-full text-xs font-semibold ${
-                                      trade.type === 'EXCHANGE'
-                                        ? 'bg-red-100 text-red-800'
-                                        : 'bg-green-100 text-green-800'
+                                      trade.type === "EXCHANGE"
+                                        ? "bg-red-100 text-red-800"
+                                        : "bg-green-100 text-green-800"
                                     }`}
                                   >
-                                    {trade.type === 'EXCHANGE' ? '교환' : '양도'}
+                                    {trade.type === "EXCHANGE"
+                                      ? "교환"
+                                      : "양도"}
                                   </span>
                                 </div>
                               </div>
 
                               {/* 좌석 정보 */}
                               <div className="bg-gray-50 rounded-lg p-4 mb-3">
-                                <h4 className="text-sm font-semibold text-gray-700 mb-2">좌석 정보</h4>
+                                <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                                  좌석 정보
+                                </h4>
                                 <div className="space-y-1 text-sm text-gray-600">
                                   {trade.section && (
                                     <p className="flex items-center gap-2">
-                                      <span className="font-medium text-gray-700">구역:</span>
+                                      <span className="font-medium text-gray-700">
+                                        구역:
+                                      </span>
                                       <span>{trade.section}</span>
                                     </p>
                                   )}
                                   {trade.row && (
                                     <p className="flex items-center gap-2">
-                                      <span className="font-medium text-gray-700">열:</span>
+                                      <span className="font-medium text-gray-700">
+                                        열:
+                                      </span>
                                       <span>{trade.row}</span>
                                     </p>
                                   )}
-                                  {trade.seatNumber && trade.type === 'EXCHANGE' && (
-                                    <p className="flex items-center gap-2">
-                                      <span className="font-medium text-gray-700">좌석:</span>
-                                      <span>{trade.seatNumber}</span>
-                                    </p>
-                                  )}
+                                  {trade.seatNumber &&
+                                    trade.type === "EXCHANGE" && (
+                                      <p className="flex items-center gap-2">
+                                        <span className="font-medium text-gray-700">
+                                          좌석:
+                                        </span>
+                                        <span>{trade.seatNumber}</span>
+                                      </p>
+                                    )}
                                   <p className="flex items-center gap-2">
-                                    <span className="font-medium text-gray-700">매수:</span>
+                                    <span className="font-medium text-gray-700">
+                                      매수:
+                                    </span>
                                     <span>{trade.totalCount || 0}매</span>
                                   </p>
                                 </div>
                               </div>
 
                               {/* 가격 정보 (양도만) */}
-                              {activeTab === 'transfer' && (
+                              {activeTab === "transfer" && (
                                 <div className="mb-3">
                                   <p className="flex items-center gap-2 text-lg">
-                                    <span className="font-semibold text-gray-700">가격:</span>
+                                    <span className="font-semibold text-gray-700">
+                                      가격:
+                                    </span>
                                     <span className="text-red-600 font-bold">
                                       {formatPrice(trade.price)}
                                     </span>
@@ -406,7 +476,9 @@ export default function TradePage() {
                       {page + 1} / {totalPages} (총 {totalElements}개)
                     </span>
                     <button
-                      onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
+                      onClick={() =>
+                        setPage(Math.min(totalPages - 1, page + 1))
+                      }
                       disabled={page >= totalPages - 1}
                       className="px-4 py-2 border border-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 font-medium text-sm"
                     >

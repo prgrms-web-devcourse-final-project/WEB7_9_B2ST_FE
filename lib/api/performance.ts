@@ -188,4 +188,22 @@ export const performanceApi = {
       data: data as PerformanceDetailRes,
     };
   },
+
+  /**
+   * 공연 예매 정책 수정 (관리자)
+   */
+  async updateBookingPolicy(
+    performanceId: number,
+    request: {
+      bookingOpenAt: string;
+      bookingCloseAt: string;
+    }
+  ) {
+    await typedPerformanceApi.updateBookingPolicy(performanceId, request);
+    return {
+      code: 200,
+      message: "성공적으로 처리되었습니다",
+      data: null,
+    };
+  },
 };

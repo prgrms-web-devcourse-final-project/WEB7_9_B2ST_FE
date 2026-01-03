@@ -18,6 +18,12 @@ export default function AdminPerformanceDetailPage() {
   );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const [isEditingPolicy, setIsEditingPolicy] = useState(false);
+  const [bookingOpenAt, setBookingOpenAt] = useState("");
+  const [bookingCloseAt, setBookingCloseAt] = useState("");
+  const [policyError, setPolicyError] = useState<string | null>(null);
+  const [isSavingPolicy, setIsSavingPolicy] = useState(false);
 
   useEffect(() => {
     const admin = localStorage.getItem("isAdmin") === "true";
@@ -46,6 +52,32 @@ export default function AdminPerformanceDetailPage() {
       );
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleEditPolicy = () => {
+    setIsEditingPolicy(true);
+    setPolicyError(null);
+    setBookingOpenAt(performance?.bookingOpenAt || "");
+    setBookingCloseAt(performance?.bookingCloseAt || "");
+  };
+
+  const handleSavePolicy = async () => {
+    setPolicyError(null);
+    setIsSavingPolicy(true);
+
+    try {
+      await performanceApi.updateBookingPolicy(parseInt(performanceId), {
+        bookingOpenAt,
+        bookingCloseAt,
+      });
+      await loadPerformance();
+      setIsEditingPolicy(false);
+      alert("예매 정책이 업데이트되었습니다.");
+    } catch (err: any) {
+      setPolicyError(err?.response?.data?.message || "예매 정책 업데이트에 실패했습니다");
+    } finally {
+      setIsSavingPolicy(false);
     }
   };
 
@@ -175,6 +207,79 @@ export default function AdminPerformanceDetailPage() {
             </p>
           </div>
         )}
+
+        <div className="border-t pt-6 mt-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">예매 정책 관리</h2>
+            {!isEditingPolicy && (
+              <button
+                onClick={handleEditPolicy}
+                className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+              >
+                수정
+              </button>
+            )}
+          </div>
+
+          {isEditingPolicy ? (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">예매 오픈 시간</label>
+                <input
+                  type="datetime-local"
+                  value={bookingOpenAt ? bookingOpenAt.slice(0, 16) : ""}
+                  onChange={(e) => setBookingOpenAt(e.target.value ? `${e.target.value}:00` : "")}
+                  className="w-full px-3 py-2 border border-gray-300 rounded"
+                  disabled={isSavingPolicy}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">예매 마감 시간</label>
+                <input
+                  type="datetime-local"
+                  value={bookingCloseAt ? bookingCloseAt.slice(0, 16) : ""}
+                  onChange={(e) => setBookingCloseAt(e.target.value ? `${e.target.value}:00` : "")}
+                  className="w-full px-3 py-2 border border-gray-300 rounded"
+                  disabled={isSavingPolicy}
+                />
+              </div>
+
+              {policyError && (
+                <div className="text-sm text-red-600 bg-red-50 p-3 rounded">
+                  {policyError}
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSavePolicy}
+                  disabled={isSavingPolicy}
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400"
+                >
+                  {isSavingPolicy ? "저장 중..." : "저장"}
+                </button>
+                <button
+                  onClick={() => setIsEditingPolicy(false)}
+                  disabled={isSavingPolicy}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:bg-gray-100"
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2 text-sm">
+              <div className="flex">
+                <span className="w-32 text-gray-500">예매 오픈</span>
+                <span className="font-medium">{performance.bookingOpenAt || "-"}</span>
+              </div>
+              <div className="flex">
+                <span className="w-32 text-gray-500">예매 마감</span>
+                <span className="font-medium">{performance.bookingCloseAt || "-"}</span>
+              </div>
+            </div>
+          )}
+        </div>
 
         {performance.gradePrices && performance.gradePrices.length > 0 && (
           <div className="border-t pt-6 mt-6">

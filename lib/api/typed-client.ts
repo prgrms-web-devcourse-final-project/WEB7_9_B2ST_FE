@@ -239,6 +239,31 @@ class TypedApiClient {
   }
 
   /**
+   * PUT 요청
+   */
+  async put<TPath extends keyof paths, TMethod extends "put", TStatus extends number = 200>(
+    path: TPath,
+    data?: RequestBody<TPath, TMethod> extends never ? never : RequestBody<TPath, TMethod>,
+    params?: {
+      path?: PathParams<TPath, TMethod>;
+    },
+  ): Promise<ResponseData<TPath, TMethod, TStatus>> {
+    let url = path as string;
+
+    // 경로 파라미터 치환
+    if (params?.path) {
+      Object.entries(params.path).forEach(([key, value]) => {
+        url = url.replace(`{${key}}`, String(value));
+      });
+    }
+
+    return this.request<ResponseData<TPath, TMethod, TStatus>>(url, {
+      method: "PUT",
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  /**
    * PATCH 요청
    */
   async patch<TPath extends keyof paths, TMethod extends "patch", TStatus extends number = 200>(

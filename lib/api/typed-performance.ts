@@ -157,4 +157,23 @@ export const typedPerformanceApi = {
       path: { performanceId },
     });
   },
+
+  /**
+   * 공연 예매 정책 수정 (관리자)
+   */
+  async updateBookingPolicy(
+    performanceId: number,
+    request: {
+      bookingOpenAt: string;
+      bookingCloseAt: string;
+    }
+  ) {
+    return typedApiClient.put<
+      "/api/admin/performances/{performanceId}/booking-policy",
+      "put",
+      200
+    >("/api/admin/performances/{performanceId}/booking-policy", request, {
+      path: { performanceId },
+    });
+  },
 };

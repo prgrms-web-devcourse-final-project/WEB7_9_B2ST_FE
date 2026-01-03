@@ -213,7 +213,8 @@ export default function AdminPage() {
             {list.map((p) => (
               <li
                 key={p.performanceId}
-                className="p-3 border rounded flex items-center gap-4"
+                onClick={() => router.push(`/admin/performances/${p.performanceId}`)}
+                className="p-3 border rounded flex items-center gap-4 cursor-pointer hover:bg-gray-50 transition-colors"
               >
                 <div className="w-20 h-24 bg-gray-100 flex-shrink-0 overflow-hidden rounded">
                   {p.posterUrl ? (

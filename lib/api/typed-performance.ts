@@ -144,4 +144,17 @@ export const typedPerformanceApi = {
       }
     );
   },
+
+  /**
+   * 관리자 공연 상세 조회
+   */
+  async getAdminPerformance(performanceId: number) {
+    return typedApiClient.get<
+      "/api/admin/performances/{performanceId}",
+      "get",
+      200
+    >("/api/admin/performances/{performanceId}", {
+      path: { performanceId },
+    });
+  },
 };

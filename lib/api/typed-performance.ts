@@ -123,10 +123,7 @@ export const typedPerformanceApi = {
     startDate: string;
     endDate: string;
   }) {
-    return typedApiClient.post<"/api/admin/performances", "post", 201>(
-      "/api/admin/performances",
-      request
-    );
+    return (typedApiClient.post as any)("/api/admin/performances", request);
   },
 
   /**
@@ -137,37 +134,27 @@ export const typedPerformanceApi = {
     cursor?: number;
     size?: number;
   }) {
-    return typedApiClient.get<"/api/admin/performances/search", "get", 200>(
-      "/api/admin/performances/search",
-      {
-        query: params,
-      }
-    );
+    return (typedApiClient.get as any)("/api/admin/performances/search", {
+      query: params,
+    });
   },
 
   /**
    * 관리자 공연 목록 조회
    */
   async getAdminPerformances(params: { cursor?: number; size?: number }) {
-    return typedApiClient.get<"/api/admin/performances", "get", 200>(
-      "/api/admin/performances",
-      {
-        query: params,
-      }
-    );
+    return (typedApiClient.get as any)("/api/admin/performances", {
+      query: params,
+    });
   },
 
   /**
    * 관리자 공연 상세 조회
    */
   async getAdminPerformance(performanceId: number) {
-    return typedApiClient.get<
-      "/api/admin/performances/{performanceId}",
-      "get",
-      200
-    >("/api/admin/performances/{performanceId}", {
-      path: { performanceId },
-    });
+    return (typedApiClient.get as any)(
+      `/api/admin/performances/${performanceId}`
+    );
   },
 
   /**
@@ -180,12 +167,9 @@ export const typedPerformanceApi = {
       bookingCloseAt: string;
     }
   ) {
-    return typedApiClient.put<
-      "/api/admin/performances/{performanceId}/booking-policy",
-      "put",
-      200
-    >("/api/admin/performances/{performanceId}/booking-policy", request, {
-      path: { performanceId },
-    });
+    return (typedApiClient.put as any)(
+      `/api/admin/performances/${performanceId}/booking-policy`,
+      request
+    );
   },
 };

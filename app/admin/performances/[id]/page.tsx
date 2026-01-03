@@ -154,7 +154,7 @@ export default function AdminPerformanceDetailPage() {
               </span>
               <span
                 className={`px-3 py-1 text-sm rounded-full ${
-                  performance.status === "ACTIVE"
+                  performance.status === "ON_SALE"
                     ? "bg-green-100 text-green-600"
                     : "bg-gray-100 text-gray-600"
                 }`}

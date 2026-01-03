@@ -11,14 +11,20 @@ import {
 } from "@/lib/api/performance";
 import { reservationApi } from "@/lib/api/reservation";
 
-export default function BookingSection({ params }: { params: Promise<{ id: string }> }) {
+export default function BookingSection({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = use(params);
   const searchParams = useSearchParams();
   const scheduleId = searchParams.get("scheduleId");
 
   const [seats, setSeats] = useState<ScheduleSeatViewRes[]>([]);
   const [selectedSeats, setSelectedSeats] = useState<ScheduleSeatViewRes[]>([]);
-  const [performance, setPerformance] = useState<PerformanceDetailRes | null>(null);
+  const [performance, setPerformance] = useState<PerformanceDetailRes | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [isHolding, setIsHolding] = useState(false);
   const [error, setError] = useState("");
@@ -38,13 +44,17 @@ export default function BookingSection({ params }: { params: Promise<{ id: strin
 
       try {
         // 공연 상세 정보 조회 (가격 정보 포함)
-        const performanceResponse = await performanceApi.getPerformance(Number(id));
+        const performanceResponse = await performanceApi.getPerformance(
+          Number(id)
+        );
         if (performanceResponse.data) {
           setPerformance(performanceResponse.data);
         }
 
         // 좌석 데이터 조회
-        const seatsResponse = await performanceApi.getScheduleSeats(Number(scheduleId));
+        const seatsResponse = await performanceApi.getScheduleSeats(
+          Number(scheduleId)
+        );
         if (seatsResponse.data) {
           setSeats(seatsResponse.data);
         }
@@ -81,7 +91,9 @@ export default function BookingSection({ params }: { params: Promise<{ id: strin
   // 각 행의 좌석을 좌석 번호 순으로 정렬
   Object.keys(groupedSeats).forEach((sectionName) => {
     Object.keys(groupedSeats[sectionName]).forEach((rowLabel) => {
-      groupedSeats[sectionName][rowLabel].sort((a, b) => (a.seatNumber || 0) - (b.seatNumber || 0));
+      groupedSeats[sectionName][rowLabel].sort(
+        (a, b) => (a.seatNumber || 0) - (b.seatNumber || 0)
+      );
     });
   });
 
@@ -100,7 +112,9 @@ export default function BookingSection({ params }: { params: Promise<{ id: strin
     if (seat.status !== "AVAILABLE") return;
 
     setSelectedSeats((prev) => {
-      const isSelected = prev.some((s) => s.scheduleSeatId === seat.scheduleSeatId);
+      const isSelected = prev.some(
+        (s) => s.scheduleSeatId === seat.scheduleSeatId
+      );
       if (isSelected) {
         // 이미 선택된 좌석이면 선택 해제
         return [];
@@ -117,7 +131,9 @@ export default function BookingSection({ params }: { params: Promise<{ id: strin
       return "bg-gray-400 cursor-not-allowed border-gray-400";
     }
 
-    const isSelected = selectedSeats.some((s) => s.scheduleSeatId === seat.scheduleSeatId);
+    const isSelected = selectedSeats.some(
+      (s) => s.scheduleSeatId === seat.scheduleSeatId
+    );
 
     if (isSelected) {
       // 선택된 좌석은 빨간색
@@ -127,10 +143,14 @@ export default function BookingSection({ params }: { params: Promise<{ id: strin
     // 구역별 기본 색상
     const sectionName = seat.sectionName || "";
     const name = sectionName.toUpperCase();
-    if (name.includes("VIP")) return "bg-blue-200 border-blue-400 hover:bg-blue-300";
-    if (name.includes("R")) return "bg-green-200 border-green-400 hover:bg-green-300";
-    if (name.includes("S")) return "bg-yellow-200 border-yellow-400 hover:bg-yellow-300";
-    if (name.includes("A")) return "bg-purple-200 border-purple-400 hover:bg-purple-300";
+    if (name.includes("VIP"))
+      return "bg-blue-200 border-blue-400 hover:bg-blue-300";
+    if (name.includes("R"))
+      return "bg-green-200 border-green-400 hover:bg-green-300";
+    if (name.includes("S"))
+      return "bg-yellow-200 border-yellow-400 hover:bg-yellow-300";
+    if (name.includes("A"))
+      return "bg-purple-200 border-purple-400 hover:bg-purple-300";
     return "bg-gray-200 border-gray-400 hover:bg-gray-300";
   };
 
@@ -140,7 +160,7 @@ export default function BookingSection({ params }: { params: Promise<{ id: strin
 
   // 선택된 좌석의 총 가격 계산 (공연 상세 정보의 가격 정보 사용)
   const getSeatPrice = (seat: ScheduleSeatViewRes) => {
-    if (!performance?.greadPrices || performance.greadPrices.length === 0) {
+    if (!performance?.gradePrices || performance.gradePrices.length === 0) {
       // 가격 정보가 없으면 기본값 사용
       const sectionName = seat.sectionName?.toUpperCase() || "";
       if (sectionName.includes("VIP")) return 250000;
@@ -160,8 +180,8 @@ export default function BookingSection({ params }: { params: Promise<{ id: strin
       : "STANDARD";
 
     // 가격 정보에서 매칭되는 항목 찾기
-    const priceInfo = performance.greadPrices.find(
-      (p) => p.gradeType.toUpperCase() === gradeType.toUpperCase(),
+    const priceInfo = performance.gradePrices.find(
+      (p) => p.gradeType.toUpperCase() === gradeType.toUpperCase()
     );
 
     if (priceInfo) {
@@ -169,10 +189,13 @@ export default function BookingSection({ params }: { params: Promise<{ id: strin
     }
 
     // 매칭되지 않으면 첫 번째 가격 정보 사용
-    return performance.greadPrices[0]?.price || 150000;
+    return performance.gradePrices[0]?.price || 150000;
   };
 
-  const totalPrice = selectedSeats.reduce((sum, seat) => sum + getSeatPrice(seat), 0);
+  const totalPrice = selectedSeats.reduce(
+    (sum, seat) => sum + getSeatPrice(seat),
+    0
+  );
 
   // 예매 홀딩 및 생성 처리
   const handleBooking = async () => {
@@ -201,7 +224,10 @@ export default function BookingSection({ params }: { params: Promise<{ id: strin
         if (!seat.seatId) {
           continue;
         }
-        const response = await reservationApi.createReservation(Number(scheduleId), seat.seatId);
+        const response = await reservationApi.createReservation(
+          Number(scheduleId),
+          seat.seatId
+        );
         if (response.data?.reservationId) {
           reservationIds.push(response.data.reservationId);
         }
@@ -210,8 +236,8 @@ export default function BookingSection({ params }: { params: Promise<{ id: strin
       // 홀딩 및 예매 생성 성공 시 결제 페이지로 이동
       router.push(
         `/performance/${id}/booking/payment?scheduleId=${scheduleId}&reservationIds=${reservationIds.join(
-          ",",
-        )}`,
+          ","
+        )}`
       );
     } catch (err) {
       setIsHolding(false);
@@ -228,7 +254,9 @@ export default function BookingSection({ params }: { params: Promise<{ id: strin
       <div className="min-h-screen bg-gray-50">
         <Header />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center py-12 text-gray-400">좌석 정보를 불러오는 중...</div>
+          <div className="text-center py-12 text-gray-400">
+            좌석 정보를 불러오는 중...
+          </div>
         </div>
       </div>
     );
@@ -261,7 +289,9 @@ export default function BookingSection({ params }: { params: Promise<{ id: strin
   }
 
   // 구역 목록 추출
-  const sections = Array.from(new Set(seats.map((seat) => seat.sectionName).filter(Boolean)));
+  const sections = Array.from(
+    new Set(seats.map((seat) => seat.sectionName).filter(Boolean))
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -300,8 +330,13 @@ export default function BookingSection({ params }: { params: Promise<{ id: strin
                     }
 
                     return (
-                      <div key={sectionName} className="flex items-center gap-2">
-                        <div className={`w-6 h-6 rounded border-2 ${color}`}></div>
+                      <div
+                        key={sectionName}
+                        className="flex items-center gap-2"
+                      >
+                        <div
+                          className={`w-6 h-6 rounded border-2 ${color}`}
+                        ></div>
                         <span>{label}</span>
                       </div>
                     );
@@ -319,37 +354,50 @@ export default function BookingSection({ params }: { params: Promise<{ id: strin
                 {/* Seat Grid by Section */}
                 {Object.keys(groupedSeats).map((sectionName) => (
                   <div key={sectionName} className="mb-8">
-                    <div className={`p-3 rounded-lg mb-4 ${getSectionColor(sectionName)}`}>
-                      <h3 className="text-lg font-bold text-gray-900">{sectionName}구역</h3>
+                    <div
+                      className={`p-3 rounded-lg mb-4 ${getSectionColor(
+                        sectionName
+                      )}`}
+                    >
+                      <h3 className="text-lg font-bold text-gray-900">
+                        {sectionName}구역
+                      </h3>
                     </div>
                     <div className="space-y-2">
                       {Object.keys(groupedSeats[sectionName])
                         .sort()
                         .map((rowLabel) => (
-                          <div key={rowLabel} className="flex items-center gap-2">
+                          <div
+                            key={rowLabel}
+                            className="flex items-center gap-2"
+                          >
                             <span className="w-12 text-center font-medium text-gray-700">
                               {rowLabel}열
                             </span>
                             <div className="flex gap-1 flex-1 flex-wrap">
-                              {groupedSeats[sectionName][rowLabel].map((seat) => (
-                                <button
-                                  key={seat.scheduleSeatId}
-                                  onClick={() => toggleSeat(seat)}
-                                  className={`w-8 h-8 rounded border-2 text-xs font-medium transition-colors ${getSeatColor(
-                                    seat,
-                                  )}`}
-                                  disabled={isSeatDisabled(seat)}
-                                  title={`${sectionName}구역 ${rowLabel}열 ${seat.seatNumber}번 - ${
-                                    seat.status === "AVAILABLE"
-                                      ? "선택 가능"
-                                      : seat.status === "HOLD"
-                                      ? "예약 중"
-                                      : "판매 완료"
-                                  }`}
-                                >
-                                  {seat.seatNumber}
-                                </button>
-                              ))}
+                              {groupedSeats[sectionName][rowLabel].map(
+                                (seat) => (
+                                  <button
+                                    key={seat.scheduleSeatId}
+                                    onClick={() => toggleSeat(seat)}
+                                    className={`w-8 h-8 rounded border-2 text-xs font-medium transition-colors ${getSeatColor(
+                                      seat
+                                    )}`}
+                                    disabled={isSeatDisabled(seat)}
+                                    title={`${sectionName}구역 ${rowLabel}열 ${
+                                      seat.seatNumber
+                                    }번 - ${
+                                      seat.status === "AVAILABLE"
+                                        ? "선택 가능"
+                                        : seat.status === "HOLD"
+                                        ? "예약 중"
+                                        : "판매 완료"
+                                    }`}
+                                  >
+                                    {seat.seatNumber}
+                                  </button>
+                                )
+                              )}
                             </div>
                           </div>
                         ))}
@@ -361,7 +409,9 @@ export default function BookingSection({ params }: { params: Promise<{ id: strin
 
             {/* Right: Selected Seats Info */}
             <div className="bg-white rounded-lg shadow-sm p-6 h-fit sticky top-4">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">선택된 좌석</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-6">
+                선택된 좌석
+              </h2>
 
               {selectedSeats.length > 0 ? (
                 <div className="space-y-4">
@@ -372,7 +422,8 @@ export default function BookingSection({ params }: { params: Promise<{ id: strin
                         className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
                       >
                         <span className="font-medium">
-                          {seat.sectionName}구역 {seat.rowLabel}열 {seat.seatNumber}번
+                          {seat.sectionName}구역 {seat.rowLabel}열{" "}
+                          {seat.seatNumber}번
                         </span>
                         <span className="text-red-600 font-semibold">
                           {getSeatPrice(seat).toLocaleString()}원

@@ -7,10 +7,13 @@ export type PagePerformanceListRes =
   components["schemas"]["PagePerformanceListRes"];
 export type PerformanceDetailRes =
   components["schemas"]["PerformanceDetailRes"] & {
-    greadPrices?: Array<{
+    gradePrices?: Array<{
       gradeType: string;
       price: number;
     }>;
+    bookingOpenAt?: string | null;
+    bookingCloseAt?: string | null;
+    isBookable?: boolean;
   };
 export type PerformanceScheduleListRes =
   components["schemas"]["PerformanceScheduleListRes"];

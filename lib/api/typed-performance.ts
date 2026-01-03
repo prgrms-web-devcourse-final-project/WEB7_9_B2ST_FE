@@ -137,12 +137,11 @@ export const typedPerformanceApi = {
     cursor?: number;
     size?: number;
   }) {
-    return typedApiClient.get<
-      '/api/admin/performances/search',
-      'get',
-      200
-    >('/api/admin/performances/search', {
-      query: params,
-    });
+    return typedApiClient.get<"/api/admin/performances/search", "get", 200>(
+      "/api/admin/performances/search",
+      {
+        query: params,
+      }
+    );
   },
 };

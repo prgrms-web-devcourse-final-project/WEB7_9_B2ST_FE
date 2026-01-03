@@ -158,19 +158,22 @@ export const performanceApi = {
   /**
    * 관리자 공연 검색 (전체 목록 포함)
    */
-  async searchAdminPerformances(params: {
-    keyword?: string;
-    cursor?: number;
-    size?: number;
-  } = {}) {
+  async searchAdminPerformances(
+    params: {
+      keyword?: string;
+      cursor?: number;
+      size?: number;
+    } = {}
+  ) {
     const data = await typedPerformanceApi.searchAdminPerformances(params);
     return {
       code: 200,
-      message: '성공적으로 처리되었습니다',
+      message: "성공적으로 처리되었습니다",
       data: data as {
         content: PerformanceListRes[];
         nextCursor: number | null;
         hasNext: boolean;
       },
     };
-  },};
+  },
+};

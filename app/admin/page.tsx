@@ -25,7 +25,9 @@ export default function AdminPage() {
   const loadPerformances = async () => {
     setIsLoadingList(true);
     try {
-      const response = await performanceApi.searchAdminPerformances({ size: 50 });
+      const response = await performanceApi.searchAdminPerformances({
+        size: 50,
+      });
       if (response.data?.content) {
         setList(response.data.content);
       }

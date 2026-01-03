@@ -18,7 +18,7 @@ export default function AdminPerformanceDetailPage() {
   );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [isEditingPolicy, setIsEditingPolicy] = useState(false);
   const [bookingOpenAt, setBookingOpenAt] = useState("");
   const [bookingCloseAt, setBookingCloseAt] = useState("");
@@ -75,7 +75,9 @@ export default function AdminPerformanceDetailPage() {
       setIsEditingPolicy(false);
       alert("예매 정책이 업데이트되었습니다.");
     } catch (err: any) {
-      setPolicyError(err?.response?.data?.message || "예매 정책 업데이트에 실패했습니다");
+      setPolicyError(
+        err?.response?.data?.message || "예매 정책 업데이트에 실패했습니다"
+      );
     } finally {
       setIsSavingPolicy(false);
     }
@@ -224,21 +226,33 @@ export default function AdminPerformanceDetailPage() {
           {isEditingPolicy ? (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">예매 오픈 시간</label>
+                <label className="block text-sm font-medium mb-1">
+                  예매 오픈 시간
+                </label>
                 <input
                   type="datetime-local"
                   value={bookingOpenAt ? bookingOpenAt.slice(0, 16) : ""}
-                  onChange={(e) => setBookingOpenAt(e.target.value ? `${e.target.value}:00` : "")}
+                  onChange={(e) =>
+                    setBookingOpenAt(
+                      e.target.value ? `${e.target.value}:00` : ""
+                    )
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded"
                   disabled={isSavingPolicy}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">예매 마감 시간</label>
+                <label className="block text-sm font-medium mb-1">
+                  예매 마감 시간
+                </label>
                 <input
                   type="datetime-local"
                   value={bookingCloseAt ? bookingCloseAt.slice(0, 16) : ""}
-                  onChange={(e) => setBookingCloseAt(e.target.value ? `${e.target.value}:00` : "")}
+                  onChange={(e) =>
+                    setBookingCloseAt(
+                      e.target.value ? `${e.target.value}:00` : ""
+                    )
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded"
                   disabled={isSavingPolicy}
                 />
@@ -271,11 +285,15 @@ export default function AdminPerformanceDetailPage() {
             <div className="space-y-2 text-sm">
               <div className="flex">
                 <span className="w-32 text-gray-500">예매 오픈</span>
-                <span className="font-medium">{performance.bookingOpenAt || "-"}</span>
+                <span className="font-medium">
+                  {performance.bookingOpenAt || "-"}
+                </span>
               </div>
               <div className="flex">
                 <span className="w-32 text-gray-500">예매 마감</span>
-                <span className="font-medium">{performance.bookingCloseAt || "-"}</span>
+                <span className="font-medium">
+                  {performance.bookingCloseAt || "-"}
+                </span>
               </div>
             </div>
           )}

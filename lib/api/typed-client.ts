@@ -21,7 +21,7 @@ type PathMethod<T extends keyof paths, M extends keyof paths[T]> = paths[T][M];
 type ResponseData<
   T extends keyof paths,
   M extends keyof paths[T],
-  Status extends number = 200,
+  Status extends number = 200
 > = PathMethod<T, M> extends { responses: infer R }
   ? R extends { [K in Status]: { content: { "*/*": infer D } } }
     ? D
@@ -29,21 +29,30 @@ type ResponseData<
   : never;
 
 // 헬퍼 타입: 요청 본문 타입 추출
-type RequestBody<T extends keyof paths, M extends keyof paths[T]> = PathMethod<T, M> extends {
+type RequestBody<T extends keyof paths, M extends keyof paths[T]> = PathMethod<
+  T,
+  M
+> extends {
   requestBody: { content: { "application/json": infer B } };
 }
   ? B
   : never;
 
 // 헬퍼 타입: 쿼리 파라미터 타입 추출
-type QueryParams<T extends keyof paths, M extends keyof paths[T]> = PathMethod<T, M> extends {
+type QueryParams<T extends keyof paths, M extends keyof paths[T]> = PathMethod<
+  T,
+  M
+> extends {
   parameters: { query: infer Q };
 }
   ? Q
   : never;
 
 // 헬퍼 타입: 경로 파라미터 타입 추출
-type PathParams<T extends keyof paths, M extends keyof paths[T]> = PathMethod<T, M> extends {
+type PathParams<T extends keyof paths, M extends keyof paths[T]> = PathMethod<
+  T,
+  M
+> extends {
   parameters: { path: infer P };
 }
   ? P
@@ -60,7 +69,7 @@ class TypedApiClient {
   private async request<T>(
     endpoint: string,
     options: RequestInit = {},
-    retryOn401: boolean = true,
+    retryOn401: boolean = true
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
 
@@ -80,8 +89,10 @@ class TypedApiClient {
     ];
 
     // 인증이 필요한 엔드포인트에만 토큰 추가
-    const isPublicEndpoint = publicEndpoints.some((path) => endpoint.includes(path));
-    
+    const isPublicEndpoint = publicEndpoints.some((path) =>
+      endpoint.includes(path)
+    );
+
     if (!isPublicEndpoint && typeof window !== "undefined") {
       const accessToken = tokenManager.getAccessToken();
       if (accessToken) {
@@ -106,12 +117,18 @@ class TypedApiClient {
       }
 
       // 401 에러 발생 시 토큰 재발급 시도
-      if (!response.ok && response.status === 401 && retryOn401 && !this.isReissuing) {
+      if (
+        !response.ok &&
+        response.status === 401 &&
+        retryOn401 &&
+        !this.isReissuing
+      ) {
         // 재발급 API 자체가 401이면 재시도하지 않음
         const isReissueEndpoint = endpoint.includes("/api/auth/reissue");
         // 로그인, 회원가입 등 인증이 필요 없는 엔드포인트는 재발급 시도하지 않음
-        const isPublicEndpoint = endpoint.includes("/api/auth/login") || 
-                                 endpoint.includes("/api/members/signup");
+        const isPublicEndpoint =
+          endpoint.includes("/api/auth/login") ||
+          endpoint.includes("/api/members/signup");
 
         if (!isReissueEndpoint && !isPublicEndpoint) {
           this.isReissuing = true;
@@ -171,12 +188,16 @@ class TypedApiClient {
   /**
    * GET 요청
    */
-  async get<TPath extends keyof paths, TMethod extends "get", TStatus extends number = 200>(
+  async get<
+    TPath extends keyof paths,
+    TMethod extends "get",
+    TStatus extends number = 200
+  >(
     path: TPath,
     params?: {
       query?: QueryParams<TPath, TMethod>;
       path?: PathParams<TPath, TMethod>;
-    },
+    }
   ): Promise<ResponseData<TPath, TMethod, TStatus>> {
     let url = path as string;
 
@@ -216,12 +237,18 @@ class TypedApiClient {
   /**
    * POST 요청
    */
-  async post<TPath extends keyof paths, TMethod extends "post", TStatus extends number = 200>(
+  async post<
+    TPath extends keyof paths,
+    TMethod extends "post",
+    TStatus extends number = 200
+  >(
     path: TPath,
-    data?: RequestBody<TPath, TMethod> extends never ? never : RequestBody<TPath, TMethod>,
+    data?: RequestBody<TPath, TMethod> extends never
+      ? never
+      : RequestBody<TPath, TMethod>,
     params?: {
       path?: PathParams<TPath, TMethod>;
-    },
+    }
   ): Promise<ResponseData<TPath, TMethod, TStatus>> {
     let url = path as string;
 
@@ -241,12 +268,18 @@ class TypedApiClient {
   /**
    * PUT 요청
    */
-  async put<TPath extends keyof paths, TMethod extends "put", TStatus extends number = 200>(
+  async put<
+    TPath extends keyof paths,
+    TMethod extends "put",
+    TStatus extends number = 200
+  >(
     path: TPath,
-    data?: RequestBody<TPath, TMethod> extends never ? never : RequestBody<TPath, TMethod>,
+    data?: RequestBody<TPath, TMethod> extends never
+      ? never
+      : RequestBody<TPath, TMethod>,
     params?: {
       path?: PathParams<TPath, TMethod>;
-    },
+    }
   ): Promise<ResponseData<TPath, TMethod, TStatus>> {
     let url = path as string;
 
@@ -266,12 +299,18 @@ class TypedApiClient {
   /**
    * PATCH 요청
    */
-  async patch<TPath extends keyof paths, TMethod extends "patch", TStatus extends number = 200>(
+  async patch<
+    TPath extends keyof paths,
+    TMethod extends "patch",
+    TStatus extends number = 200
+  >(
     path: TPath,
-    data?: RequestBody<TPath, TMethod> extends never ? never : RequestBody<TPath, TMethod>,
+    data?: RequestBody<TPath, TMethod> extends never
+      ? never
+      : RequestBody<TPath, TMethod>,
     params?: {
       path?: PathParams<TPath, TMethod>;
-    },
+    }
   ): Promise<ResponseData<TPath, TMethod, TStatus>> {
     let url = path as string;
 
@@ -291,11 +330,15 @@ class TypedApiClient {
   /**
    * DELETE 요청
    */
-  async delete<TPath extends keyof paths, TMethod extends "delete", TStatus extends number = 200>(
+  async delete<
+    TPath extends keyof paths,
+    TMethod extends "delete",
+    TStatus extends number = 200
+  >(
     path: TPath,
     params?: {
       path?: PathParams<TPath, TMethod>;
-    },
+    }
   ): Promise<ResponseData<TPath, TMethod, TStatus>> {
     let url = path as string;
 

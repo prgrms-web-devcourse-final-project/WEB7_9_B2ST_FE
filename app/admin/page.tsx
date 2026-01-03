@@ -17,14 +17,33 @@ export default function AdminPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [posterUrl, setPosterUrl] = useState("");
-  const [list, setList] = useState<PerformanceDetailRes[]>([]);
+  const [list, setList] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingList, setIsLoadingList] = useState(false);
+
+  const loadPerformances = async () => {
+    setIsLoadingList(true);
+    try {
+      const response = await performanceApi.searchAdminPerformances({ size: 50 });
+      if (response.data?.content) {
+        setList(response.data.content);
+      }
+    } catch (err) {
+      console.error("공연 목록 로드 실패:", err);
+    } finally {
+      setIsLoadingList(false);
+    }
+  };
 
   useEffect(() => {
     const admin = localStorage.getItem("isAdmin") === "true";
     setIsAdmin(admin);
-    if (!admin) router.push("/admin/login");
+    if (!admin) {
+      router.push("/admin/login");
+    } else {
+      loadPerformances();
+    }
   }, [router]);
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -44,7 +63,6 @@ export default function AdminPage() {
       });
 
       if (response.data) {
-        setList([response.data, ...list]);
         setTitle("");
         setVenueId("1");
         setCategory("");
@@ -53,6 +71,7 @@ export default function AdminPage() {
         setEndDate("");
         setPosterUrl("");
         alert("공연이 생성되었습니다.");
+        await loadPerformances();
       }
     } catch (err: any) {
       setError(err?.response?.data?.message || "공연 생성에 실패했습니다");
@@ -183,7 +202,9 @@ export default function AdminPage() {
 
       <section>
         <h2 className="text-lg font-semibold mb-3">생성된 공연 목록</h2>
-        {list.length === 0 ? (
+        {isLoadingList ? (
+          <div className="text-sm text-gray-500">로딩 중...</div>
+        ) : list.length === 0 ? (
           <div className="text-sm text-gray-500">생성된 공연이 없습니다.</div>
         ) : (
           <ul className="space-y-3">
@@ -203,7 +224,7 @@ export default function AdminPage() {
                 </div>
                 <div className="flex-1">
                   <div className="font-medium">{p.title}</div>
-                  <div className="text-sm text-gray-500">{p.venue?.name}</div>
+                  <div className="text-sm text-gray-500">{p.venueName}</div>
                   <div className="text-xs text-gray-400">{p.category}</div>
                   <div className="text-sm text-gray-400">
                     {p.startDate} ~ {p.endDate}

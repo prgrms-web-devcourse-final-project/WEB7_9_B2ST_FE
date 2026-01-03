@@ -128,4 +128,21 @@ export const typedPerformanceApi = {
       request
     );
   },
+
+  /**
+   * 관리자 공연 검색 (전체 목록 포함)
+   */
+  async searchAdminPerformances(params: {
+    keyword?: string;
+    cursor?: number;
+    size?: number;
+  }) {
+    return typedApiClient.get<
+      '/api/admin/performances/search',
+      'get',
+      200
+    >('/api/admin/performances/search', {
+      query: params,
+    });
+  },
 };

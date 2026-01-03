@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { performanceApi, type PerformanceDetailRes } from "@/lib/api/performance";
+import {
+  performanceApi,
+  type PerformanceDetailRes,
+} from "@/lib/api/performance";
 
 export default function AdminPerformanceDetailPage() {
   const router = useRouter();
@@ -10,7 +13,9 @@ export default function AdminPerformanceDetailPage() {
   const performanceId = params.id as string;
 
   const [isAdmin, setIsAdmin] = useState(false);
-  const [performance, setPerformance] = useState<PerformanceDetailRes | null>(null);
+  const [performance, setPerformance] = useState<PerformanceDetailRes | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,12 +34,16 @@ export default function AdminPerformanceDetailPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await performanceApi.getAdminPerformance(parseInt(performanceId));
+      const response = await performanceApi.getAdminPerformance(
+        parseInt(performanceId)
+      );
       if (response.data) {
         setPerformance(response.data);
       }
     } catch (err: any) {
-      setError(err?.response?.data?.message || "공연 정보를 불러오는데 실패했습니다");
+      setError(
+        err?.response?.data?.message || "공연 정보를 불러오는데 실패했습니다"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -86,8 +95,18 @@ export default function AdminPerformanceDetailPage() {
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-gray-400">
-                <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <svg
+                  className="w-16 h-16"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
                 </svg>
               </div>
             )}
@@ -99,11 +118,13 @@ export default function AdminPerformanceDetailPage() {
               <span className="px-3 py-1 bg-red-100 text-red-600 text-sm rounded-full">
                 {performance.category}
               </span>
-              <span className={`px-3 py-1 text-sm rounded-full ${
-                performance.status === 'ACTIVE' 
-                  ? 'bg-green-100 text-green-600' 
-                  : 'bg-gray-100 text-gray-600'
-              }`}>
+              <span
+                className={`px-3 py-1 text-sm rounded-full ${
+                  performance.status === "ACTIVE"
+                    ? "bg-green-100 text-green-600"
+                    : "bg-gray-100 text-gray-600"
+                }`}
+              >
                 {performance.status}
               </span>
               {performance.isBookable && (
@@ -120,7 +141,9 @@ export default function AdminPerformanceDetailPage() {
               </div>
               <div className="flex">
                 <span className="w-24 text-gray-500">공연장</span>
-                <span className="font-medium">{performance.venue?.name || "-"}</span>
+                <span className="font-medium">
+                  {performance.venue?.name || "-"}
+                </span>
               </div>
               <div className="flex">
                 <span className="w-24 text-gray-500">공연 기간</span>
@@ -130,11 +153,15 @@ export default function AdminPerformanceDetailPage() {
               </div>
               <div className="flex">
                 <span className="w-24 text-gray-500">예매 오픈</span>
-                <span className="font-medium">{performance.bookingOpenAt || "-"}</span>
+                <span className="font-medium">
+                  {performance.bookingOpenAt || "-"}
+                </span>
               </div>
               <div className="flex">
                 <span className="w-24 text-gray-500">예매 마감</span>
-                <span className="font-medium">{performance.bookingCloseAt || "-"}</span>
+                <span className="font-medium">
+                  {performance.bookingCloseAt || "-"}
+                </span>
               </div>
             </div>
           </div>
@@ -143,7 +170,9 @@ export default function AdminPerformanceDetailPage() {
         {performance.description && (
           <div className="border-t pt-6">
             <h2 className="text-lg font-semibold mb-3">공연 설명</h2>
-            <p className="text-gray-700 whitespace-pre-wrap">{performance.description}</p>
+            <p className="text-gray-700 whitespace-pre-wrap">
+              {performance.description}
+            </p>
           </div>
         )}
 
@@ -152,7 +181,10 @@ export default function AdminPerformanceDetailPage() {
             <h2 className="text-lg font-semibold mb-3">등급별 가격</h2>
             <div className="grid grid-cols-2 gap-3">
               {performance.gradePrices.map((grade, idx) => (
-                <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                <div
+                  key={idx}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded"
+                >
                   <span className="font-medium">{grade.gradeType}</span>
                   <span className="text-lg font-bold text-red-600">
                     {grade.price.toLocaleString()}원

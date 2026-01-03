@@ -1,20 +1,19 @@
-import { typedApiClient } from './typed-client';
-import type { components } from '@/types/api';
+import { typedApiClient } from "./typed-client";
+import type { components } from "@/types/api";
 
 export const typedPerformanceApi = {
   /**
    * 공연 목록 조회
    */
   async getPerformances(params: {
-    pageable: components['schemas']['Pageable'];
+    pageable: components["schemas"]["Pageable"];
   }) {
-    return typedApiClient.get<
-      '/api/performances',
-      'get',
-      200
-    >('/api/performances', {
-      query: params,
-    });
+    return typedApiClient.get<"/api/performances", "get", 200>(
+      "/api/performances",
+      {
+        query: params,
+      }
+    );
   },
 
   /**
@@ -22,28 +21,26 @@ export const typedPerformanceApi = {
    */
   async searchPerformances(params: {
     keyword: string;
-    pageable: components['schemas']['Pageable'];
+    pageable: components["schemas"]["Pageable"];
   }) {
-    return typedApiClient.get<
-      '/api/performances/search',
-      'get',
-      200
-    >('/api/performances/search', {
-      query: params,
-    });
+    return typedApiClient.get<"/api/performances/search", "get", 200>(
+      "/api/performances/search",
+      {
+        query: params,
+      }
+    );
   },
 
   /**
    * 공연 상세 정보 조회
    */
   async getPerformance(performanceId: number) {
-    return typedApiClient.get<
-      '/api/performances/{performanceId}',
-      'get',
-      200
-    >('/api/performances/{performanceId}', {
-      path: { performanceId },
-    });
+    return typedApiClient.get<"/api/performances/{performanceId}", "get", 200>(
+      "/api/performances/{performanceId}",
+      {
+        path: { performanceId },
+      }
+    );
   },
 
   /**
@@ -51,10 +48,10 @@ export const typedPerformanceApi = {
    */
   async getSchedules(performanceId: number) {
     return typedApiClient.get<
-      '/api/performances/{performanceId}/schedules',
-      'get',
+      "/api/performances/{performanceId}/schedules",
+      "get",
       200
-    >('/api/performances/{performanceId}/schedules', {
+    >("/api/performances/{performanceId}/schedules", {
       path: { performanceId },
     });
   },
@@ -64,10 +61,10 @@ export const typedPerformanceApi = {
    */
   async getSchedule(performanceId: number, scheduleId: number) {
     return typedApiClient.get<
-      '/api/performances/{performanceId}/schedules/{scheduleId}',
-      'get',
+      "/api/performances/{performanceId}/schedules/{scheduleId}",
+      "get",
       200
-    >('/api/performances/{performanceId}/schedules/{scheduleId}', {
+    >("/api/performances/{performanceId}/schedules/{scheduleId}", {
       path: { performanceId, scheduleId },
     });
   },
@@ -77,10 +74,10 @@ export const typedPerformanceApi = {
    */
   async getSeatLayout(performanceId: number) {
     return typedApiClient.get<
-      '/api/performances/{performanceId}/lottery/section',
-      'get',
+      "/api/performances/{performanceId}/lottery/section",
+      "get",
       200
-    >('/api/performances/{performanceId}/lottery/section', {
+    >("/api/performances/{performanceId}/lottery/section", {
       path: { performanceId },
     });
   },
@@ -90,14 +87,17 @@ export const typedPerformanceApi = {
    * @param scheduleId 회차 ID
    * @param status 좌석 상태 (선택, AVAILABLE, HOLD, SOLD)
    */
-  async getScheduleSeats(scheduleId: number, status?: 'AVAILABLE' | 'HOLD' | 'SOLD') {
+  async getScheduleSeats(
+    scheduleId: number,
+    status?: "AVAILABLE" | "HOLD" | "SOLD"
+  ) {
     // 타입 정의에 query 파라미터가 없지만 실제 API는 status 파라미터를 받음
-    const url = `/api/schedules/${scheduleId}/seats${status ? `?status=${status}` : ''}`;
-    return typedApiClient.get<
-      '/api/schedules/{scheduleId}/seats',
-      'get',
-      200
-    >(url as '/api/schedules/{scheduleId}/seats');
+    const url = `/api/schedules/${scheduleId}/seats${
+      status ? `?status=${status}` : ""
+    }`;
+    return typedApiClient.get<"/api/schedules/{scheduleId}/seats", "get", 200>(
+      url as "/api/schedules/{scheduleId}/seats"
+    );
   },
 
   /**
@@ -108,11 +108,24 @@ export const typedPerformanceApi = {
   async holdSeat(scheduleId: number, seatId: number) {
     const url = `/api/schedules/${scheduleId}/seats/${seatId}/hold`;
     // 타입 정의에 해당 경로가 없으므로 post 메서드를 any로 캐스팅하여 사용
-    return (typedApiClient.post as any)(
-      url as any,
-      undefined,
-      undefined
+    return (typedApiClient.post as any)(url as any, undefined, undefined);
+  },
+
+  /**
+   * 공연 생성 (관리자)
+   */
+  async createPerformance(request: {
+    venueId: number;
+    title: string;
+    category: string;
+    posterUrl: string;
+    description: string;
+    startDate: string;
+    endDate: string;
+  }) {
+    return typedApiClient.post<"/api/admin/performances", "post", 201>(
+      "/api/admin/performances",
+      request
     );
   },
 };
-

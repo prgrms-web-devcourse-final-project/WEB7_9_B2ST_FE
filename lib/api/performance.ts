@@ -1,18 +1,21 @@
-import { typedPerformanceApi } from './typed-performance';
-import type { components } from '@/types/api';
+import { typedPerformanceApi } from "./typed-performance";
+import type { components } from "@/types/api";
 
 // 타입 재export (하위 호환성)
-export type PerformanceListRes = components['schemas']['PerformanceListRes'];
-export type PagePerformanceListRes = components['schemas']['PagePerformanceListRes'];
-export type PerformanceDetailRes = components['schemas']['PerformanceDetailRes'] & {
-  greadPrices?: Array<{
-    gradeType: string;
-    price: number;
-  }>;
-};
-export type PerformanceScheduleListRes = components['schemas']['PerformanceScheduleListRes'];
-export type ScheduleSeatViewRes = components['schemas']['ScheduleSeatViewRes'];
-export type Pageable = components['schemas']['Pageable'];
+export type PerformanceListRes = components["schemas"]["PerformanceListRes"];
+export type PagePerformanceListRes =
+  components["schemas"]["PagePerformanceListRes"];
+export type PerformanceDetailRes =
+  components["schemas"]["PerformanceDetailRes"] & {
+    greadPrices?: Array<{
+      gradeType: string;
+      price: number;
+    }>;
+  };
+export type PerformanceScheduleListRes =
+  components["schemas"]["PerformanceScheduleListRes"];
+export type ScheduleSeatViewRes = components["schemas"]["ScheduleSeatViewRes"];
+export type Pageable = components["schemas"]["Pageable"];
 
 export interface PerformanceListParams {
   page?: number;
@@ -29,14 +32,14 @@ export const performanceApi = {
     const pageable: Pageable = {
       page: params.page ?? 0,
       size: params.size ?? 20,
-      sort: params.sort ?? ['createdAt,desc'],
+      sort: params.sort ?? ["createdAt,desc"],
     };
 
     const data = await typedPerformanceApi.getPerformances({ pageable });
-    
+
     return {
       code: 200,
-      message: '성공적으로 처리되었습니다',
+      message: "성공적으로 처리되었습니다",
       data: data as PagePerformanceListRes,
     };
   },
@@ -44,21 +47,24 @@ export const performanceApi = {
   /**
    * 공연 목록 검색
    */
-  async searchPerformances(keyword: string, params: PerformanceListParams = {}) {
+  async searchPerformances(
+    keyword: string,
+    params: PerformanceListParams = {}
+  ) {
     const pageable: Pageable = {
       page: params.page ?? 0,
       size: params.size ?? 20,
-      sort: params.sort ?? ['createdAt,desc'],
+      sort: params.sort ?? ["createdAt,desc"],
     };
 
     const data = await typedPerformanceApi.searchPerformances({
       keyword,
       pageable,
     });
-    
+
     return {
       code: 200,
-      message: '성공적으로 처리되었습니다',
+      message: "성공적으로 처리되었습니다",
       data: data as PagePerformanceListRes,
     };
   },
@@ -68,10 +74,10 @@ export const performanceApi = {
    */
   async getPerformance(performanceId: number) {
     const data = await typedPerformanceApi.getPerformance(performanceId);
-    
+
     return {
       code: 200,
-      message: '성공적으로 처리되었습니다',
+      message: "성공적으로 처리되었습니다",
       data: data as PerformanceDetailRes,
     };
   },
@@ -81,19 +87,19 @@ export const performanceApi = {
    */
   async getSchedules(performanceId: number) {
     const data = await typedPerformanceApi.getSchedules(performanceId);
-    
+
     // 배열인 경우 그대로 반환
     if (Array.isArray(data)) {
       return {
         code: 200,
-        message: '성공적으로 처리되었습니다',
+        message: "성공적으로 처리되었습니다",
         data: data as PerformanceScheduleListRes[],
       };
     }
-    
+
     return {
       code: 200,
-      message: '성공적으로 처리되었습니다',
+      message: "성공적으로 처리되었습니다",
       data: [data] as PerformanceScheduleListRes[],
     };
   },
@@ -103,13 +109,16 @@ export const performanceApi = {
    * @param scheduleId 회차 ID
    * @param status 좌석 상태 (선택, AVAILABLE, HOLD, SOLD)
    */
-  async getScheduleSeats(scheduleId: number, status?: 'AVAILABLE' | 'HOLD' | 'SOLD') {
+  async getScheduleSeats(
+    scheduleId: number,
+    status?: "AVAILABLE" | "HOLD" | "SOLD"
+  ) {
     const data = await typedPerformanceApi.getScheduleSeats(scheduleId, status);
-    
+
     return {
       code: 200,
-      message: '성공적으로 처리되었습니다',
-      data: Array.isArray(data) ? data as ScheduleSeatViewRes[] : [],
+      message: "성공적으로 처리되었습니다",
+      data: Array.isArray(data) ? (data as ScheduleSeatViewRes[]) : [],
     };
   },
 
@@ -122,8 +131,28 @@ export const performanceApi = {
     await typedPerformanceApi.holdSeat(scheduleId, seatId);
     return {
       code: 200,
-      message: '성공적으로 처리되었습니다',
+      message: "성공적으로 처리되었습니다",
       data: null,
+    };
+  },
+
+  /**
+   * 공연 생성 (관리자)
+   */
+  async createPerformance(request: {
+    venueId: number;
+    title: string;
+    category: string;
+    posterUrl: string;
+    description: string;
+    startDate: string;
+    endDate: string;
+  }) {
+    const data = await typedPerformanceApi.createPerformance(request);
+    return {
+      code: 201,
+      message: "성공적으로 생성되었습니다",
+      data: data as PerformanceDetailRes,
     };
   },
 };

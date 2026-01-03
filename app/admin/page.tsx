@@ -2,53 +2,63 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-
-type Perf = {
-  id: string;
-  title: string;
-  venue?: string;
-  startDate?: string;
-  endDate?: string;
-  posterUrl?: string;
-};
+import {
+  performanceApi,
+  type PerformanceDetailRes,
+} from "@/lib/api/performance";
 
 export default function AdminPage() {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
   const [title, setTitle] = useState("");
-  const [venue, setVenue] = useState("");
+  const [venueId, setVenueId] = useState("1");
+  const [category, setCategory] = useState("");
+  const [description, setDescription] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [posterUrl, setPosterUrl] = useState("");
-  const [list, setList] = useState<Perf[]>([]);
+  const [list, setList] = useState<PerformanceDetailRes[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const admin = localStorage.getItem("isAdmin") === "true";
     setIsAdmin(admin);
     if (!admin) router.push("/admin/login");
-
-    const stored = localStorage.getItem("admin_performances");
-    if (stored) setList(JSON.parse(stored));
   }, [router]);
 
-  const handleCreate = (e: React.FormEvent) => {
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const perf: Perf = {
-      id: String(Date.now()),
-      title,
-      venue,
-      startDate,
-      endDate,
-      posterUrl,
-    };
-    const next = [perf, ...list];
-    setList(next);
-    localStorage.setItem("admin_performances", JSON.stringify(next));
-    setTitle("");
-    setVenue("");
-    setStartDate("");
-    setEndDate("");
-    setPosterUrl("");
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      const response = await performanceApi.createPerformance({
+        venueId: parseInt(venueId),
+        title,
+        category,
+        posterUrl,
+        description,
+        startDate: `${startDate}T00:00:00`,
+        endDate: `${endDate}T23:59:59`,
+      });
+
+      if (response.data) {
+        setList([response.data, ...list]);
+        setTitle("");
+        setVenueId("1");
+        setCategory("");
+        setDescription("");
+        setStartDate("");
+        setEndDate("");
+        setPosterUrl("");
+        alert("공연이 생성되었습니다.");
+      }
+    } catch (err: any) {
+      setError(err?.response?.data?.message || "공연 생성에 실패했습니다");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleLogout = () => {
@@ -76,52 +86,96 @@ export default function AdminPage() {
         <h2 className="text-lg font-semibold mb-3">공연 생성</h2>
         <form onSubmit={handleCreate} className="space-y-3">
           <div>
-            <label className="block text-sm font-medium">제목</label>
+            <label className="block text-sm font-medium">제목 *</label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="mt-1 block w-full rounded border-gray-300"
+              className="mt-1 block w-full rounded border px-3 py-2 border-gray-300"
+              required
+              disabled={isLoading}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium">공연장</label>
+            <label className="block text-sm font-medium">카테고리 *</label>
             <input
-              value={venue}
-              onChange={(e) => setVenue(e.target.value)}
-              className="mt-1 block w-full rounded border-gray-300"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              placeholder="뮤지컬, 콘서트 등"
+              className="mt-1 block w-full rounded border px-3 py-2 border-gray-300"
+              required
+              disabled={isLoading}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium">공연장 ID *</label>
+            <input
+              type="number"
+              value={venueId}
+              onChange={(e) => setVenueId(e.target.value)}
+              className="mt-1 block w-full rounded border px-3 py-2 border-gray-300"
+              required
+              disabled={isLoading}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium">설명</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="mt-1 block w-full rounded border px-3 py-2 border-gray-300"
+              rows={3}
+              disabled={isLoading}
             />
           </div>
           <div className="flex gap-3">
             <div className="flex-1">
-              <label className="block text-sm font-medium">시작일</label>
+              <label className="block text-sm font-medium">시작일 *</label>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="mt-1 block w-full rounded border-gray-300"
+                className="mt-1 block w-full rounded border px-3 py-2 border-gray-300"
+                required
+                disabled={isLoading}
               />
             </div>
             <div className="flex-1">
-              <label className="block text-sm font-medium">종료일</label>
+              <label className="block text-sm font-medium">종료일 *</label>
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="mt-1 block w-full rounded border-gray-300"
+                className="mt-1 block w-full rounded border px-3 py-2 border-gray-300"
+                required
+                disabled={isLoading}
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium">포스터 URL</label>
+            <label className="block text-sm font-medium">포스터 URL *</label>
             <input
               value={posterUrl}
               onChange={(e) => setPosterUrl(e.target.value)}
-              className="mt-1 block w-full rounded border-gray-300"
+              placeholder="https://example.com/poster.jpg"
+              className="mt-1 block w-full rounded border px-3 py-2 border-gray-300"
+              required
+              disabled={isLoading}
             />
           </div>
+
+          {error && (
+            <div className="text-sm text-red-600 bg-red-50 p-3 rounded">
+              {error}
+            </div>
+          )}
+
           <div>
-            <button className="px-4 py-2 bg-red-600 text-white rounded">
-              생성
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-400"
+            >
+              {isLoading ? "생성 중..." : "생성"}
             </button>
           </div>
         </form>
@@ -135,23 +189,24 @@ export default function AdminPage() {
           <ul className="space-y-3">
             {list.map((p) => (
               <li
-                key={p.id}
+                key={p.performanceId}
                 className="p-3 border rounded flex items-center gap-4"
               >
-                <div className="w-20 h-24 bg-gray-100 flex-shrink-0 overflow-hidden">
+                <div className="w-20 h-24 bg-gray-100 flex-shrink-0 overflow-hidden rounded">
                   {p.posterUrl ? (
                     <img
                       src={p.posterUrl}
-                      alt={p.title}
+                      alt={p.title || "공연"}
                       className="w-full h-full object-cover"
                     />
                   ) : null}
                 </div>
                 <div className="flex-1">
                   <div className="font-medium">{p.title}</div>
-                  <div className="text-sm text-gray-500">{p.venue}</div>
+                  <div className="text-sm text-gray-500">{p.venue?.name}</div>
+                  <div className="text-xs text-gray-400">{p.category}</div>
                   <div className="text-sm text-gray-400">
-                    {p.startDate} {p.endDate ? `~ ${p.endDate}` : ""}
+                    {p.startDate} ~ {p.endDate}
                   </div>
                 </div>
               </li>

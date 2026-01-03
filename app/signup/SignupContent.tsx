@@ -1,5 +1,13 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
+import { authApi, type SignupRequest } from "@/lib/api/auth";
+import { emailApi } from "@/lib/api/email";
+import { useAuth } from "@/contexts/AuthContext";
+
 // 유효성 검사 함수들
 const validateEmail = (email: string): string | null => {
   if (!email) return "이메일은 필수입니다.";

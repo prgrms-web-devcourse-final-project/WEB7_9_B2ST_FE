@@ -17,6 +17,8 @@ export type PerformanceDetailRes =
   };
 export type PerformanceScheduleListRes =
   components["schemas"]["PerformanceScheduleListRes"];
+export type PerformanceScheduleDetailRes =
+  components["schemas"]["PerformanceScheduleDetailRes"];
 export type ScheduleSeatViewRes = components["schemas"]["ScheduleSeatViewRes"];
 export type Pageable = components["schemas"]["Pageable"];
 
@@ -104,6 +106,22 @@ export const performanceApi = {
       code: 200,
       message: "성공적으로 처리되었습니다",
       data: [data] as PerformanceScheduleListRes[],
+    };
+  },
+
+  /**
+   * 공연 회차 단건 조회
+   */
+  async getSchedule(performanceId: number, scheduleId: number) {
+    const data = await typedPerformanceApi.getSchedule(
+      performanceId,
+      scheduleId
+    );
+
+    return {
+      code: 200,
+      message: "성공적으로 처리되었습니다",
+      data: data as PerformanceScheduleDetailRes,
     };
   },
 

@@ -8,6 +8,7 @@ import {
   performanceApi,
   type ScheduleSeatViewRes,
   type PerformanceDetailRes,
+  type PerformanceScheduleDetailRes,
 } from "@/lib/api/performance";
 import { reservationApi } from "@/lib/api/reservation";
 
@@ -23,6 +24,9 @@ export default function BookingSection({
   const [seats, setSeats] = useState<ScheduleSeatViewRes[]>([]);
   const [selectedSeats, setSelectedSeats] = useState<ScheduleSeatViewRes[]>([]);
   const [performance, setPerformance] = useState<PerformanceDetailRes | null>(
+    null
+  );
+  const [schedule, setSchedule] = useState<PerformanceScheduleDetailRes | null>(
     null
   );
   const [isLoading, setIsLoading] = useState(true);
@@ -49,6 +53,15 @@ export default function BookingSection({
         );
         if (performanceResponse.data) {
           setPerformance(performanceResponse.data);
+        }
+
+        // 회차 상세 정보 조회
+        const scheduleResponse = await performanceApi.getSchedule(
+          Number(id),
+          Number(scheduleId)
+        );
+        if (scheduleResponse.data) {
+          setSchedule(scheduleResponse.data);
         }
 
         // 좌석 데이터 조회
@@ -300,7 +313,63 @@ export default function BookingSection({
       <Header />
       <div className="py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">좌석 선택</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">좌석 선택</h1>
+
+          {/* 회차 정보 */}
+          {schedule && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <p className="text-gray-600">예매 유형</p>
+                  <p className="font-semibold text-gray-900">
+                    {schedule.bookingType === "FIRST_COME"
+                      ? "선착순"
+                      : schedule.bookingType === "LOTTERY"
+                      ? "추첨"
+                      : "지정석"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-600">예매 시작</p>
+                  <p className="font-semibold text-gray-900">
+                    {schedule.bookingOpenAt
+                      ? new Date(schedule.bookingOpenAt).toLocaleString(
+                          "ko-KR",
+                          {
+                            month: "2-digit",
+                            day: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )
+                      : "-"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-600">예매 종료</p>
+                  <p className="font-semibold text-gray-900">
+                    {schedule.bookingCloseAt
+                      ? new Date(schedule.bookingCloseAt).toLocaleString(
+                          "ko-KR",
+                          {
+                            month: "2-digit",
+                            day: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )
+                      : "-"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-600">회차</p>
+                  <p className="font-semibold text-gray-900">
+                    {schedule.performanceScheduleId}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Left: Seat Map */}

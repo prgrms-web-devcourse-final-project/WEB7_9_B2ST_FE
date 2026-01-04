@@ -204,11 +204,11 @@ export default function BookingSection({
     0
   );
 
-  // 예매 홀딩 및 생성 처리
-  const handleBooking = async () => {
+  // 예매 홀딩 및 생성 처리 (공통 로직)
+  const handleHoldingAndCreateReservation = async () => {
     if (!scheduleId || selectedSeats.length === 0) {
       alert("좌석을 선택해주세요.");
-      return;
+      return null;
     }
 
     setIsHolding(true);
@@ -240,8 +240,7 @@ export default function BookingSection({
       );
 
       if (response.data?.reservationId) {
-        // 예매 성공 시 마이페이지로 리다이렉트
-        router.push("/my-page?tab=lottery");
+        return response.data.reservationId;
       } else {
         throw new Error("예매 생성에 실패했습니다.");
       }
@@ -252,6 +251,25 @@ export default function BookingSection({
       } else {
         alert("좌석 예매에 실패했습니다.");
       }
+      return null;
+    }
+  };
+
+  // 바로 결제하기
+  const handlePaymentImmediately = async () => {
+    const reservationId = await handleHoldingAndCreateReservation();
+    if (reservationId) {
+      router.push(
+        `/performance/${id}/booking/payment?reservationId=${reservationId}&scheduleId=${scheduleId}`
+      );
+    }
+  };
+
+  // 나중에 결제하기
+  const handlePaymentLater = async () => {
+    const reservationId = await handleHoldingAndCreateReservation();
+    if (reservationId) {
+      router.push(`/my-page/reservations/${reservationId}`);
     }
   };
 
@@ -501,20 +519,29 @@ export default function BookingSection({
                         좌석 {selectedSeats.length}개
                       </span>
                     </div>
-                    <div className="flex justify-between items-center mb-4">
+                    <div className="flex justify-between items-center mb-6">
                       <span className="font-bold text-lg">총 결제금액</span>
                       <span className="text-2xl font-bold text-red-600">
                         {totalPrice.toLocaleString()}원
                       </span>
                     </div>
 
-                    <button
-                      onClick={handleBooking}
-                      disabled={isHolding}
-                      className="w-full px-6 py-4 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    >
-                      {isHolding ? "좌석 홀딩 중..." : "예약 완료"}
-                    </button>
+                    <div className="space-y-2">
+                      <button
+                        onClick={handlePaymentImmediately}
+                        disabled={isHolding}
+                        className="w-full px-6 py-4 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      >
+                        {isHolding ? "홀딩 중..." : "바로 결제하기"}
+                      </button>
+                      <button
+                        onClick={handlePaymentLater}
+                        disabled={isHolding}
+                        className="w-full px-6 py-4 bg-gray-200 text-gray-900 rounded-lg font-semibold hover:bg-gray-300 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      >
+                        {isHolding ? "홀딩 중..." : "나중에 결제하기"}
+                      </button>
+                    </div>
                   </div>
                 </div>
               ) : (

@@ -142,12 +142,12 @@ export default function ReservationDetailPage({
     );
   };
 
-  // 예매 확정 대기 상태인지 확인
+  // 예매 확정 대기 상태인지 확인 (결제 가능 상태)
   const isPendingConfirmation = (status?: string) => {
     if (!status) return false;
     const statusUpper = status.toUpperCase();
-    // HOLD, CREATED 상태는 예매 확정 대기
-    return statusUpper === "HOLD" || statusUpper === "CREATED";
+    // PENDING, HOLD, CREATED 상태는 결제 가능
+    return statusUpper === "PENDING" || statusUpper === "HOLD" || statusUpper === "CREATED";
   };
 
   // 예매 취소
@@ -379,18 +379,36 @@ export default function ReservationDetailPage({
               </section>
             )}
 
-            {/* 예매 확정 및 취소 버튼 */}
+            {/* 결제 및 취소 버튼 */}
             {(isPendingConfirmation(reservation.reservation.status) ||
               canCancel(reservation.reservation.status)) && (
               <section>
                 <div className="flex justify-end gap-3 pt-4 border-t">
                   {isPendingConfirmation(reservation.reservation.status) && (
-                    <Link
-                      href={`/performance/${reservation.reservation.performance?.performanceId}/booking/payment?scheduleId=${reservation.reservation.performance?.performanceScheduleId}&reservationIds=${reservationId}`}
-                      className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
-                    >
-                      예매 확정
-                    </Link>
+                    <>
+                      {reservation.reservation.status?.toUpperCase() === "HOLD" ? (
+                        <Link
+                          href={`/performance/${reservation.reservation.performance?.performanceId}/booking/payment?reservationId=${reservationId}&scheduleId=${reservation.reservation.performance?.performanceScheduleId}`}
+                          className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+                        >
+                          결제하기
+                        </Link>
+                      ) : reservation.reservation.status?.toUpperCase() === "PENDING" ? (
+                        <Link
+                          href={`/performance/${reservation.reservation.performance?.performanceId}/booking/payment?reservationId=${reservationId}&scheduleId=${reservation.reservation.performance?.performanceScheduleId}`}
+                          className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+                        >
+                          결제하기
+                        </Link>
+                      ) : (
+                        <Link
+                          href={`/performance/${reservation.reservation.performance?.performanceId}/booking/payment?scheduleId=${reservation.reservation.performance?.performanceScheduleId}&reservationIds=${reservationId}`}
+                          className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+                        >
+                          예매 확정
+                        </Link>
+                      )}
+                    </>
                   )}
                   {canCancel(reservation.reservation.status) && (
                     <button

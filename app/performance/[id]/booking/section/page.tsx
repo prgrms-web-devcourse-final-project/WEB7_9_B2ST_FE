@@ -110,7 +110,23 @@ export default function BookingSection({
     });
   });
 
-  // 구역별 색상 매핑
+  // 가격별 색상 매핑
+  const getColorByPrice = (price: number | undefined) => {
+    if (price === 30000)
+      return { bg: "bg-blue-200 border-blue-400", hover: "hover:bg-blue-300" };
+    if (price === 20000)
+      return {
+        bg: "bg-green-200 border-green-400",
+        hover: "hover:bg-green-300",
+      };
+    if (price === 10000)
+      return {
+        bg: "bg-yellow-200 border-yellow-400",
+        hover: "hover:bg-yellow-300",
+      };
+    return { bg: "bg-gray-200 border-gray-400", hover: "hover:bg-gray-300" };
+  };
+
   const getSectionColor = (sectionName: string) => {
     const name = sectionName.toUpperCase();
     if (name.includes("VIP")) return "bg-blue-100 border-blue-300";
@@ -153,18 +169,20 @@ export default function BookingSection({
       return "bg-red-600 text-white border-red-600";
     }
 
-    // 구역별 기본 색상
-    const sectionName = seat.sectionName || "";
-    const name = sectionName.toUpperCase();
-    if (name.includes("VIP"))
-      return "bg-blue-200 border-blue-400 hover:bg-blue-300";
-    if (name.includes("R"))
-      return "bg-green-200 border-green-400 hover:bg-green-300";
-    if (name.includes("S"))
-      return "bg-yellow-200 border-yellow-400 hover:bg-yellow-300";
-    if (name.includes("A"))
-      return "bg-purple-200 border-purple-400 hover:bg-purple-300";
-    return "bg-gray-200 border-gray-400 hover:bg-gray-300";
+    // 가격별 색상
+    const colors = getColorByPrice(seat.price);
+    return `${colors.bg} ${colors.hover}`;
+  };
+
+  // 구역의 가격 정보 추출
+  const getSectionPrices = (sectionName: string) => {
+    const seatsInSection = Object.values(
+      groupedSeats[sectionName] || {}
+    ).flat();
+    const prices = new Set(
+      seatsInSection.map((s) => s.price).filter((p) => p !== undefined)
+    );
+    return Array.from(prices).sort((a, b) => (b || 0) - (a || 0));
   };
 
   const isSeatDisabled = (seat: ScheduleSeatViewRes) => {
@@ -353,38 +371,19 @@ export default function BookingSection({
                 </div>
 
                 {/* Seat Legend */}
-                <div className="flex justify-center gap-4 mb-6 text-sm flex-wrap">
-                  {sections.map((sectionName) => {
-                    const name = sectionName?.toUpperCase() || "";
-                    let color = "bg-gray-200 border-gray-400";
-                    let label = sectionName || "기타";
-
-                    if (name.includes("VIP")) {
-                      color = "bg-blue-200 border-blue-400";
-                      label = "VIP석";
-                    } else if (name.includes("R")) {
-                      color = "bg-green-200 border-green-400";
-                      label = "R석";
-                    } else if (name.includes("S")) {
-                      color = "bg-yellow-200 border-yellow-400";
-                      label = "S석";
-                    } else if (name.includes("A")) {
-                      color = "bg-purple-200 border-purple-400";
-                      label = "A석";
-                    }
-
-                    return (
-                      <div
-                        key={sectionName}
-                        className="flex items-center gap-2"
-                      >
-                        <div
-                          className={`w-6 h-6 rounded border-2 ${color}`}
-                        ></div>
-                        <span>{label}</span>
-                      </div>
-                    );
-                  })}
+                <div className="flex justify-center gap-6 mb-6 text-sm flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-blue-200 border-2 border-blue-400 rounded"></div>
+                    <span>VIP석 - 30,000원</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-green-200 border-2 border-green-400 rounded"></div>
+                    <span>R석 - 20,000원</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-yellow-200 border-2 border-yellow-400 rounded"></div>
+                    <span>S석 - 10,000원</span>
+                  </div>
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 bg-red-600 rounded"></div>
                     <span>선택됨</span>
@@ -396,58 +395,69 @@ export default function BookingSection({
                 </div>
 
                 {/* Seat Grid by Section */}
-                {Object.keys(groupedSeats).map((sectionName) => (
-                  <div key={sectionName} className="mb-8">
-                    <div
-                      className={`p-3 rounded-lg mb-4 ${getSectionColor(
-                        sectionName
-                      )}`}
-                    >
-                      <h3 className="text-lg font-bold text-gray-900">
-                        {sectionName}구역
-                      </h3>
-                    </div>
-                    <div className="space-y-2">
-                      {Object.keys(groupedSeats[sectionName])
-                        .sort()
-                        .map((rowLabel) => (
-                          <div
-                            key={rowLabel}
-                            className="flex items-center gap-2"
-                          >
-                            <span className="w-12 text-center font-medium text-gray-700">
-                              {rowLabel}열
+                {Object.keys(groupedSeats).map((sectionName) => {
+                  const sectionPrices = getSectionPrices(sectionName);
+                  const priceLabel =
+                    sectionPrices.length > 0
+                      ? sectionPrices
+                          .map((p) => `${p?.toLocaleString()}원`)
+                          .join(", ")
+                      : "";
+
+                  return (
+                    <div key={sectionName} className="mb-8">
+                      <div className="p-3 rounded-lg mb-4 bg-gray-100 border border-gray-300">
+                        <h3 className="text-lg font-bold text-gray-900">
+                          {sectionName}구역{" "}
+                          {priceLabel && (
+                            <span className="text-sm font-normal text-gray-600">
+                              ({priceLabel})
                             </span>
-                            <div className="flex gap-1 flex-1 flex-wrap">
-                              {groupedSeats[sectionName][rowLabel].map(
-                                (seat) => (
-                                  <button
-                                    key={seat.scheduleSeatId}
-                                    onClick={() => toggleSeat(seat)}
-                                    className={`w-8 h-8 rounded border-2 text-xs font-medium transition-colors ${getSeatColor(
-                                      seat
-                                    )}`}
-                                    disabled={isSeatDisabled(seat)}
-                                    title={`${sectionName}구역 ${rowLabel}열 ${
-                                      seat.seatNumber
-                                    }번 - ${
-                                      seat.status === "AVAILABLE"
-                                        ? "선택 가능"
-                                        : seat.status === "HOLD"
-                                        ? "예약 중"
-                                        : "판매 완료"
-                                    }`}
-                                  >
-                                    {seat.seatNumber}
-                                  </button>
-                                )
-                              )}
+                          )}
+                        </h3>
+                      </div>
+                      <div className="space-y-2">
+                        {Object.keys(groupedSeats[sectionName])
+                          .sort()
+                          .map((rowLabel) => (
+                            <div
+                              key={rowLabel}
+                              className="flex items-center gap-2"
+                            >
+                              <span className="w-12 text-center font-medium text-gray-700">
+                                {rowLabel}열
+                              </span>
+                              <div className="flex gap-1 flex-1 flex-wrap">
+                                {groupedSeats[sectionName][rowLabel].map(
+                                  (seat) => (
+                                    <button
+                                      key={seat.scheduleSeatId}
+                                      onClick={() => toggleSeat(seat)}
+                                      className={`w-8 h-8 rounded border-2 text-xs font-medium transition-colors ${getSeatColor(
+                                        seat
+                                      )}`}
+                                      disabled={isSeatDisabled(seat)}
+                                      title={`${sectionName}구역 ${rowLabel}열 ${
+                                        seat.seatNumber
+                                      }번 - ${
+                                        seat.status === "AVAILABLE"
+                                          ? "선택 가능"
+                                          : seat.status === "HOLD"
+                                          ? "예약 중"
+                                          : "판매 완료"
+                                      }`}
+                                    >
+                                      {seat.seatNumber}
+                                    </button>
+                                  )
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 

@@ -221,8 +221,6 @@ export default function BookingSection({
     setError("");
 
     try {
-      const reservationIds: number[] = [];
-
       // 1단계: 모든 좌석에 대해 홀딩
       for (const seat of selectedSeats) {
         if (!seat.seatId) {
@@ -232,28 +230,27 @@ export default function BookingSection({
         await performanceApi.holdSeat(Number(scheduleId), seat.seatId);
       }
 
-      // 2단계: 홀딩 성공 후 예매 생성
-      for (const seat of selectedSeats) {
-        if (!seat.seatId) {
-          continue;
-        }
-        try {
-          const response = await reservationApi.createReservation(
-            Number(scheduleId),
-            seat.seatId
-          );
-          if (response.data?.reservationId) {
-            reservationIds.push(response.data.reservationId);
-          }
-        } catch (reservationErr) {
-          // 예매 생성 실패 시 에러 메시지 전파
-          throw reservationErr;
-        }
+      // 2단계: 홀딩 성공한 좌석 ID 배열 생성
+      const seatIds = selectedSeats
+        .filter((seat) => seat.seatId)
+        .map((seat) => seat.seatId as number);
+
+      if (seatIds.length === 0) {
+        throw new Error("선택된 좌석이 없습니다.");
       }
 
-      // 홀딩 및 예매 생성 성공 시 예매 완료 (결제는 나중에 lottery 당첨 시 진행)
-      // 마이페이지로 리다이렉트
-      router.push("/my-page?tab=lottery");
+      // 3단계: 배열로 예매 생성
+      const response = await reservationApi.createReservation(
+        Number(scheduleId),
+        seatIds
+      );
+
+      if (response.data?.reservationId) {
+        // 예매 성공 시 마이페이지로 리다이렉트
+        router.push("/my-page?tab=lottery");
+      } else {
+        throw new Error("예매 생성에 실패했습니다.");
+      }
     } catch (err) {
       setIsHolding(false);
       if (err instanceof Error) {

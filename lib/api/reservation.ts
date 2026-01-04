@@ -62,21 +62,30 @@ export const reservationApi = {
   },
 
   /**
-   * 예매 홀딩 (좌석 선점)
+   * 예매 생성
+   * 요청: { scheduleId: number, seatIds: number[] }
    * 응답: { reservationId: number, status: string }
    */
   async createReservation(
     scheduleId: number,
-    seatId: number
+    seatIds: number[]
   ): Promise<ApiResponse<CreateReservationRes>> {
     const data = await typedReservationApi.createReservation({
       scheduleId,
-      seatId,
+      seatIds,
     });
+
+    // 배열인 경우 첫 번째 요소 사용, 단일 객체인 경우 그대로 사용
+    const reservationData = Array.isArray(data) ? data[0] : data;
+
+    if (!reservationData) {
+      throw new Error("예매 생성 응답 데이터가 없습니다.");
+    }
+
     return {
       code: 201,
       message: "성공적으로 생성되었습니다",
-      data: data as CreateReservationRes,
+      data: reservationData as CreateReservationRes,
     };
   },
 

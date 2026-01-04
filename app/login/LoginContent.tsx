@@ -62,6 +62,9 @@ export default function LoginContent() {
           setError("카카오 로그인에 실패했습니다. 다시 시도해주세요.");
         }
         setIsKakaoLoading(false);
+
+        // URL에서 카카오 콜백 파라미터 제거하여 useEffect 재실행 방지
+        window.history.replaceState({}, "", "/login");
       }
     },
     [kakaoLogin, router]

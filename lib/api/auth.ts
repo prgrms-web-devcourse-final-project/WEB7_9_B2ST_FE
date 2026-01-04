@@ -86,12 +86,18 @@ export const authApi = {
    * 카카오 로그인
    */
   async kakaoLogin(request: KakaoLoginRequest) {
-    const data = await typedAuthApi.kakaoLogin(request.code);
-    // TokenInfo 타입을 KakaoLoginResponse로 변환
-    return {
-      code: 200,
-      message: "성공적으로 처리되었습니다",
-      data: data as KakaoLoginResponse,
-    };
+    try {
+      const data = await typedAuthApi.kakaoLogin(request.code);
+      console.log("카카오 로그인 API 응답:", data);
+      // TokenInfo 타입을 KakaoLoginResponse로 변환
+      return {
+        code: 200,
+        message: "성공적으로 처리되었습니다",
+        data: data as KakaoLoginResponse,
+      };
+    } catch (error) {
+      console.error("카카오 로그인 API 실패:", error);
+      throw error;
+    }
   },
 };

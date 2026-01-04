@@ -69,9 +69,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (refreshToken && typeof refreshToken === "string") {
           tokenManager.setRefreshToken(refreshToken);
         }
+        // 토큰 저장 후 상태 업데이트
         setIsAuthenticated(true);
+        console.log("카카오 로그인 성공, 토큰 저장됨");
+      } else {
+        throw new Error("응답에 accessToken이 없습니다");
       }
     } catch (error) {
+      console.error("카카오 로그인 실패:", error);
       throw error;
     }
   };

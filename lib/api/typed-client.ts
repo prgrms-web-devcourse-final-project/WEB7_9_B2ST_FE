@@ -81,6 +81,7 @@ class TypedApiClient {
     // 인증이 필요 없는 엔드포인트 목록
     const publicEndpoints = [
       "/api/auth/login",
+      "/api/auth/kakao",
       "/api/auth/reissue",
       "/api/members/signup",
       "/api/email/verification",

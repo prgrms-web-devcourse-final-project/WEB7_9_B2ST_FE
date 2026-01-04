@@ -24,9 +24,31 @@ export default function LoginContent() {
       setIsKakaoLoading(true);
 
       try {
+        console.log("카카오 로그인 처리 시작, code:", code);
+        console.log("카카오 로그인 전 localStorage:", {
+          accessToken: localStorage.getItem("accessToken"),
+          refreshToken: localStorage.getItem("refreshToken"),
+        });
+
         await kakaoLogin({ code });
-        router.push("/");
+
+        console.log("카카오 로그인 성공, 토큰 저장 후 localStorage:", {
+          accessToken: localStorage.getItem("accessToken"),
+          refreshToken: localStorage.getItem("refreshToken"),
+        });
+
+        // 약간의 지연을 추가하여 상태 업데이트가 완료되도록 대기
+        setTimeout(() => {
+          console.log("홈 페이지로 리다이렉트 중...");
+          router.push("/");
+        }, 100);
       } catch (err) {
+        console.error("카카오 로그인 오류:", err);
+        console.log("카카오 로그인 실패 후 localStorage:", {
+          accessToken: localStorage.getItem("accessToken"),
+          refreshToken: localStorage.getItem("refreshToken"),
+        });
+
         if (err instanceof Error) {
           // 이메일 정보 미동의 시 처리
           if (err.message.includes("이메일 정보 제공에 동의")) {

@@ -224,12 +224,17 @@ export default function BookingSection({
         if (!seat.seatId) {
           continue;
         }
-        const response = await reservationApi.createReservation(
-          Number(scheduleId),
-          seat.seatId
-        );
-        if (response.data?.reservationId) {
-          reservationIds.push(response.data.reservationId);
+        try {
+          const response = await reservationApi.createReservation(
+            Number(scheduleId),
+            seat.seatId
+          );
+          if (response.data?.reservationId) {
+            reservationIds.push(response.data.reservationId);
+          }
+        } catch (reservationErr) {
+          // 예매 생성 실패 시 에러 메시지 전파
+          throw reservationErr;
         }
       }
 
@@ -239,9 +244,9 @@ export default function BookingSection({
     } catch (err) {
       setIsHolding(false);
       if (err instanceof Error) {
-        alert(err.message || "좌석 홀딩에 실패했습니다.");
+        alert(err.message || "좌석 예매에 실패했습니다.");
       } else {
-        alert("좌석 홀딩에 실패했습니다.");
+        alert("좌석 예매에 실패했습니다.");
       }
     }
   };

@@ -147,7 +147,11 @@ export default function ReservationDetailPage({
     if (!status) return false;
     const statusUpper = status.toUpperCase();
     // PENDING, HOLD, CREATED 상태는 결제 가능
-    return statusUpper === "PENDING" || statusUpper === "HOLD" || statusUpper === "CREATED";
+    return (
+      statusUpper === "PENDING" ||
+      statusUpper === "HOLD" ||
+      statusUpper === "CREATED"
+    );
   };
 
   // 예매 취소
@@ -386,14 +390,16 @@ export default function ReservationDetailPage({
                 <div className="flex justify-end gap-3 pt-4 border-t">
                   {isPendingConfirmation(reservation.reservation.status) && (
                     <>
-                      {reservation.reservation.status?.toUpperCase() === "HOLD" ? (
+                      {reservation.reservation.status?.toUpperCase() ===
+                      "HOLD" ? (
                         <Link
                           href={`/performance/${reservation.reservation.performance?.performanceId}/booking/payment?reservationId=${reservationId}&scheduleId=${reservation.reservation.performance?.performanceScheduleId}`}
                           className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
                         >
                           결제하기
                         </Link>
-                      ) : reservation.reservation.status?.toUpperCase() === "PENDING" ? (
+                      ) : reservation.reservation.status?.toUpperCase() ===
+                        "PENDING" ? (
                         <Link
                           href={`/performance/${reservation.reservation.performance?.performanceId}/booking/payment?reservationId=${reservationId}&scheduleId=${reservation.reservation.performance?.performanceScheduleId}`}
                           className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"

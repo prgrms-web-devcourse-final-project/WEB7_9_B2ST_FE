@@ -13,6 +13,30 @@ export interface CreateReservationRes {
   status: string; // "PENDING"
 }
 
+// 예매 상세 조회 응답 타입
+export interface ReservationDetailWithSeatsRes {
+  reservation: {
+    reservationId: number;
+    status: string;
+    performance: {
+      performanceId: number;
+      performanceScheduleId: number;
+      title: string;
+      category: string;
+      startDate: string;
+      startAt: string;
+    };
+  };
+  seats: Array<{
+    seatId: number;
+    sectionId: number;
+    sectionName: string;
+    rowLabel: string;
+    seatNumber: number;
+  }>;
+  payment: any; // null or payment object
+}
+
 export const reservationApi = {
   /**
    * 내 예매 목록 조회 (상세)
@@ -36,16 +60,17 @@ export const reservationApi = {
 
   /**
    * 예매 상세 조회
+   * 응답: { reservation, seats[], payment }
    */
   async getReservationDetail(
     reservationId: number
-  ): Promise<ApiResponse<ReservationDetailRes>> {
+  ): Promise<ApiResponse<ReservationDetailWithSeatsRes>> {
     const data = await typedReservationApi.getReservationDetail(reservationId);
     // typedApiClient는 이미 data 필드를 추출해서 반환
     return {
       code: 200,
       message: "성공적으로 처리되었습니다",
-      data: data as ReservationDetailRes,
+      data: data as ReservationDetailWithSeatsRes,
     };
   },
 

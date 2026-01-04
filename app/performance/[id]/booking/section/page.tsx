@@ -130,10 +130,10 @@ export default function BookingSection({
       );
       if (isSelected) {
         // 이미 선택된 좌석이면 선택 해제
-        return [];
+        return prev.filter((s) => s.scheduleSeatId !== seat.scheduleSeatId);
       } else {
-        // 새로운 좌석 선택 시 기존 선택 해제하고 1개만 선택
-        return [seat];
+        // 새로운 좌석 추가 (다중 선택 가능)
+        return [...prev, seat];
       }
     });
   };
@@ -171,38 +171,14 @@ export default function BookingSection({
     return seat.status !== "AVAILABLE";
   };
 
-  // 선택된 좌석의 총 가격 계산 (공연 상세 정보의 가격 정보 사용)
+  // 선택된 좌석의 총 가격 계산 (API 응답의 price 필드 사용)
   const getSeatPrice = (seat: ScheduleSeatViewRes) => {
-    if (!performance?.gradePrices || performance.gradePrices.length === 0) {
-      // 가격 정보가 없으면 기본값 사용
-      const sectionName = seat.sectionName?.toUpperCase() || "";
-      if (sectionName.includes("VIP")) return 250000;
-      if (sectionName.includes("R")) return 200000;
-      if (sectionName.includes("S")) return 180000;
-      return 150000;
+    // API 응답에서 price 필드 직접 사용
+    if (seat.price !== undefined && seat.price !== null) {
+      return seat.price;
     }
-
-    // 구역명과 gradeType 매칭
-    const sectionName = seat.sectionName?.toUpperCase() || "";
-    const gradeType = sectionName.includes("VIP")
-      ? "VIP"
-      : sectionName.includes("R")
-      ? "R"
-      : sectionName.includes("S")
-      ? "S"
-      : "STANDARD";
-
-    // 가격 정보에서 매칭되는 항목 찾기
-    const priceInfo = performance.gradePrices.find(
-      (p) => p.gradeType.toUpperCase() === gradeType.toUpperCase()
-    );
-
-    if (priceInfo) {
-      return priceInfo.price;
-    }
-
-    // 매칭되지 않으면 첫 번째 가격 정보 사용
-    return performance.gradePrices[0]?.price || 150000;
+    // price 필드가 없으면 기본값 사용
+    return 0;
   };
 
   const totalPrice = selectedSeats.reduce(
@@ -487,20 +463,34 @@ export default function BookingSection({
                     {selectedSeats.map((seat) => (
                       <div
                         key={seat.scheduleSeatId}
-                        className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
+                        className="flex justify-between items-center p-3 bg-gray-50 rounded-lg group"
                       >
                         <span className="font-medium">
                           {seat.sectionName}구역 {seat.rowLabel}열{" "}
                           {seat.seatNumber}번
                         </span>
-                        <span className="text-red-600 font-semibold">
-                          {getSeatPrice(seat).toLocaleString()}원
-                        </span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-red-600 font-semibold">
+                            {getSeatPrice(seat).toLocaleString()}원
+                          </span>
+                          <button
+                            onClick={() => toggleSeat(seat)}
+                            className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-600 transition-opacity"
+                            title="선택 취소"
+                          >
+                            ✕
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
 
                   <div className="border-t pt-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm text-gray-600">
+                        좌석 {selectedSeats.length}개
+                      </span>
+                    </div>
                     <div className="flex justify-between items-center mb-4">
                       <span className="font-bold text-lg">총 결제금액</span>
                       <span className="text-2xl font-bold text-red-600">

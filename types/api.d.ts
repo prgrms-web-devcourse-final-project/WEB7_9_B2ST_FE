@@ -1213,6 +1213,9 @@ export interface components {
       seatNumber?: number;
       /** @enum {string} */
       status?: "AVAILABLE" | "HOLD" | "SOLD";
+      grade?: string;
+      /** Format: int32 */
+      price?: number;
     };
     BaseResponseReservationRes: {
       /** Format: int32 */

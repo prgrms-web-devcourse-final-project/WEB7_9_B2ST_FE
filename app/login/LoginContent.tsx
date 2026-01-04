@@ -24,13 +24,13 @@ export default function LoginContent() {
       setIsKakaoLoading(true);
 
       try {
-        console.log("카카오 로그인 처리 시작, code:", code);
+        console.log("카카오 로그인 처리 시작, code:", code, "state:", state);
         console.log("카카오 로그인 전 localStorage:", {
           accessToken: localStorage.getItem("accessToken"),
           refreshToken: localStorage.getItem("refreshToken"),
         });
 
-        await kakaoLogin({ code });
+        await kakaoLogin({ code, state });
 
         console.log("카카오 로그인 성공, 토큰 저장 후 localStorage:", {
           accessToken: localStorage.getItem("accessToken"),

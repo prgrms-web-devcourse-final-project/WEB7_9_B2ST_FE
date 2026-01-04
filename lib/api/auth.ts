@@ -14,6 +14,7 @@ export type SignupResponse = number; // memberId
 export type KakaoAuthorizeUrlResponse = KakaoAuthorizeUrlResponseType;
 export type KakaoLoginRequest = {
   code: string;
+  state?: string;
 };
 export type KakaoLoginResponse = components["schemas"]["TokenInfo"];
 
@@ -87,7 +88,7 @@ export const authApi = {
    */
   async kakaoLogin(request: KakaoLoginRequest) {
     try {
-      const data = await typedAuthApi.kakaoLogin(request.code);
+      const data = await typedAuthApi.kakaoLogin(request.code, request.state);
       console.log("카카오 로그인 API 응답:", data);
       // TokenInfo 타입을 KakaoLoginResponse로 변환
       return {

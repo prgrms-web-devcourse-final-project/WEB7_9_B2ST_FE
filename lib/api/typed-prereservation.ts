@@ -19,4 +19,36 @@ export const typedPrereservationApi = {
       { sectionId }
     );
   },
+
+  /**
+   * 사전 예매 좌석 hold
+   */
+  async holdPrereservationSeat(scheduleId: number, seatId: number) {
+    const response = await fetch(
+      `${
+        process.env.NEXT_PUBLIC_API_BASE_URL ||
+        "https://api.b2st.doncrytt.online"
+      }/api/prereservations/schedules/${scheduleId}/seats/${seatId}/hold`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${
+            typeof window !== "undefined"
+              ? localStorage.getItem("accessToken") || ""
+              : ""
+          }`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.message || "사전 예매 좌석 hold에 실패했습니다."
+      );
+    }
+
+    return response.json();
+  },
 };

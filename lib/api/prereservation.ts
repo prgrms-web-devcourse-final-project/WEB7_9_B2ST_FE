@@ -37,4 +37,19 @@ export const prereservationApi = {
       data: null,
     };
   },
+
+  /**
+   * 사전 예매 좌석 hold
+   */
+  async holdPrereservationSeat(scheduleId: number, seatId: number) {
+    const data = await typedPrereservationApi.holdPrereservationSeat(
+      scheduleId,
+      seatId
+    );
+    return {
+      code: 201,
+      message: "성공적으로 생성되었습니다",
+      data: null,
+    };
+  },
 };

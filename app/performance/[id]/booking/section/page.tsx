@@ -11,6 +11,7 @@ import {
   type PerformanceScheduleDetailRes,
 } from "@/lib/api/performance";
 import { reservationApi } from "@/lib/api/reservation";
+import { prereservationApi } from "@/lib/api/prereservation";
 
 export default function BookingSection({
   params,
@@ -20,6 +21,7 @@ export default function BookingSection({
   const { id } = use(params);
   const searchParams = useSearchParams();
   const scheduleId = searchParams.get("scheduleId");
+  const isPrereservation = searchParams.get("prereservation") === "true";
 
   const [seats, setSeats] = useState<ScheduleSeatViewRes[]>([]);
   const [selectedSeats, setSelectedSeats] = useState<ScheduleSeatViewRes[]>([]);
@@ -238,8 +240,15 @@ export default function BookingSection({
         if (!seat.seatId) {
           throw new Error("좌석 정보가 올바르지 않습니다.");
         }
-        // 좌석 홀딩
-        await performanceApi.holdSeat(Number(scheduleId), seat.seatId);
+        // 좌석 홀딩 (사전 예매는 전용 API 사용)
+        if (isPrereservation) {
+          await prereservationApi.holdPrereservationSeat(
+            Number(scheduleId),
+            seat.seatId
+          );
+        } else {
+          await performanceApi.holdSeat(Number(scheduleId), seat.seatId);
+        }
       }
 
       holdSuccessful = true;

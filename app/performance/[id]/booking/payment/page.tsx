@@ -9,6 +9,7 @@ import {
   type ReservationDetailWithSeatsRes,
 } from "@/lib/api/reservation";
 import { paymentApi, type PaymentRequest } from "@/lib/api/payment";
+import { performanceApi } from "@/lib/api/performance";
 
 export default function BookingPayment({
   params,
@@ -35,6 +36,7 @@ export default function BookingPayment({
   const [reservations, setReservations] = useState<
     ReservationDetailWithSeatsRes[]
   >([]);
+  const [seatPrices, setSeatPrices] = useState<Map<number, number>>(new Map());
   const [error, setError] = useState("");
 
   // 예매 정보 조회
@@ -51,11 +53,37 @@ export default function BookingPayment({
             reservationApi.getReservationDetail(reservationId)
           )
         );
-        setReservations(
-          reservationDetails
-            .map((r) => r.data)
-            .filter(Boolean) as ReservationDetailWithSeatsRes[]
-        );
+        const reservationData = reservationDetails
+          .map((r) => r.data)
+          .filter(Boolean) as ReservationDetailWithSeatsRes[];
+
+        setReservations(reservationData);
+
+        // 좌석 가격 조회
+        const pricesMap = new Map<number, number>();
+        for (const reservation of reservationData) {
+          const scheduleId =
+            reservation.reservation.performance.performanceScheduleId;
+          try {
+            const seatsResponse = await performanceApi.getScheduleSeats(
+              scheduleId
+            );
+            if (seatsResponse.data) {
+              // 각 예약된 좌석의 가격 매핑
+              reservation.seats.forEach((reservedSeat) => {
+                const seatInfo = seatsResponse.data.find(
+                  (s) => s.seatId === reservedSeat.seatId
+                );
+                if (seatInfo && seatInfo.price) {
+                  pricesMap.set(reservedSeat.seatId, seatInfo.price);
+                }
+              });
+            }
+          } catch (err) {
+            console.error(`스케줄 ${scheduleId} 좌석 정보 조회 실패:`, err);
+          }
+        }
+        setSeatPrices(pricesMap);
       } catch (err) {
         console.error("예매 정보 조회 실패:", err);
         setError("예매 정보를 불러오는데 실패했습니다.");
@@ -65,13 +93,12 @@ export default function BookingPayment({
     fetchReservations();
   }, [reservationIds.join(",")]);
 
-  // 총 가격 계산
+  // 총 가격 계산 (실제 좌석 가격 사용)
   const totalPrice = reservations.reduce((sum, reservation) => {
     const seatPrice =
       reservation.seats?.reduce((seatSum, seat) => {
-        // 좌석 가격은 별도 API에서 조회되어야 함
-        // 일단 기본값 사용
-        return seatSum + 10000;
+        const price = seatPrices.get(seat.seatId) || 0;
+        return seatSum + price;
       }, 0) || 0;
     return sum + seatPrice;
   }, 0);

@@ -98,8 +98,18 @@ export default function BookingSeats({
     // URL은 변경하지 않음 (대기열 재진입 방지)
   };
 
+  // 중복 제거: sectionName + rowLabel + seatNumber로 유니크한 좌석만 선택
+  const uniqueSeats = Array.from(
+    new Map(
+      seats.map((seat) => {
+        const key = `${seat.sectionName}_${seat.rowLabel}_${seat.seatNumber}`;
+        return [key, seat];
+      })
+    ).values()
+  );
+
   // 좌석을 구역별, 행별로 그룹화
-  const groupedSeats = seats.reduce((acc, seat) => {
+  const groupedSeats = uniqueSeats.reduce((acc, seat) => {
     const sectionName = seat.sectionName || "기타";
     const rowLabel = seat.rowLabel || "";
 
@@ -129,11 +139,21 @@ export default function BookingSeats({
 
     setSelectedSeats((prev) => {
       const isSelected = prev.some(
-        (s) => s.scheduleSeatId === seat.scheduleSeatId
+        (s) =>
+          s.sectionName === seat.sectionName &&
+          s.rowLabel === seat.rowLabel &&
+          s.seatNumber === seat.seatNumber
       );
       if (isSelected) {
         // 선택 해제
-        return prev.filter((s) => s.scheduleSeatId !== seat.scheduleSeatId);
+        return prev.filter(
+          (s) =>
+            !(
+              s.sectionName === seat.sectionName &&
+              s.rowLabel === seat.rowLabel &&
+              s.seatNumber === seat.seatNumber
+            )
+        );
       } else {
         // 새로 선택 - 1개만 선택 가능하도록 제한
         if (prev.length >= 1) {
@@ -143,6 +163,21 @@ export default function BookingSeats({
         return [...prev, seat];
       }
     });
+  };
+
+  // 등급별 색상 매핑 (API 응답의 grade 필드 기반)
+  const getGradeColor = (grade?: string): string => {
+    if (!grade)
+      return "bg-white border-gray-300 text-gray-900 hover:border-gray-400 hover:bg-gray-100";
+
+    const upperGrade = grade.toUpperCase();
+    if (upperGrade === "VIP")
+      return "bg-yellow-100 border-yellow-400 text-gray-900 hover:bg-yellow-200 hover:border-yellow-500";
+    if (upperGrade === "ROYAL")
+      return "bg-purple-100 border-purple-400 text-gray-900 hover:bg-purple-200 hover:border-purple-500";
+    if (upperGrade === "STANDARD")
+      return "bg-blue-100 border-blue-400 text-gray-900 hover:bg-blue-200 hover:border-blue-500";
+    return "bg-white border-gray-300 text-gray-900 hover:border-gray-400 hover:bg-gray-100";
   };
 
   const getSeatColor = (seat: ScheduleSeatViewRes) => {
@@ -155,20 +190,18 @@ export default function BookingSeats({
       return "bg-gray-400 cursor-not-allowed border-gray-400";
     if (seat.status === "HOLD")
       return "bg-yellow-300 cursor-not-allowed border-yellow-300";
-    return "bg-white border-gray-300 hover:border-red-500 hover:bg-red-50";
+
+    // AVAILABLE 좌석의 경우 등급별 색상 적용
+    return getGradeColor(seat.grade);
   };
 
   const isSeatDisabled = (seat: ScheduleSeatViewRes) => {
     return seat.status !== "AVAILABLE";
   };
 
-  // 선택된 좌석의 총 가격 계산 (임시로 구역별 가격 설정)
+  // 실제 가격 사용 (API에서 제공하는 price 필드)
   const getSeatPrice = (seat: ScheduleSeatViewRes) => {
-    const sectionName = seat.sectionName?.toUpperCase() || "";
-    if (sectionName.includes("VIP")) return 250000;
-    if (sectionName.includes("R")) return 200000;
-    if (sectionName.includes("S")) return 180000;
-    return 150000;
+    return seat.price || 0;
   };
 
   const totalPrice = selectedSeats.reduce(
@@ -195,7 +228,8 @@ export default function BookingSeats({
     }
 
     const seat = selectedSeats[0];
-    if (!seat.scheduleSeatId) {
+    if (!seat.seatId) {
+      console.error("좌석 정보:", seat);
       alert("좌석 정보가 올바르지 않습니다.");
       return;
     }
@@ -205,15 +239,12 @@ export default function BookingSeats({
 
     try {
       // 1단계: 좌석 hold
-      await performanceApi.holdSeat(
-        Number(currentScheduleId),
-        seat.scheduleSeatId
-      );
+      await performanceApi.holdSeat(Number(currentScheduleId), seat.seatId);
 
       // 2단계: 예매 생성 (hold가 성공한 경우에만 진행)
       const response = await reservationApi.createReservation(
         Number(currentScheduleId),
-        [seat.scheduleSeatId]
+        [seat.seatId]
       );
 
       if (!response.data?.reservationId) {
@@ -229,6 +260,7 @@ export default function BookingSeats({
       router.push(paymentUrl);
     } catch (err) {
       setIsProcessing(false);
+      console.error("예매 실패 상세:", err);
       if (err instanceof Error) {
         alert(err.message || "좌석 예매에 실패했습니다.");
       } else {
@@ -364,8 +396,16 @@ export default function BookingSeats({
                 {/* Seat Legend */}
                 <div className="flex justify-center gap-6 mb-6 text-sm flex-wrap">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-white border border-gray-300 rounded"></div>
-                    <span>선택 가능</span>
+                    <div className="w-6 h-6 bg-yellow-100 border-2 border-yellow-400 rounded"></div>
+                    <span>VIP (30,000원)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-purple-100 border-2 border-purple-400 rounded"></div>
+                    <span>ROYAL (20,000원)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-blue-100 border-2 border-blue-400 rounded"></div>
+                    <span>STANDARD (10,000원)</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 bg-red-600 rounded"></div>
@@ -411,6 +451,10 @@ export default function BookingSeats({
                                     title={`${sectionName}구역 ${rowLabel}열 ${
                                       seat.seatNumber
                                     }번 - ${
+                                      seat.price
+                                        ? `${seat.price.toLocaleString()}원`
+                                        : "가격 정보 없음"
+                                    } - ${
                                       seat.status === "AVAILABLE"
                                         ? "선택 가능"
                                         : seat.status === "HOLD"
@@ -445,10 +489,17 @@ export default function BookingSeats({
                         key={seat.scheduleSeatId}
                         className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
                       >
-                        <span className="font-medium">
-                          {seat.sectionName}구역 {seat.rowLabel}열{" "}
-                          {seat.seatNumber}번
-                        </span>
+                        <div className="flex flex-col">
+                          <span className="font-medium">
+                            {seat.sectionName}구역 {seat.rowLabel}열{" "}
+                            {seat.seatNumber}번
+                          </span>
+                          {seat.grade && (
+                            <span className="text-xs text-gray-500">
+                              {seat.grade}
+                            </span>
+                          )}
+                        </div>
                         <span className="text-red-600 font-semibold">
                           {getSeatPrice(seat).toLocaleString()}원
                         </span>
@@ -457,9 +508,9 @@ export default function BookingSeats({
                   </div>
 
                   <div className="border-t pt-4">
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="font-bold text-lg">총 결제금액</span>
-                      <span className="text-2xl font-bold text-red-600">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm text-gray-600">결제 금액</span>
+                      <span className="text-lg font-bold text-red-600">
                         {totalPrice.toLocaleString()}원
                       </span>
                     </div>

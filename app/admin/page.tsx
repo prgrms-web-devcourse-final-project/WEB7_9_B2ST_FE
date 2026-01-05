@@ -50,6 +50,12 @@ export default function AdminPage() {
       icon: "🎟️",
       path: "/admin/venues/seats",
     },
+    {
+      title: "예매 조회",
+      description: "예매 상태별 조회",
+      icon: "🎫",
+      path: "/admin/reservations",
+    },
   ];
 
   return (

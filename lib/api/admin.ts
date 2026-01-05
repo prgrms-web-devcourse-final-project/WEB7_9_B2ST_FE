@@ -76,6 +76,59 @@ export interface CreateVenueSeatRequest {
   seatNumber: number;
 }
 
+// 예매 타입
+export type ReservationStatus =
+  | "PENDING"
+  | "COMPLETED"
+  | "CANCELED"
+  | "EXPIRED";
+
+export interface AdminReservation {
+  reservationId: number;
+  scheduleId: number;
+  memberId: number;
+  status: ReservationStatus;
+  seatCount: number;
+  createdAt: string;
+  expiresAt: string;
+}
+
+export interface AdminReservationPageResponse {
+  content: AdminReservation[];
+  empty: boolean;
+  first: boolean;
+  last: boolean;
+  number: number;
+  numberOfElements: number;
+  pageable: {
+    offset: number;
+    pageNumber: number;
+    pageSize: number;
+    paged: boolean;
+    sort: {
+      empty: boolean;
+      sorted: boolean;
+      unsorted: boolean;
+    };
+    unpaged: boolean;
+  };
+  size: number;
+  sort: {
+    empty: boolean;
+    sorted: boolean;
+    unsorted: boolean;
+  };
+  totalElements: number;
+  totalPages: number;
+}
+
+export interface ReservationQueryParams {
+  scheduleId?: number;
+  memberId?: number;
+  page?: number;
+  status?: ReservationStatus;
+}
+
 export const adminApi = {
   /**
    * 로그인 로그 조회
@@ -141,6 +194,40 @@ export const adminApi = {
     return {
       code: 201,
       message: "성공적으로 생성되었습니다",
+      data,
+    };
+  },
+
+  /**
+   * 관리자 예매 조회 (상태별)
+   */
+  async getReservations(
+    params?: ReservationQueryParams
+  ): Promise<{
+    code: number;
+    message: string;
+    data: AdminReservationPageResponse;
+  }> {
+    const queryParams = new URLSearchParams();
+
+    if (params?.scheduleId)
+      queryParams.append("scheduleId", String(params.scheduleId));
+    if (params?.memberId)
+      queryParams.append("memberId", String(params.memberId));
+    if (params?.page !== undefined)
+      queryParams.append("page", String(params.page));
+    if (params?.status) queryParams.append("status", params.status);
+
+    const queryString = queryParams.toString();
+    const url = `/api/admin/reservations${
+      queryString ? `?${queryString}` : ""
+    }`;
+
+    const data = await adminApiClient.get<AdminReservationPageResponse>(url);
+
+    return {
+      code: 200,
+      message: "성공적으로 처리되었습니다",
       data,
     };
   },

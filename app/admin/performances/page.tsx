@@ -6,6 +6,7 @@ import {
   performanceApi,
   type PerformanceDetailRes,
 } from "@/lib/api/performance";
+import { adminApi } from "@/lib/api/admin";
 
 export default function AdminPerformancesPage() {
   const router = useRouter();
@@ -17,6 +18,9 @@ export default function AdminPerformancesPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [posterUrl, setPosterUrl] = useState("");
+  const [posterFile, setPosterFile] = useState<File | null>(null);
+  const [posterPreview, setPosterPreview] = useState<string | null>(null);
+  const [isUploadingPoster, setIsUploadingPoster] = useState(false);
   const [list, setList] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -68,17 +72,92 @@ export default function AdminPerformancesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // 파일 형식 검증
+      const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+      if (!allowedTypes.includes(file.type)) {
+        setError(
+          "허용된 이미지 형식은 image/jpeg, image/png, image/webp입니다."
+        );
+        return;
+      }
+
+      // 파일 크기 검증 (10MB)
+      if (file.size < 1 || file.size > 10485760) {
+        setError("파일 크기는 1바이트 이상 10MB 이하여야 합니다.");
+        return;
+      }
+
+      setPosterFile(file);
+      setPosterUrl(""); // URL 입력 초기화
+      setError(null);
+
+      // 미리보기 생성
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPosterPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
 
     try {
+      let finalPosterUrl = posterUrl;
+
+      // 파일이 선택된 경우 업로드 진행
+      if (posterFile) {
+        setIsUploadingPoster(true);
+        try {
+          // 1. Presigned URL 요청
+          const presignResponse = await adminApi.getPosterPresignedUrl({
+            contentType: posterFile.type,
+            fileSize: posterFile.size,
+          });
+
+          const { uploadUrl, objectKey } = presignResponse.data;
+
+          // 2. S3에 파일 업로드
+          const uploadResponse = await fetch(uploadUrl, {
+            method: "PUT",
+            body: posterFile,
+            headers: {
+              "Content-Type": posterFile.type,
+            },
+          });
+
+          if (!uploadResponse.ok) {
+            throw new Error("이미지 업로드에 실패했습니다.");
+          }
+
+          // 3. 업로드된 파일의 public URL 생성 (uploadUrl에서 쿼리 파라미터 제거)
+          finalPosterUrl = uploadUrl.split("?")[0];
+        } catch (uploadErr: any) {
+          console.error("포스터 업로드 실패:", uploadErr);
+          throw new Error(
+            uploadErr?.message || "포스터 업로드에 실패했습니다."
+          );
+        } finally {
+          setIsUploadingPoster(false);
+        }
+      }
+
+      // 포스터 URL이 없으면 에러
+      if (!finalPosterUrl) {
+        throw new Error("포스터 이미지를 업로드하거나 URL을 입력해주세요.");
+      }
+
       const response = await performanceApi.createPerformance({
         venueId: parseInt(venueId),
         title,
         category,
-        posterUrl,
+        posterUrl: finalPosterUrl,
         description,
         startDate: `${startDate}T00:00:00`,
         endDate: `${endDate}T23:59:59`,
@@ -92,6 +171,8 @@ export default function AdminPerformancesPage() {
         setStartDate("");
         setEndDate("");
         setPosterUrl("");
+        setPosterFile(null);
+        setPosterPreview(null);
         alert("공연이 생성되었습니다.");
         await loadPerformances();
       }
@@ -100,11 +181,7 @@ export default function AdminPerformancesPage() {
       let errorMessage = "공연 생성에 실패했습니다";
 
       if (err?.message) {
-        if (err.message.includes("권한") || err.message.includes("인증")) {
-          errorMessage = err.message;
-        } else {
-          errorMessage = err.message;
-        }
+        errorMessage = err.message;
       }
 
       setError(errorMessage);
@@ -198,15 +275,66 @@ export default function AdminPerformancesPage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium">포스터 URL *</label>
-              <input
-                value={posterUrl}
-                onChange={(e) => setPosterUrl(e.target.value)}
-                placeholder="https://example.com/poster.jpg"
-                className="mt-1 block w-full rounded border px-3 py-2 border-gray-300"
-                required
-                disabled={isLoading}
-              />
+              <label className="block text-sm font-medium mb-2">
+                포스터 이미지 *
+              </label>
+              <div className="space-y-3">
+                {/* 파일 업로드 */}
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">
+                    파일 업로드 (최대 10MB, jpeg/png/webp)
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleFileChange}
+                    disabled={isLoading || !!posterUrl}
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50"
+                  />
+                </div>
+
+                {/* 또는 구분선 */}
+                <div className="flex items-center">
+                  <div className="flex-1 border-t border-gray-300"></div>
+                  <span className="px-3 text-xs text-gray-500">또는</span>
+                  <div className="flex-1 border-t border-gray-300"></div>
+                </div>
+
+                {/* URL 입력 */}
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">
+                    포스터 URL 직접 입력
+                  </label>
+                  <input
+                    value={posterUrl}
+                    onChange={(e) => {
+                      setPosterUrl(e.target.value);
+                      if (e.target.value) {
+                        setPosterFile(null);
+                        setPosterPreview(null);
+                      }
+                    }}
+                    placeholder="https://example.com/poster.jpg"
+                    className="block w-full rounded border px-3 py-2 border-gray-300 text-sm"
+                    disabled={isLoading || !!posterFile}
+                  />
+                </div>
+
+                {/* 미리보기 */}
+                {posterPreview && (
+                  <div className="mt-2">
+                    <p className="text-xs text-gray-600 mb-1">미리보기:</p>
+                    <div className="w-32 h-40 border rounded overflow-hidden">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={posterPreview}
+                        alt="포스터 미리보기"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {error && (
@@ -221,7 +349,11 @@ export default function AdminPerformancesPage() {
                 disabled={isLoading}
                 className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-400"
               >
-                {isLoading ? "생성 중..." : "생성"}
+                {isUploadingPoster
+                  ? "이미지 업로드 중..."
+                  : isLoading
+                  ? "생성 중..."
+                  : "생성"}
               </button>
             </div>
           </form>

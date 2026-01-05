@@ -374,4 +374,32 @@ export const adminApi = {
       data,
     };
   },
+
+  /**
+   * 포스터 업로드 Presigned URL 생성
+   */
+  async getPosterPresignedUrl(request: {
+    contentType: string;
+    fileSize: number;
+  }): Promise<{
+    code: number;
+    message: string;
+    data: {
+      objectKey: string;
+      uploadUrl: string;
+      expiresInSeconds: number;
+    };
+  }> {
+    const data = await adminApiClient.post<{
+      objectKey: string;
+      uploadUrl: string;
+      expiresInSeconds: number;
+    }>("/api/admin/performances/poster/presign", request);
+
+    return {
+      code: 200,
+      message: "성공적으로 처리되었습니다",
+      data,
+    };
+  },
 };

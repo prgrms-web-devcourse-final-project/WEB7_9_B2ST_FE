@@ -248,4 +248,28 @@ export const performanceApi = {
       data: null,
     };
   },
+
+  /**
+   * 공연 회차 생성 (관리자)
+   */
+  async createSchedule(
+    performanceId: number,
+    request: {
+      startAt: string;
+      roundNo: number;
+      bookingType: "FIRST_COME" | "SEAT" | "LOTTERY";
+      bookingOpenAt: string;
+      bookingCloseAt: string;
+    }
+  ) {
+    const data = await typedPerformanceApi.createSchedule(
+      performanceId,
+      request
+    );
+    return {
+      code: 200,
+      message: "성공적으로 처리되었습니다",
+      data: data as components["schemas"]["PerformanceScheduleCreateRes"],
+    };
+  },
 };

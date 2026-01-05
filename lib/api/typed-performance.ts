@@ -186,4 +186,20 @@ export const typedPerformanceApi = {
       request
     );
   },
+
+  /**
+   * 공연 회차 생성 (관리자)
+   */
+  async createSchedule(
+    performanceId: number,
+    request: components["schemas"]["PerformanceScheduleCreateReq"]
+  ) {
+    return typedApiClient.post<
+      "/api/performances/{performanceId}/schedules",
+      "post",
+      200
+    >("/api/performances/{performanceId}/schedules", request, {
+      path: { performanceId },
+    });
+  },
 };

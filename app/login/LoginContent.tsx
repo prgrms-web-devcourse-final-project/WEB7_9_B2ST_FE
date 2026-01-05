@@ -17,7 +17,7 @@ export default function LoginContent() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isKakaoLoading, setIsKakaoLoading] = useState(false);
-  
+
   // 카카오 로그인 중복 호출 방지
   const isProcessingKakaoLogin = useRef(false);
 

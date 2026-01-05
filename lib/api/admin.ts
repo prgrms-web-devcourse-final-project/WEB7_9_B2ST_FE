@@ -286,4 +286,23 @@ export const adminApi = {
       data,
     };
   },
+
+  /**
+   * 관리자 예매 취소
+   */
+  async cancelReservation(reservationId: number): Promise<{
+    code: number;
+    message: string;
+    data: null;
+  }> {
+    const url = `/api/admin/reservations/${reservationId}/cancel`;
+
+    const data = await adminApiClient.post<null>(url);
+
+    return {
+      code: 200,
+      message: "성공적으로 처리되었습니다",
+      data,
+    };
+  },
 };

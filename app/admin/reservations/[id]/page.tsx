@@ -31,6 +31,9 @@ export default function AdminReservationDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [detail, setDetail] = useState<AdminReservationDetail | null>(null);
+  const [isCanceling, setIsCanceling] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelSuccess, setCancelSuccess] = useState(false);
 
   useEffect(() => {
     const admin = localStorage.getItem("isAdmin") === "true";
@@ -62,6 +65,27 @@ export default function AdminReservationDetailPage() {
       setError(msg);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleCancelReservation = async () => {
+    setIsCanceling(true);
+    setError("");
+
+    try {
+      await adminApi.cancelReservation(parseInt(reservationId, 10));
+      setCancelSuccess(true);
+      setShowCancelModal(false);
+      // 상세 정보 다시 로드하여 상태 업데이트
+      await fetchDetail();
+    } catch (err: any) {
+      console.error("예매 취소 실패:", err);
+      const msg =
+        err instanceof Error ? err.message : "예매 취소에 실패했습니다.";
+      setError(msg);
+      setShowCancelModal(false);
+    } finally {
+      setIsCanceling(false);
     }
   };
 
@@ -130,13 +154,32 @@ export default function AdminReservationDetailPage() {
       <div className="max-w-4xl mx-auto px-4 py-12">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">예매 상세</h1>
-          <button
-            onClick={() => router.push("/admin/reservations")}
-            className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300"
-          >
-            ← 목록으로
-          </button>
+          <div className="flex gap-2">
+            {reservation.status !== "CANCELED" && (
+              <button
+                onClick={() => setShowCancelModal(true)}
+                disabled={isCanceling}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isCanceling ? "취소 중..." : "예매 취소"}
+              </button>
+            )}
+            <button
+              onClick={() => router.push("/admin/reservations")}
+              className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300"
+            >
+              ← 목록으로
+            </button>
+          </div>
         </div>
+
+        {cancelSuccess && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded">
+            <p className="text-sm text-green-600 font-semibold">
+              예매가 성공적으로 취소되었습니다.
+            </p>
+          </div>
+        )}
 
         {/* 예매 정보 */}
         <section className="bg-white p-6 rounded-lg shadow-sm mb-6">
@@ -315,6 +358,35 @@ export default function AdminReservationDetailPage() {
             </div>
           </div>
         </section>
+
+        {/* 취소 확인 모달 */}
+        {showCancelModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-lg font-semibold mb-4">예매 취소 확인</h3>
+              <p className="text-gray-700 mb-6">
+                예매 ID {reservation.reservationId}번을 취소하시겠습니까?
+                <br />이 작업은 되돌릴 수 없습니다.
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setShowCancelModal(false)}
+                  disabled={isCanceling}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50"
+                >
+                  아니오
+                </button>
+                <button
+                  onClick={handleCancelReservation}
+                  disabled={isCanceling}
+                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+                >
+                  {isCanceling ? "취소 중..." : "예, 취소합니다"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

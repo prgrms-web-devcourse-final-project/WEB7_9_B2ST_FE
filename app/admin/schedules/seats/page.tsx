@@ -42,6 +42,8 @@ export default function AdminScheduleSeatsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [seats, setSeats] = useState<ScheduleSeat[]>([]);
+  const [releasingSeatId, setReleasingSeatId] = useState<number | null>(null);
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     const admin = localStorage.getItem("isAdmin") === "true";
@@ -83,6 +85,34 @@ export default function AdminScheduleSeatsPage() {
     await fetchSeats();
   };
 
+  const handleReleaseHold = async (seatId: number) => {
+    if (!scheduleId) return;
+
+    // 확인 대화상자
+    const confirmed = window.confirm(
+      `좌석 ID ${seatId}의 HOLD를 해제하시겠습니까?`
+    );
+    if (!confirmed) return;
+
+    setReleasingSeatId(seatId);
+    setError("");
+    setSuccessMessage("");
+
+    try {
+      await adminApi.releaseHoldSeat(parseInt(scheduleId, 10), seatId);
+      setSuccessMessage(`좌석 ID ${seatId}의 HOLD가 해제되었습니다.`);
+      // 목록 재조회
+      await fetchSeats();
+    } catch (err: any) {
+      console.error("HOLD 해제 실패:", err);
+      const msg =
+        err instanceof Error ? err.message : "HOLD 해제에 실패했습니다.";
+      setError(msg);
+    } finally {
+      setReleasingSeatId(null);
+    }
+  };
+
   const statusSummary = seats.reduce((acc, seat) => {
     acc[seat.status] = (acc[seat.status] || 0) + 1;
     return acc;
@@ -102,6 +132,14 @@ export default function AdminScheduleSeatsPage() {
             ← 대시보드로
           </button>
         </div>
+
+        {successMessage && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded">
+            <p className="text-sm text-green-600 font-semibold">
+              {successMessage}
+            </p>
+          </div>
+        )}
 
         <section className="bg-white p-6 rounded-lg shadow-sm mb-6">
           <h2 className="text-lg font-semibold mb-4">조회 조건</h2>
@@ -171,6 +209,7 @@ export default function AdminScheduleSeatsPage() {
                   setStatus("");
                   setSeats([]);
                   setError("");
+                  setSuccessMessage("");
                 }}
                 disabled={isLoading}
                 className="px-6 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50"
@@ -246,6 +285,9 @@ export default function AdminScheduleSeatsPage() {
                     <th className="px-4 py-2 text-left font-semibold text-gray-700">
                       상태
                     </th>
+                    <th className="px-4 py-2 text-left font-semibold text-gray-700">
+                      작업
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -276,6 +318,19 @@ export default function AdminScheduleSeatsPage() {
                         >
                           {seat.status}
                         </span>
+                      </td>
+                      <td className="px-4 py-2">
+                        {seat.status === "HOLD" && (
+                          <button
+                            onClick={() => handleReleaseHold(seat.seatId)}
+                            disabled={releasingSeatId === seat.seatId}
+                            className="px-3 py-1 text-xs bg-orange-600 text-white rounded hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {releasingSeatId === seat.seatId
+                              ? "해제 중..."
+                              : "해제"}
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}

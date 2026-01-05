@@ -352,4 +352,26 @@ export const adminApi = {
       data,
     };
   },
+
+  /**
+   * HOLD 좌석 해제
+   */
+  async releaseHoldSeat(
+    scheduleId: number,
+    seatId: number
+  ): Promise<{
+    code: number;
+    message: string;
+    data: null;
+  }> {
+    const url = `/api/admin/schedules/${scheduleId}/seats/${seatId}/release-hold`;
+
+    const data = await adminApiClient.post<null>(url);
+
+    return {
+      code: 201,
+      message: "성공적으로 생성되었습니다.",
+      data,
+    };
+  },
 };

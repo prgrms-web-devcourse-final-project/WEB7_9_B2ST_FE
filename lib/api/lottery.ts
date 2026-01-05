@@ -72,14 +72,20 @@ export const lotteryApi = {
   /**
    * 선택한 추첨 응모 정보 저장
    */
-  async createLotteryEntry(performanceId: number, request: CreateLotteryEntryRequest) {
+  async createLotteryEntry(
+    performanceId: number,
+    request: CreateLotteryEntryRequest
+  ) {
     // API는 RegisterLotteryEntryReq를 요구 (grade 사용)
     const apiRequest = {
       scheduleId: request.scheduleId,
       grade: request.grade,
       quantity: request.quantity,
     };
-    const response = await typedLotteryApi.createLotteryEntry(performanceId, apiRequest);
+    const response = await typedLotteryApi.createLotteryEntry(
+      performanceId,
+      apiRequest
+    );
     // API 응답의 id는 UUID (String) 타입
     // typedApiClient가 반환하는 data는 LotteryEntryInfo 타입이지만, 실제로는 id가 UUID 문자열
     const responseData = response as any;

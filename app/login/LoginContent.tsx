@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -17,6 +17,9 @@ export default function LoginContent() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isKakaoLoading, setIsKakaoLoading] = useState(false);
+  
+  // 카카오 로그인 중복 호출 방지
+  const isProcessingKakaoLogin = useRef(false);
 
   const handleKakaoCallback = useCallback(
     async (code: string, state: string) => {
@@ -98,10 +101,13 @@ export default function LoginContent() {
     const code = searchParams.get("code");
     const state = searchParams.get("state");
 
-    if (code && state) {
+    // code와 state가 있고, 아직 처리 중이 아닐 때만 실행
+    if (code && state && !isProcessingKakaoLogin.current) {
+      console.log("🔵 카카오 콜백 감지 - 처리 시작");
+      isProcessingKakaoLogin.current = true; // 중복 실행 방지
       handleKakaoCallback(code, state);
     }
-  }, [searchParams, handleKakaoCallback]);
+  }, [searchParams]); // handleKakaoCallback 의존성 제거 - 중복 실행 방지
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

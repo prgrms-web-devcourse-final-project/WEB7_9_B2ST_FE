@@ -76,10 +76,10 @@ export const typedQueueApi = {
    * POST /api/queues/{queueId}/complete
    */
   async complete(queueId: number): Promise<void> {
-    return typedApiClient.post<
-      "/api/queues/{queueId}/complete",
-      "post",
-      200
-    >(`/api/queues/${queueId}/complete`, {}, { path: { queueId } });
+    return typedApiClient.post<"/api/queues/{queueId}/complete", "post", 200>(
+      `/api/queues/${queueId}/complete`,
+      {},
+      { path: { queueId } }
+    );
   },
 };

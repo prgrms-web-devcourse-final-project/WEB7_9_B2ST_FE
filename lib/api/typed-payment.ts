@@ -1,4 +1,4 @@
-import { typedApiClient } from "./typed-client";
+import { tokenManager } from "@/lib/auth/token";
 
 export interface PaymentRequest {
   domainType: "RESERVATION" | "PRERESERVATION" | "LOTTERY" | "TRADE";
@@ -15,13 +15,29 @@ export interface PaymentResponse {
   paidAt: string;
 }
 
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.b2st.doncrytt.online";
+
 class TypedPaymentApi {
   async pay(request: PaymentRequest): Promise<PaymentResponse> {
-    const response = await typedApiClient.post<PaymentResponse>(
-      "/api/payments/pay",
-      request
-    );
-    return response;
+    const token = tokenManager.getAccessToken();
+
+    const response = await fetch(`${API_BASE_URL}/api/payments/pay`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "결제에 실패했습니다.");
+    }
+
+    const result = await response.json();
+    return result.data;
   }
 }
 

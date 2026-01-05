@@ -1,14 +1,14 @@
-import { typedMyPageApi } from './typed-mypage';
-import { typedBanksApi } from './typed-banks';
-import type { components } from '@/types/api';
-import { ApiResponse } from './client';
+import { typedMyPageApi } from "./typed-mypage";
+import { typedBanksApi } from "./typed-banks";
+import type { components } from "@/types/api";
+import { ApiResponse } from "./client";
 
 // 타입 재export (하위 호환성)
-export type MyInfoRes = components['schemas']['MyInfoRes'];
-export type RefundAccountRes = components['schemas']['RefundAccountRes'];
-export type RefundAccountReq = components['schemas']['RefundAccountReq'];
-export type PasswordChangeReq = components['schemas']['PasswordChangeReq'];
-export type BankRes = components['schemas']['BankRes'];
+export type MyInfoRes = components["schemas"]["MyInfoRes"];
+export type RefundAccountRes = components["schemas"]["RefundAccountRes"];
+export type RefundAccountReq = components["schemas"]["RefundAccountReq"];
+export type PasswordChangeReq = components["schemas"]["PasswordChangeReq"];
+export type BankRes = components["schemas"]["BankRes"];
 
 export const mypageApi = {
   /**
@@ -18,12 +18,13 @@ export const mypageApi = {
     const data = await typedMyPageApi.getMyInfo();
     // typedApiClient는 이미 data 필드를 추출해서 반환
     // data가 BaseResponse 형태인 경우 data 필드 추출
-    const myInfo = (data && typeof data === 'object' && 'data' in data) 
-      ? (data as any).data 
-      : data;
+    const myInfo =
+      data && typeof data === "object" && "data" in data
+        ? (data as any).data
+        : data;
     return {
       code: 200,
-      message: '성공적으로 처리되었습니다',
+      message: "성공적으로 처리되었습니다",
       data: (myInfo as MyInfoRes) || null,
     };
   },
@@ -37,23 +38,25 @@ export const mypageApi = {
       const data = await typedMyPageApi.getRefundAccount();
       // typedApiClient는 이미 data 필드를 추출해서 반환
       // data가 BaseResponse 형태인 경우 data 필드 추출
-      const refundAccount = (data && typeof data === 'object' && 'data' in data) 
-        ? (data as any).data 
-        : data;
+      const refundAccount =
+        data && typeof data === "object" && "data" in data
+          ? (data as any).data
+          : data;
       return {
         code: 200,
-        message: '성공적으로 처리되었습니다',
+        message: "성공적으로 처리되었습니다",
         data: (refundAccount as RefundAccountRes) || null,
       };
     } catch (err) {
       // 404는 계좌가 없는 정상적인 상태
-      if (err instanceof Error && (
-        err.message.includes('404') || 
-        err.message.includes('등록된 환불 계좌가 없습니다')
-      )) {
+      if (
+        err instanceof Error &&
+        (err.message.includes("404") ||
+          err.message.includes("등록된 환불 계좌가 없습니다"))
+      ) {
         return {
           code: 404,
-          message: '등록된 환불 계좌가 없습니다.',
+          message: "등록된 환불 계좌가 없습니다.",
           data: null,
         };
       }
@@ -65,11 +68,13 @@ export const mypageApi = {
   /**
    * 환불 계좌 등록/수정
    */
-  async setRefundAccount(request: RefundAccountReq): Promise<ApiResponse<null>> {
+  async setRefundAccount(
+    request: RefundAccountReq
+  ): Promise<ApiResponse<null>> {
     await typedMyPageApi.setRefundAccount(request);
     return {
       code: 200,
-      message: '성공적으로 처리되었습니다',
+      message: "성공적으로 처리되었습니다",
       data: null,
     };
   },
@@ -81,7 +86,7 @@ export const mypageApi = {
     await typedMyPageApi.changePassword(request);
     return {
       code: 200,
-      message: '성공적으로 처리되었습니다',
+      message: "성공적으로 처리되었습니다",
       data: null,
     };
   },
@@ -93,12 +98,13 @@ export const mypageApi = {
     const data = await typedBanksApi.getBankList();
     // typedApiClient는 이미 data 필드를 추출해서 반환
     // data가 BaseResponse 형태인 경우 data 필드 추출
-    const banks = (data && typeof data === 'object' && 'data' in data) 
-      ? (data as any).data 
-      : data;
+    const banks =
+      data && typeof data === "object" && "data" in data
+        ? (data as any).data
+        : data;
     return {
       code: 200,
-      message: '성공적으로 처리되었습니다',
+      message: "성공적으로 처리되었습니다",
       data: (Array.isArray(banks) ? banks : []) as BankRes[],
     };
   },
@@ -110,11 +116,11 @@ export const mypageApi = {
     const data = await typedMyPageApi.withdraw({ password });
     return {
       code: 200,
-      message: '성공적으로 처리되었습니다',
-      data: (data && typeof data === 'object' && 'data' in data) 
-        ? (data as any).data 
-        : '회원 탈퇴가 완료되었습니다',
+      message: "성공적으로 처리되었습니다",
+      data:
+        data && typeof data === "object" && "data" in data
+          ? (data as any).data
+          : "회원 탈퇴가 완료되었습니다",
     };
   },
 };
-

@@ -141,4 +141,13 @@ export const typedAuthApi = {
       throw error;
     }
   },
+
+  /**
+   * 회원 탈퇴 복구 이메일 전송
+   */
+  async sendWithdrawalRecoveryEmail(email: string) {
+    return typedApiClient.post<any, any, any>("/api/auth/withdrawal-recovery", {
+      email,
+    });
+  },
 };

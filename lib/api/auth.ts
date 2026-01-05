@@ -119,4 +119,21 @@ export const authApi = {
       throw error;
     }
   },
+
+  /**
+   * 회원 탈퇴 복구 이메일 전송
+   */
+  async sendWithdrawalRecoveryEmail(email: string) {
+    try {
+      const data = await typedAuthApi.sendWithdrawalRecoveryEmail(email);
+      return {
+        code: 200,
+        message: "성공적으로 처리되었습니다",
+        data: data as string,
+      };
+    } catch (error) {
+      console.error("탈퇴 복구 이메일 전송 실패:", error);
+      throw error;
+    }
+  },
 };

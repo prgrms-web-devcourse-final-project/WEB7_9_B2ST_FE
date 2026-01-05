@@ -55,7 +55,7 @@ export default function AdminLoginLogsPage() {
       loadLoginLogs();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router]);
+  }, []);
 
   if (!isAdmin) return null;
 

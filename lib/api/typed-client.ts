@@ -75,8 +75,22 @@ class TypedApiClient {
 
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
-      ...(options.headers as Record<string, string>),
     };
+
+    // 먼저 options.headers를 병합 (관리자 API가 직접 전달한 Authorization 헤더 포함)
+    if (options.headers) {
+      console.log("[TypedApiClient] options.headers 받음:", options.headers);
+      const optionsHeaders = options.headers as Record<string, string>;
+      Object.keys(optionsHeaders).forEach((key) => {
+        headers[key] = optionsHeaders[key];
+        console.log(
+          `[TypedApiClient] 헤더 병합: ${key} = ${optionsHeaders[key].substring(
+            0,
+            30
+          )}...`
+        );
+      });
+    }
 
     // 인증이 필요 없는 엔드포인트 목록
     const publicEndpoints = [
@@ -89,22 +103,44 @@ class TypedApiClient {
       "/api/email/check-duplicate",
     ];
 
-    // 인증이 필요한 엔드포인트에만 토큰 추가
+    // 인증이 필요한 엔드포인트에만 토큰 추가 (단, 이미 Authorization 헤더가 있으면 덮어쓰지 않음)
     const isPublicEndpoint = publicEndpoints.some((path) =>
       endpoint.includes(path)
     );
 
-    if (!isPublicEndpoint && typeof window !== "undefined") {
+    console.log("[TypedApiClient] 인증 체크:", {
+      isPublicEndpoint,
+      hasAuthInHeaders: !!headers["Authorization"],
+    });
+
+    if (
+      !isPublicEndpoint &&
+      typeof window !== "undefined" &&
+      !headers["Authorization"]
+    ) {
       const accessToken = tokenManager.getAccessToken();
+      console.log("[TypedApiClient] 일반 토큰 사용:", !!accessToken);
       if (accessToken) {
         headers["Authorization"] = `Bearer ${accessToken}`;
       }
     }
 
+    // 디버깅: 최종 헤더 출력
+    console.log("[TypedApiClient] Request:", {
+      url,
+      method: options.method || "GET",
+      hasAuthHeader: !!headers["Authorization"],
+      authHeaderPreview: headers["Authorization"]
+        ? `${headers["Authorization"].substring(0, 20)}...`
+        : "none",
+      hasCredentials: true,
+    });
+
     try {
       const response = await fetch(url, {
         ...options,
         headers,
+        credentials: "include", // 쿠키를 포함하여 전송
       });
 
       // 응답이 비어있는 경우 처리 (로그아웃 등)
@@ -130,6 +166,8 @@ class TypedApiClient {
         const isPublicEndpoint =
           endpoint.includes("/api/auth/login") ||
           endpoint.includes("/api/members/signup");
+        // 관리자 API인지 확인
+        const isAdminEndpoint = endpoint.includes("/api/admin/");
 
         if (!isReissueEndpoint && !isPublicEndpoint) {
           this.isReissuing = true;
@@ -140,9 +178,15 @@ class TypedApiClient {
             // 재발급 성공 시 원래 요청 재시도
             return this.request<T>(endpoint, options, false); // 재시도는 한 번만
           } else {
-            // 재발급 실패 시 토큰 제거하고 에러 throw
+            // 재발급 실패 시 토큰 제거
             tokenManager.clearTokens();
-            // 페이지 리로드하여 로그인 페이지로 이동
+
+            // 관리자 API의 경우 자동 리다이렉트하지 않고 에러만 throw
+            if (isAdminEndpoint) {
+              throw new Error("권한이 없습니다. 관리자 로그인이 필요합니다.");
+            }
+
+            // 일반 사용자 API의 경우 로그인 페이지로 이동
             if (typeof window !== "undefined") {
               window.location.href = "/login";
             }

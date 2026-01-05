@@ -1,4 +1,5 @@
 import { typedApiClient } from "./typed-client";
+import { adminApiClient } from "./admin-client";
 import type { components } from "@/types/api";
 
 export const typedPerformanceApi = {
@@ -123,7 +124,7 @@ export const typedPerformanceApi = {
     startDate: string;
     endDate: string;
   }) {
-    return (typedApiClient.post as any)("/api/admin/performances", request);
+    return adminApiClient.post("/api/admin/performances", request);
   },
 
   /**
@@ -134,27 +135,40 @@ export const typedPerformanceApi = {
     cursor?: number;
     size?: number;
   }) {
-    return (typedApiClient.get as any)("/api/admin/performances/search", {
-      query: params,
-    });
+    const queryParams = new URLSearchParams();
+    if (params.keyword) queryParams.append("keyword", params.keyword);
+    if (params.cursor !== undefined)
+      queryParams.append("cursor", String(params.cursor));
+    if (params.size !== undefined)
+      queryParams.append("size", String(params.size));
+    const queryString = queryParams.toString();
+    const url = `/api/admin/performances/search${
+      queryString ? `?${queryString}` : ""
+    }`;
+    return adminApiClient.get(url);
   },
 
   /**
    * 관리자 공연 목록 조회
    */
   async getAdminPerformances(params: { cursor?: number; size?: number }) {
-    return (typedApiClient.get as any)("/api/admin/performances", {
-      query: params,
-    });
+    const queryParams = new URLSearchParams();
+    if (params.cursor !== undefined)
+      queryParams.append("cursor", String(params.cursor));
+    if (params.size !== undefined)
+      queryParams.append("size", String(params.size));
+    const queryString = queryParams.toString();
+    const url = `/api/admin/performances${
+      queryString ? `?${queryString}` : ""
+    }`;
+    return adminApiClient.get(url);
   },
 
   /**
    * 관리자 공연 상세 조회
    */
   async getAdminPerformance(performanceId: number) {
-    return (typedApiClient.get as any)(
-      `/api/admin/performances/${performanceId}`
-    );
+    return adminApiClient.get(`/api/admin/performances/${performanceId}`);
   },
 
   /**
@@ -167,7 +181,7 @@ export const typedPerformanceApi = {
       bookingCloseAt: string;
     }
   ) {
-    return (typedApiClient.put as any)(
+    return adminApiClient.put(
       `/api/admin/performances/${performanceId}/booking-policy`,
       request
     );

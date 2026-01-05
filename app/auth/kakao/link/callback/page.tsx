@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 
-export default function KakaoLinkCallbackPage() {
+function KakaoLinkCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { linkKakao } = useAuth();
@@ -56,5 +56,22 @@ export default function KakaoLinkCallbackPage() {
         <p className="text-gray-600">카카오 계정 연동 중...</p>
       </div>
     </div>
+  );
+}
+
+export default function KakaoLinkCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">로딩 중...</p>
+          </div>
+        </div>
+      }
+    >
+      <KakaoLinkCallbackContent />
+    </Suspense>
   );
 }

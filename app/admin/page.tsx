@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { adminTokenManager } from "@/lib/auth/token";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -13,10 +14,12 @@ export default function AdminPage() {
     if (!admin) {
       router.push("/admin/login");
     }
-  }, [router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("isAdmin");
+    // 관리자 토큰 및 상태 모두 제거
+    adminTokenManager.clearTokens();
     router.push("/");
   };
 

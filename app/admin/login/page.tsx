@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authApi } from "@/lib/api/auth";
+import { adminTokenManager } from "@/lib/auth/token";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -17,7 +18,35 @@ export default function AdminLoginPage() {
     setIsLoading(true);
 
     try {
-      await authApi.login({ email, password });
+      const response = await authApi.login({ email, password });
+
+      console.log("[Admin Login] 로그인 응답:", response);
+
+      // authApi.login()은 { code, message, data } 구조로 반환됨
+      const tokenData = response.data;
+
+      console.log("[Admin Login] 토큰 데이터:", {
+        hasAccessToken: !!tokenData?.accessToken,
+        accessTokenPreview: tokenData?.accessToken
+          ? `${tokenData.accessToken.substring(0, 20)}...`
+          : "none",
+      });
+
+      // 관리자 전용 토큰 저장소에 저장
+      if (tokenData?.accessToken) {
+        adminTokenManager.setAccessToken(tokenData.accessToken);
+        console.log("[Admin Login] adminAccessToken 저장됨");
+      }
+
+      // 저장 확인
+      const savedToken = adminTokenManager.getAccessToken();
+      console.log("[Admin Login] 저장된 토큰 확인:", {
+        hasSavedToken: !!savedToken,
+        savedTokenPreview: savedToken
+          ? `${savedToken.substring(0, 20)}...`
+          : "none",
+      });
+
       localStorage.setItem("isAdmin", "true");
       router.push("/admin");
     } catch (err: any) {

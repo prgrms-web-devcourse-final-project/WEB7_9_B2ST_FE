@@ -1,4 +1,5 @@
-import { typedApiClient } from "./typed-client";
+import { adminApiClient } from "./admin-client";
+import { adminTokenManager } from "@/lib/auth/token";
 
 // 로그인 로그 타입
 export interface LoginLog {
@@ -83,17 +84,12 @@ export const adminApi = {
       queryString ? `?${queryString}` : ""
     }`;
 
-    const data = await (typedApiClient as any).request(url, {
-      method: "GET",
-    });
+    const data = await adminApiClient.get<LoginLogPageResponse>(url);
 
     return {
       code: 200,
       message: "성공적으로 처리되었습니다",
-      data:
-        data && typeof data === "object" && "data" in data
-          ? (data as any).data
-          : data,
+      data,
     };
   },
 
@@ -106,18 +102,12 @@ export const adminApi = {
   ): Promise<{ code: number; message: string; data: VenueSection }> {
     const url = `/api/admin/venues/${venueId}/sections`;
 
-    const data = await (typedApiClient as any).request(url, {
-      method: "POST",
-      body: JSON.stringify(request),
-    });
+    const data = await adminApiClient.post<VenueSection>(url, request);
 
     return {
       code: 201,
       message: "성공적으로 생성되었습니다",
-      data:
-        data && typeof data === "object" && "data" in data
-          ? (data as any).data
-          : data,
+      data,
     };
   },
 };

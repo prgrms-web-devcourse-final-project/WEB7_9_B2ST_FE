@@ -19,7 +19,8 @@ export default function AdminVenueSectionsPage() {
     if (!admin) {
       router.push("/admin/login");
     }
-  }, [router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,10 +48,20 @@ export default function AdminVenueSectionsPage() {
       }
     } catch (err: any) {
       console.error("구역 등록 실패:", err);
+      console.error("에러 상세:", {
+        message: err.message,
+        response: err.response,
+        status: err.status,
+      });
 
       let errorMessage = "구역 등록에 실패했습니다.";
       if (err instanceof Error) {
-        if (err.message.includes("404")) {
+        if (err.message.includes("403") || err.message.includes("권한")) {
+          errorMessage =
+            "권한이 없습니다. 관리자 로그인이 필요합니다. (관리자 계정으로 다시 로그인해주세요)";
+        } else if (err.message.includes("401")) {
+          errorMessage = "인증이 필요합니다. 관리자로 로그인해주세요.";
+        } else if (err.message.includes("404")) {
           errorMessage = "공연장 정보가 올바르지 않습니다.";
         } else if (err.message.includes("409")) {
           errorMessage = "이미 등록된 구역입니다.";

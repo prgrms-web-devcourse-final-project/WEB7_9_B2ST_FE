@@ -65,7 +65,8 @@ export default function AdminPerformancesPage() {
     } else {
       loadPerformances();
     }
-  }, [router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,7 +96,18 @@ export default function AdminPerformancesPage() {
         await loadPerformances();
       }
     } catch (err: any) {
-      setError(err?.response?.data?.message || "공연 생성에 실패했습니다");
+      console.error("공연 생성 실패:", err);
+      let errorMessage = "공연 생성에 실패했습니다";
+
+      if (err?.message) {
+        if (err.message.includes("권한") || err.message.includes("인증")) {
+          errorMessage = err.message;
+        } else {
+          errorMessage = err.message;
+        }
+      }
+
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

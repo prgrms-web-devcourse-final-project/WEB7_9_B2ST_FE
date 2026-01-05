@@ -98,7 +98,7 @@ export default function AdminQueues() {
   }, [selectedPerformanceId]);
 
   // 대기열 목록 로드
-  const loadQueueList = async () => {
+  const loadQueueList = useCallback(async () => {
     setLoading(true);
     setError("");
 
@@ -119,12 +119,12 @@ export default function AdminQueues() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filterPerformanceId, filterQueueType]);
 
   // 초기 로드 및 필터 변경 시 재로드
   useEffect(() => {
     loadQueueList();
-  }, [filterPerformanceId, filterQueueType, loadQueueList]);
+  }, [loadQueueList]);
 
   // 대기열 생성
   const handleCreateQueue = async () => {

@@ -16,14 +16,17 @@ export default function AdminQueueDetail() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [queueDetail, setQueueDetail] = useState<AdminQueueDetailResponse | null>(
-    null
-  );
+  const [queueDetail, setQueueDetail] =
+    useState<AdminQueueDetailResponse | null>(null);
 
   // 수정 모드 상태
   const [isEditMode, setIsEditMode] = useState(false);
-  const [editMaxActiveUsers, setEditMaxActiveUsers] = useState<number | null>(null);
-  const [editEntryTtlMinutes, setEditEntryTtlMinutes] = useState<number | null>(null);
+  const [editMaxActiveUsers, setEditMaxActiveUsers] = useState<number | null>(
+    null
+  );
+  const [editEntryTtlMinutes, setEditEntryTtlMinutes] = useState<number | null>(
+    null
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -39,7 +42,7 @@ export default function AdminQueueDetail() {
         setQueueDetail(response);
       } catch (err: any) {
         console.error("대기열 상세 조회 실패:", err);
-        
+
         if (err.response?.status === 404) {
           setError("해당 대기열을 찾을 수 없습니다.");
         } else {
@@ -160,8 +163,7 @@ export default function AdminQueueDetail() {
         setError("해당 대기열을 찾을 수 없습니다.");
       } else if (err.response?.status === 500) {
         setError(
-          err.response?.data?.message ||
-            "Redis 작업 중 오류가 발생했습니다."
+          err.response?.data?.message || "Redis 작업 중 오류가 발생했습니다."
         );
       } else {
         setError(
@@ -407,9 +409,7 @@ export default function AdminQueueDetail() {
                         </span>
                       </div>
                       <div className="flex justify-between mt-3 pt-2 border-t border-gray-300">
-                        <span className="text-sm text-gray-700">
-                          사용률:
-                        </span>
+                        <span className="text-sm text-gray-700">사용률:</span>
                         <span className="text-sm font-semibold text-gray-900">
                           {Math.round(
                             ((queueDetail.currentWaiting +
@@ -438,7 +438,9 @@ export default function AdminQueueDetail() {
               {!isEditMode ? (
                 <>
                   <button
-                    onClick={() => router.push(`/admin/queues/${queueId}/statistics`)}
+                    onClick={() =>
+                      router.push(`/admin/queues/${queueId}/statistics`)
+                    }
                     disabled={isDeleting}
                     className="px-4 py-2 text-white bg-purple-600 rounded-lg hover:bg-purple-700 font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >

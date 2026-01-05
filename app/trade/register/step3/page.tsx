@@ -25,7 +25,7 @@ function TradeRegisterStep3Content() {
   const performanceIdParam = searchParams.get("performanceId");
   const ticketIdsParam = searchParams.get("ticketIds");
   const priceParam = searchParams.get("price");
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
 
   const performanceId = performanceIdParam ? Number(performanceIdParam) : null;
   const ticketIds = ticketIdsParam
@@ -42,13 +42,13 @@ function TradeRegisterStep3Content() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (isLoading) return;
+    if (authLoading) return;
     if (!isAuthenticated) {
       const queryString = searchParams.toString();
       const from = queryString ? `${pathname}?${queryString}` : pathname;
       router.replace(`/login?from=${encodeURIComponent(from)}`);
     }
-  }, [isAuthenticated, isLoading, pathname, router, searchParams]);
+  }, [authLoading, isAuthenticated, pathname, router, searchParams]);
 
   // 공연 정보 및 선택한 티켓 정보 조회
   useEffect(() => {

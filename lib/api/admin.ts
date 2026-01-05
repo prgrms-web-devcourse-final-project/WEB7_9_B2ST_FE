@@ -129,6 +129,44 @@ export interface ReservationQueryParams {
   status?: ReservationStatus;
 }
 
+// 예매 상세 타입
+export interface ReservationDetailPerformance {
+  performanceId: number;
+  performanceScheduleId: number;
+  title: string;
+  category: string;
+  startDate: string;
+  startAt: string;
+}
+
+export interface ReservationDetailReservation {
+  reservationId: number;
+  status: ReservationStatus;
+  performance: ReservationDetailPerformance;
+}
+
+export interface ReservationDetailSeat {
+  seatId: number;
+  sectionId: number;
+  sectionName: string;
+  rowLabel: string;
+  seatNumber: number;
+}
+
+export interface ReservationDetailPayment {
+  paymentId: number;
+  orderId: string;
+  amount: number;
+  status: string;
+  paidAt: string;
+}
+
+export interface AdminReservationDetail {
+  reservation: ReservationDetailReservation;
+  seats: ReservationDetailSeat[];
+  payment: ReservationDetailPayment;
+}
+
 export const adminApi = {
   /**
    * 로그인 로그 조회
@@ -201,9 +239,7 @@ export const adminApi = {
   /**
    * 관리자 예매 조회 (상태별)
    */
-  async getReservations(
-    params?: ReservationQueryParams
-  ): Promise<{
+  async getReservations(params?: ReservationQueryParams): Promise<{
     code: number;
     message: string;
     data: AdminReservationPageResponse;
@@ -224,6 +260,25 @@ export const adminApi = {
     }`;
 
     const data = await adminApiClient.get<AdminReservationPageResponse>(url);
+
+    return {
+      code: 200,
+      message: "성공적으로 처리되었습니다",
+      data,
+    };
+  },
+
+  /**
+   * 관리자 예매 상세 조회
+   */
+  async getReservationDetail(reservationId: number): Promise<{
+    code: number;
+    message: string;
+    data: AdminReservationDetail;
+  }> {
+    const url = `/api/admin/reservations/${reservationId}`;
+
+    const data = await adminApiClient.get<AdminReservationDetail>(url);
 
     return {
       code: 200,

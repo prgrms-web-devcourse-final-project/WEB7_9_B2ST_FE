@@ -292,7 +292,13 @@ export default function AdminReservationsPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {reservations.map((r) => (
-                    <tr key={r.reservationId} className="hover:bg-gray-50">
+                    <tr
+                      key={r.reservationId}
+                      onClick={() =>
+                        router.push(`/admin/reservations/${r.reservationId}`)
+                      }
+                      className="hover:bg-gray-50 cursor-pointer transition-colors"
+                    >
                       <td className="px-4 py-2 text-gray-900">
                         {r.reservationId}
                       </td>

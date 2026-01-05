@@ -6,6 +6,9 @@ export interface PrereservationSection {
   bookingStartAt: string;
   bookingEndAt: string;
   applied: boolean;
+  performanceTitle?: string;
+  scheduleStartAt?: string;
+  performanceId?: number;
 }
 
 export interface PrereservationApplication {

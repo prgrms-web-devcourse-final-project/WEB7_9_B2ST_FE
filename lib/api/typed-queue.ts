@@ -31,18 +31,6 @@ export interface QueuePositionResponse {
   updatedAt: string;
 }
 
-// 대기열 완료 요청 (예매 완료 후 권한 소진)
-export interface QueueCompleteRequest {
-  queueId: number;
-}
-
-// 대기열 완료 응답
-export interface QueueCompleteResponse {
-  queueId: number;
-  status: QueueStatus;
-  completedAt: string;
-}
-
 export const typedQueueApi = {
   /**
    * 대기열 진입 (예매 시작)
@@ -85,23 +73,13 @@ export const typedQueueApi = {
 
   /**
    * 대기열 완료 (예매 완료 후 권한 소진)
+   * POST /api/queues/{queueId}/complete
    */
-  async complete(queueId: number): Promise<QueueCompleteResponse> {
-    // TODO: API 연동 시 실제 구현
-    // return typedApiClient.post<'/api/queues/{queueId}/complete', 'post', 200>(
-    //   `/api/queues/${queueId}/complete`,
-    //   {}
-    // );
-
-    // 임시 목업 데이터
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          queueId,
-          status: "COMPLETED",
-          completedAt: new Date().toISOString(),
-        });
-      }, 300);
-    });
+  async complete(queueId: number): Promise<void> {
+    return typedApiClient.post<
+      "/api/queues/{queueId}/complete",
+      "post",
+      200
+    >(`/api/queues/${queueId}/complete`, {}, { path: { queueId } });
   },
 };

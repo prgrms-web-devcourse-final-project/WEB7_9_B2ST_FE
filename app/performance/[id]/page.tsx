@@ -141,7 +141,7 @@ export default function PerformanceDetail({
     );
   }
 
-  const handleBooking = () => {
+  const handleBooking = async () => {
     if (!selectedSchedule) {
       alert("날짜와 회차를 선택해주세요.");
       return;
@@ -152,9 +152,24 @@ export default function PerformanceDetail({
         `/performance/${id}/lottery/step1?scheduleId=${selectedSchedule.performanceScheduleId}`
       );
     } else {
-      router.push(
-        `/performance/${id}/booking/section?scheduleId=${selectedSchedule.performanceScheduleId}`
-      );
+      // 일반 예매의 경우 대기열 진입
+      try {
+        // 대기열 API 임포트 (동적 임포트)
+        const { typedQueueApi } = await import("@/lib/api/typed-queue");
+
+        // 대기열 생성
+        const queueResponse = await typedQueueApi.startBooking(
+          selectedSchedule.performanceScheduleId
+        );
+
+        // 대기열 대기 화면으로 이동
+        router.push(
+          `/performance/${id}/booking/queue?scheduleId=${selectedSchedule.performanceScheduleId}&queueId=${queueResponse.queueId}`
+        );
+      } catch (err) {
+        console.error("대기열 진입 실패:", err);
+        alert("예매를 시작할 수 없습니다. 잠시 후 다시 시도해주세요.");
+      }
     }
   };
 

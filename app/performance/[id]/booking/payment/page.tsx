@@ -22,6 +22,7 @@ export default function BookingPayment({
   // reservationId (단수) 또는 reservationIds (복수)에서 ID 추출
   const reservationIdParam = searchParams.get("reservationId");
   const reservationIdsParam = searchParams.get("reservationIds");
+  const queueId = searchParams.get("queueId");
   const reservationIds = reservationIdParam
     ? [Number(reservationIdParam)]
     : reservationIdsParam?.split(",").map(Number).filter(Boolean) || [];
@@ -103,6 +104,17 @@ export default function BookingPayment({
 
       if (!response.success || !response.data) {
         throw new Error(response.error || "결제에 실패했습니다.");
+      }
+
+      // 결제 성공 후 대기열 권한 소진 (queueId가 있는 경우)
+      if (queueId) {
+        try {
+          const { typedQueueApi } = await import("@/lib/api/typed-queue");
+          await typedQueueApi.complete(Number(queueId));
+        } catch (queueErr) {
+          console.error("대기열 권한 소진 실패:", queueErr);
+          // 대기열 권한 소진 실패는 결제 완료에 영향을 주지 않음
+        }
       }
 
       // 결제 성공

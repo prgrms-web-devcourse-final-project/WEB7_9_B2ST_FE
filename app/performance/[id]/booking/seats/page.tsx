@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import {
   performanceApi,
   type ScheduleSeatViewRes,
+  type PerformanceScheduleListRes,
 } from "@/lib/api/performance";
 import { reservationApi } from "@/lib/api/reservation";
 
@@ -18,17 +19,46 @@ export default function BookingSeats({
   const router = useRouter();
   const searchParams = useSearchParams();
   const scheduleId = searchParams.get("scheduleId");
+  const queueId = searchParams.get("queueId");
   const section = searchParams.get("section");
 
   const [seats, setSeats] = useState<ScheduleSeatViewRes[]>([]);
   const [selectedSeats, setSelectedSeats] = useState<ScheduleSeatViewRes[]>([]);
+  const [schedules, setSchedules] = useState<PerformanceScheduleListRes[]>([]);
+  const [currentScheduleId, setCurrentScheduleId] = useState<string | null>(scheduleId);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
 
+  const [seats, setSeats] = useState<ScheduleSeatViewRes[]>([]);
+  const [selectedSeats, setSelectedSeats] = useState<ScheduleSeatViewRes[]>([]);
+  const [schedules, setSchedules] = useState<PerformanceScheduleListRes[]>([]);
+  const [currentScheduleId, setCurrentScheduleId] = useState<string | null>(scheduleId);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState("");
+
+  // 공연 일정 목록 로드
+  useEffect(() => {
+    const fetchSchedules = async () => {
+      if (!id) return;
+
+      try {
+        const response = await performanceApi.getSchedules(Number(id));
+        if (response.data && Array.isArray(response.data)) {
+          setSchedules(response.data);
+        }
+      } catch (err) {
+        console.error("일정 목록 조회 실패:", err);
+      }
+    };
+
+    fetchSchedules();
+  }, [id]);
+
   // 좌석 데이터 로드
   useEffect(() => {
-    if (!scheduleId) {
+    if (!currentScheduleId) {
       setError("회차 정보가 없습니다.");
       setIsLoading(false);
       return;
@@ -37,10 +67,11 @@ export default function BookingSeats({
     const fetchSeats = async () => {
       setIsLoading(true);
       setError("");
+      setSelectedSeats([]); // 회차 변경 시 선택 초기화
 
       try {
         const response = await performanceApi.getScheduleSeats(
-          Number(scheduleId)
+          Number(currentScheduleId)
         );
         if (response.data) {
           // 구역 필터링 (section 파라미터가 있으면 해당 구역만 표시)
@@ -65,7 +96,13 @@ export default function BookingSeats({
     };
 
     fetchSeats();
-  }, [scheduleId, section]);
+  }, [currentScheduleId, section]);
+
+  // 회차 변경 핸들러
+  const handleScheduleChange = (newScheduleId: string) => {
+    setCurrentScheduleId(newScheduleId);
+    // URL은 변경하지 않음 (대기열 재진입 방지)
+  };
 
   // 좌석을 구역별, 행별로 그룹화
   const groupedSeats = seats.reduce((acc, seat) => {
@@ -148,7 +185,7 @@ export default function BookingSeats({
   // 예매 진행 (validation -> hold -> reservation 생성 -> payment 이동)
   const handleProceedToPayment = async () => {
     // 좌석 선택 validation
-    if (!scheduleId) {
+    if (!currentScheduleId) {
       alert("회차 정보가 없습니다.");
       return;
     }
@@ -174,11 +211,11 @@ export default function BookingSeats({
 
     try {
       // 1단계: 좌석 hold
-      await performanceApi.holdSeat(Number(scheduleId), seat.scheduleSeatId);
+      await performanceApi.holdSeat(Number(currentScheduleId), seat.scheduleSeatId);
 
       // 2단계: 예매 생성 (hold가 성공한 경우에만 진행)
       const response = await reservationApi.createReservation(
-        Number(scheduleId),
+        Number(currentScheduleId),
         [seat.scheduleSeatId]
       );
 
@@ -187,9 +224,12 @@ export default function BookingSeats({
       }
 
       // 3단계: 결제 페이지로 이동 (모든 단계가 성공한 경우에만)
-      router.push(
-        `/performance/${id}/booking/payment?reservationId=${response.data.reservationId}&scheduleId=${scheduleId}`
-      );
+      // queueId가 있으면 함께 전달
+      const paymentUrl = queueId 
+        ? `/performance/${id}/booking/payment?reservationId=${response.data.reservationId}&scheduleId=${currentScheduleId}&queueId=${queueId}`
+        : `/performance/${id}/booking/payment?reservationId=${response.data.reservationId}&scheduleId=${currentScheduleId}`;
+      
+      router.push(paymentUrl);
     } catch (err) {
       setIsProcessing(false);
       if (err instanceof Error) {
@@ -198,6 +238,7 @@ export default function BookingSeats({
         alert("좌석 예매에 실패했습니다.");
       }
     }
+  };
   };
 
   if (isLoading) {
@@ -244,7 +285,65 @@ export default function BookingSeats({
       <Header />
       <div className="py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">좌석 선택</h1>
+          {/* 상단: 제목 및 회차 선택 드롭다운 */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-3xl font-bold text-gray-900">좌석 선택</h1>
+              
+              {/* 대기열 정보 표시 */}
+              {queueId && (
+                <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 px-4 py-2 rounded-lg">
+                  <svg
+                    className="w-5 h-5 text-blue-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span className="text-sm text-blue-700 font-medium">대기열 통과</span>
+                </div>
+              )}
+            </div>
+            
+            {/* 회차 선택 드롭다운 */}
+            {schedules.length > 0 && (
+              <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+                <label htmlFor="schedule-select" className="block text-sm font-medium text-gray-700 mb-2">
+                  회차 선택
+                </label>
+                <select
+                  id="schedule-select"
+                  value={currentScheduleId || ""}
+                  onChange={(e) => handleScheduleChange(e.target.value)}
+                  className="block w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white text-gray-900"
+                >
+                  {schedules.map((schedule) => (
+                    <option key={schedule.scheduleId} value={schedule.scheduleId}>
+                      {new Date(schedule.performanceDate).toLocaleDateString('ko-KR', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        weekday: 'short',
+                      })}{" "}
+                      {schedule.performanceTime}
+                      {schedule.availableSeats !== undefined && 
+                        ` (잔여: ${schedule.availableSeats}석)`
+                      }
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-2 text-xs text-gray-500">
+                  ※ 회차를 변경해도 대기열을 다시 거치지 않습니다.
+                </p>
+              </div>
+            )}
+          </div>
 
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Left: Seat Map */}

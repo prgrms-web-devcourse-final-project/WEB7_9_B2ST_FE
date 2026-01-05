@@ -56,6 +56,12 @@ export default function AdminPage() {
       icon: "🎫",
       path: "/admin/reservations",
     },
+    {
+      title: "회차 좌석 조회",
+      description: "회차별 좌석 상태 조회",
+      icon: "💺",
+      path: "/admin/schedules/seats",
+    },
   ];
 
   return (

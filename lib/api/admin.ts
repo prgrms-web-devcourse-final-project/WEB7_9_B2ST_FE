@@ -129,6 +129,24 @@ export interface ReservationQueryParams {
   status?: ReservationStatus;
 }
 
+// 회차 좌석 타입
+export type ScheduleSeatStatus = "AVAILABLE" | "HOLD" | "SOLD";
+
+export interface ScheduleSeat {
+  scheduleSeatId: number;
+  seatId: number;
+  sectionName: string;
+  rowLabel: string;
+  seatNumber: number;
+  status: ScheduleSeatStatus;
+  grade: string;
+  price: number;
+}
+
+export interface ScheduleSeatsQueryParams {
+  status?: ScheduleSeatStatus;
+}
+
 // 예매 상세 타입
 export interface ReservationDetailPerformance {
   performanceId: number;
@@ -298,6 +316,35 @@ export const adminApi = {
     const url = `/api/admin/reservations/${reservationId}/cancel`;
 
     const data = await adminApiClient.post<null>(url);
+
+    return {
+      code: 200,
+      message: "성공적으로 처리되었습니다",
+      data,
+    };
+  },
+
+  /**
+   * 회차별 좌석 상태 조회
+   */
+  async getScheduleSeats(
+    scheduleId: number,
+    params?: ScheduleSeatsQueryParams
+  ): Promise<{
+    code: number;
+    message: string;
+    data: ScheduleSeat[];
+  }> {
+    const queryParams = new URLSearchParams();
+
+    if (params?.status) queryParams.append("status", params.status);
+
+    const queryString = queryParams.toString();
+    const url = `/api/admin/schedules/${scheduleId}/seats${
+      queryString ? `?${queryString}` : ""
+    }`;
+
+    const data = await adminApiClient.get<ScheduleSeat[]>(url);
 
     return {
       code: 200,

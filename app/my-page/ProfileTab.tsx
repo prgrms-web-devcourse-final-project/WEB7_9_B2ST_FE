@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   mypageApi,
   type MyInfoRes,
@@ -11,6 +12,7 @@ import {
 
 export default function ProfileTab() {
   const router = useRouter();
+  const { getKakaoAuthorizeUrl } = useAuth();
   const [myInfo, setMyInfo] = useState<MyInfoRes | null>(null);
   const [refundAccount, setRefundAccount] = useState<RefundAccountRes | null>(
     null
@@ -34,6 +36,9 @@ export default function ProfileTab() {
   const [withdrawPassword, setWithdrawPassword] = useState("");
   const [withdrawError, setWithdrawError] = useState("");
   const [isWithdrawing, setIsWithdrawing] = useState(false);
+
+  // 카카오 연동 관련 상태
+  const [isLinkingKakao, setIsLinkingKakao] = useState(false);
 
   // 환불 계좌 관련 상태
   const [accountForm, setAccountForm] = useState({
@@ -241,6 +246,28 @@ export default function ProfileTab() {
     }
   };
 
+  // 카카오 연동
+  const handleLinkKakao = async () => {
+    setIsLinkingKakao(true);
+    try {
+      const { authorizeUrl } = await getKakaoAuthorizeUrl();
+
+      // 연동 콜백 URL로 설정 (현재 도메인 + /auth/kakao/link/callback)
+      const callbackUrl = `${window.location.origin}/auth/kakao/link/callback`;
+      const linkUrl = authorizeUrl.replace(
+        encodeURIComponent(`${window.location.origin}/auth/kakao/callback`),
+        encodeURIComponent(callbackUrl)
+      );
+
+      // 카카오 로그인 페이지로 리다이렉트
+      window.location.href = linkUrl;
+    } catch (err) {
+      console.error("카카오 연동 URL 조회 실패:", err);
+      alert("카카오 연동을 시작할 수 없습니다. 다시 시도해주세요.");
+      setIsLinkingKakao(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="bg-white rounded-lg shadow-sm p-6">
@@ -351,6 +378,39 @@ export default function ProfileTab() {
           >
             비밀번호 변경
           </button>
+        </div>
+
+        {/* 카카오 연동 */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            소셜 계정 연동
+          </label>
+          <button
+            onClick={handleLinkKakao}
+            disabled={isLinkingKakao}
+            className="px-6 py-2 bg-yellow-400 text-gray-900 rounded-lg font-medium hover:bg-yellow-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {isLinkingKakao ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+                연동 중...
+              </>
+            ) : (
+              <>
+                <svg
+                  className="w-5 h-5"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M12 3c5.799 0 10.5 3.664 10.5 8.185 0 4.52-4.701 8.184-10.5 8.184a13.5 13.5 0 0 1-1.727-.11l-4.408 2.883c-.501.265-.678.236-.472-.413l.892-3.678c-2.88-1.46-4.785-3.99-4.785-6.866C1.5 6.665 6.201 3 12 3z" />
+                </svg>
+                카카오 계정 연동
+              </>
+            )}
+          </button>
+          <p className="mt-2 text-sm text-gray-500">
+            카카오 계정으로도 로그인할 수 있습니다.
+          </p>
         </div>
 
         {/* 환불계좌 관리 */}

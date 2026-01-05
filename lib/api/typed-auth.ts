@@ -110,4 +110,35 @@ export const typedAuthApi = {
       throw error;
     }
   },
+
+  /**
+   * 카카오 계정 연동
+   */
+  async linkKakao(kakaoCode: string, kakaoState?: string) {
+    try {
+      console.log("🔵 카카오 연동 API 호출:", {
+        code: kakaoCode,
+        state: kakaoState,
+        endpoint: "/api/auth/link/kakao",
+      });
+      const response = await typedApiClient.post<any, any, any>(
+        "/api/auth/link/kakao",
+        {
+          code: kakaoCode,
+          ...(kakaoState && { state: kakaoState }),
+        }
+      );
+      console.log("✅ 카카오 연동 API 응답 성공:", response);
+      return response;
+    } catch (error: any) {
+      console.error("❌ 카카오 연동 API 에러 상세:", {
+        error,
+        message: error?.message,
+        status: error?.status,
+        response: error?.response,
+        stack: error?.stack,
+      });
+      throw error;
+    }
+  },
 };

@@ -101,4 +101,22 @@ export const authApi = {
       throw error;
     }
   },
+
+  /**
+   * 카카오 계정 연동
+   */
+  async linkKakao(request: KakaoLoginRequest) {
+    try {
+      const data = await typedAuthApi.linkKakao(request.code, request.state);
+      console.log("카카오 연동 API 응답:", data);
+      return {
+        code: 200,
+        message: "성공적으로 처리되었습니다",
+        data: data as string,
+      };
+    } catch (error) {
+      console.error("카카오 연동 API 실패:", error);
+      throw error;
+    }
+  },
 };

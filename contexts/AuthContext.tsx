@@ -21,6 +21,7 @@ interface AuthContextType {
   login: (credentials: LoginRequest) => Promise<void>;
   getKakaoAuthorizeUrl: () => Promise<KakaoAuthorizeUrlResponse>;
   kakaoLogin: (request: KakaoLoginRequest) => Promise<void>;
+  linkKakao: (request: KakaoLoginRequest) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -90,6 +91,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const linkKakao = async (request: KakaoLoginRequest) => {
+    try {
+      const response = await authApi.linkKakao(request);
+      console.log("카카오 연동 성공:", response);
+    } catch (error) {
+      console.error("카카오 연동 실패:", error);
+      throw error;
+    }
+  };
+
   const logout = async () => {
     try {
       console.log("Logout API 호출 시작");
@@ -112,6 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         getKakaoAuthorizeUrl,
         kakaoLogin,
+        linkKakao,
         logout,
       }}
     >

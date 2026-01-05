@@ -5,7 +5,7 @@ export type QueueType = "BOOKING_ORDER" | "LOTTERY" | "PROMOTION";
 
 // 어드민 대기열 생성 요청
 export interface AdminQueueCreateRequest {
-  scheduleId: number;
+  performanceId: number;
   queueType: QueueType;
   maxActiveUsers: number;
   entryTtlMinutes: number;
@@ -14,7 +14,7 @@ export interface AdminQueueCreateRequest {
 // 어드민 대기열 생성 응답
 export interface AdminQueueCreateResponse {
   queueId: number;
-  scheduleId: number;
+  performanceId: number;
   queueType: QueueType;
   maxActiveUsers: number;
   entryTtlMinutes: number;

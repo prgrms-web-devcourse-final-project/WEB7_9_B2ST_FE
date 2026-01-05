@@ -89,6 +89,7 @@ export default function AdminQueuesPage() {
   useEffect(() => {
     if (!selectedPerformanceId) {
       setSchedules([]);
+      setSelectedScheduleId(null);
       return;
     }
 
@@ -105,7 +106,8 @@ export default function AdminQueuesPage() {
       }
     };
 
-    fetchSchedules();
+    // 회차 로드는 필요 없지만 추후 참고용으로 유지
+    // fetchSchedules();
   }, [selectedPerformanceId]);
 
   // 대기열 목록 로드
@@ -139,8 +141,8 @@ export default function AdminQueuesPage() {
 
   // 대기열 생성
   const handleCreateQueue = async () => {
-    if (!selectedScheduleId) {
-      setError("회차를 선택해주세요.");
+    if (!selectedPerformanceId) {
+      setError("공연을 선택해주세요.");
       return;
     }
 
@@ -150,7 +152,7 @@ export default function AdminQueuesPage() {
 
     try {
       const request: AdminQueueCreateRequest = {
-        scheduleId: selectedScheduleId,
+        performanceId: selectedPerformanceId,
         queueType,
         maxActiveUsers,
         entryTtlMinutes,
@@ -452,45 +454,6 @@ export default function AdminQueuesPage() {
                   </select>
                 </div>
 
-                {/* 회차 선택 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    회차 선택 *
-                  </label>
-                  <select
-                    value={selectedScheduleId || ""}
-                    onChange={(e) =>
-                      setSelectedScheduleId(
-                        e.target.value ? Number(e.target.value) : null
-                      )
-                    }
-                    disabled={!selectedPerformanceId}
-                    className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  >
-                    <option value="">회차를 선택해주세요</option>
-                    {schedules.map((schedule) => (
-                      <option
-                        key={schedule.performanceScheduleId}
-                        value={schedule.performanceScheduleId}
-                      >
-                        {schedule.startAt &&
-                          new Date(schedule.startAt).toLocaleDateString(
-                            "ko-KR"
-                          )}{" "}
-                        {schedule.startAt &&
-                          new Date(schedule.startAt).toLocaleTimeString(
-                            "ko-KR",
-                            {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            }
-                          )}
-                        {schedule.roundNo && ` (${schedule.roundNo}회차)`}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
                 {/* 대기열 타입 */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -558,7 +521,7 @@ export default function AdminQueuesPage() {
                 <div className="flex gap-4 pt-4">
                   <button
                     onClick={handleCreateQueue}
-                    disabled={loading || !selectedScheduleId}
+                    disabled={loading || !selectedPerformanceId}
                     className="flex-1 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium"
                   >
                     {loading ? "생성 중..." : "대기열 생성"}

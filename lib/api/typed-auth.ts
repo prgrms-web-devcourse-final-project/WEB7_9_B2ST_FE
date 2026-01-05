@@ -150,4 +150,13 @@ export const typedAuthApi = {
       email,
     });
   },
+
+  /**
+   * 회원 탈퇴 복구 확인
+   */
+  async confirmRecovery(token: string) {
+    return typedApiClient.post<any, any, any>("/api/auth/confirm-recovery", {
+      token,
+    });
+  },
 };

@@ -156,7 +156,7 @@ export default function PerformanceDetail({
       router.push(
         `/performance/${id}/lottery/step1?scheduleId=${selectedSchedule.performanceScheduleId}`
       );
-    } else if (selectedSchedule.bookingType === "PRERESERVATION") {
+    } else if ((selectedSchedule.bookingType as string) === "PRERESERVATION") {
       // 신청예매의 경우
       router.push(
         `/performance/${id}/prereservation/step1?scheduleId=${selectedSchedule.performanceScheduleId}`
@@ -655,7 +655,8 @@ export default function PerformanceDetail({
                   {/* Booking Button */}
                   {selectedSchedule && (
                     <div className="space-y-2">
-                      {selectedSchedule.bookingType === "PRERESERVATION" ? (
+                      {(selectedSchedule.bookingType as string) ===
+                      "PRERESERVATION" ? (
                         <button
                           onClick={handleBooking}
                           className="w-full px-6 py-4 rounded-lg font-bold text-center transition-colors shadow-lg bg-blue-600 text-white hover:bg-blue-700"

@@ -24,7 +24,7 @@ export interface CreateLotteryEntryRequest {
 }
 
 export interface LotteryEntry {
-  lotteryEntryId: number;
+  lotteryEntryId: string; // UUID (String)
   title: string;
   startAt: string;
   roundNo: number;
@@ -103,12 +103,17 @@ export const lotteryApi = {
    * @param page 페이지 번호 (0부터 시작, 기본값 0)
    */
   async getMyLotteryEntries(page: number = 0) {
-    const data = await typedLotteryApi.getMyLotteryEntries(page);
+    const response = await typedLotteryApi.getMyLotteryEntries(page);
+    const data = response as any;
+
+    // 새로운 응답 구조: { content: [...], hasNext: boolean }
+    const content = data?.content || [];
+    const hasNext = data?.hasNext || false;
 
     // AppliedLotteryInfo[]를 LotteryEntry[]로 변환
-    const entries: LotteryEntry[] = Array.isArray(data)
-      ? data.map((entry) => ({
-          lotteryEntryId: entry.lotteryEntryId || 0,
+    const entries: LotteryEntry[] = Array.isArray(content)
+      ? content.map((entry: any) => ({
+          lotteryEntryId: entry.lotteryEntryId || "",
           title: entry.title || "",
           startAt: entry.startAt || "",
           roundNo: entry.roundNo || 0,
@@ -122,6 +127,7 @@ export const lotteryApi = {
       code: 200,
       message: "성공적으로 처리되었습니다",
       data: entries,
+      hasNext,
     };
   },
 };

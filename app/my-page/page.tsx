@@ -148,8 +148,8 @@ export default function MyPage() {
           const response = await lotteryApi.getMyLotteryEntries(0);
           if (response.data) {
             setLotteryEntries(response.data);
-            // 10개 미만이면 더 이상 데이터가 없음
-            setLotteryHasMore(response.data.length >= 10);
+            // hasNext 필드 사용
+            setLotteryHasMore(response.hasNext || false);
           }
         } catch (err) {
           if (err instanceof Error) {
@@ -180,8 +180,8 @@ export default function MyPage() {
         // 기존 데이터에 추가
         setLotteryEntries((prev) => [...prev, ...response.data]);
         setLotteryCurrentPage(nextPage);
-        // 10개 미만이면 더 이상 데이터가 없음
-        setLotteryHasMore(response.data.length >= 10);
+        // hasNext 필드 사용
+        setLotteryHasMore(response.hasNext || false);
       }
     } catch (err) {
       if (err instanceof Error) {

@@ -33,8 +33,7 @@ export const typedLotteryApi = {
    * 내가 응모한 공연 전체 조회
    */
   async getMyLotteryEntries(page: number = 0) {
-    // 타입 정의에 query 파라미터가 없지만 실제 API는 page 파라미터를 받음
-    const url = `/api/mypage/lottery/entries${page > 0 ? `?page=${page}` : ""}`;
+    const url = `/api/mypage/lottery/entries?page=${page}`;
     return typedApiClient.get<"/api/mypage/lottery/entries", "get", 200>(
       url as "/api/mypage/lottery/entries",
     );

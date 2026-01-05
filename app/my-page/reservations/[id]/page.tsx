@@ -48,8 +48,8 @@ export default function ReservationDetailPage({
       } catch (err) {
         if (err instanceof Error) {
           // API에서 전달된 에러 메시지 사용
-          // 403: "해당 예매에 대한 권한이 없습니다."
-          // 404: "예매내역이 없습니다."
+          // 401: 인증 실패
+          // 404: 예매 정보 없음
           setError(err.message || "예매 정보를 불러오는데 실패했습니다.");
         } else {
           setError("예매 정보를 불러오는데 실패했습니다.");
@@ -379,6 +379,55 @@ export default function ReservationDetailPage({
                       </div>
                     </div>
                   ))}
+                </div>
+              </section>
+            )}
+
+            {/* 결제 정보 */}
+            {reservation.payment && (
+              <section>
+                <h2 className="text-xl font-bold text-gray-900 mb-4 pb-2 border-b">
+                  결제 정보
+                </h2>
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-sm text-gray-500 block mb-1">
+                        결제 상태
+                      </span>
+                      <p className="text-lg font-semibold text-gray-900">
+                        {reservation.payment.status === "DONE"
+                          ? "결제 완료"
+                          : "결제 대기"}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-500 block mb-1">
+                        결제 금액
+                      </span>
+                      <p className="text-lg font-semibold text-red-600">
+                        {reservation.payment.amount?.toLocaleString()}원
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-500 block mb-1">
+                        주문 번호
+                      </span>
+                      <p className="text-sm font-mono text-gray-900 break-all">
+                        {reservation.payment.orderId || "-"}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-500 block mb-1">
+                        결제 일시
+                      </span>
+                      <p className="text-sm text-gray-900">
+                        {reservation.payment.paidAt
+                          ? formatDateTime(reservation.payment.paidAt)
+                          : "-"}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </section>
             )}

@@ -24,47 +24,70 @@ export default function LoginContent() {
       setIsKakaoLoading(true);
 
       try {
-        console.log("카카오 로그인 처리 시작, code:", code, "state:", state);
-        console.log("카카오 로그인 전 localStorage:", {
+        console.log("🔵 카카오 로그인 처리 시작");
+        console.log("🔵 Code:", code);
+        console.log("🔵 State:", state);
+        console.log("🔵 카카오 로그인 전 localStorage:", {
           accessToken: localStorage.getItem("accessToken"),
           refreshToken: localStorage.getItem("refreshToken"),
         });
 
         await kakaoLogin({ code, state });
 
-        console.log("카카오 로그인 성공, 토큰 저장 후 localStorage:", {
+        console.log("✅ 카카오 로그인 성공, 토큰 저장 후 localStorage:", {
           accessToken: localStorage.getItem("accessToken"),
           refreshToken: localStorage.getItem("refreshToken"),
         });
 
         // 약간의 지연을 추가하여 상태 업데이트가 완료되도록 대기
         setTimeout(() => {
-          console.log("홈 페이지로 리다이렉트 중...");
+          console.log("✅ 홈 페이지로 리다이렉트 중...");
           router.push("/");
         }, 100);
       } catch (err) {
-        console.error("카카오 로그인 오류:", err);
-        console.log("카카오 로그인 실패 후 localStorage:", {
+        console.error("❌ 카카오 로그인 오류 발생");
+        console.error("❌ Code:", code);
+        console.error("❌ State:", state);
+        console.error("❌ 에러 상세:", err);
+        console.log("❌ 카카오 로그인 실패 후 localStorage:", {
           accessToken: localStorage.getItem("accessToken"),
           refreshToken: localStorage.getItem("refreshToken"),
         });
 
         if (err instanceof Error) {
+          // 401 에러인 경우 상세 정보 출력 및 URL 유지
+          if (err.message.includes("401") || err.message.includes("인증")) {
+            console.error("⚠️⚠️⚠️ 401 인증 에러 발생 ⚠️⚠️⚠️");
+            console.error("⚠️ Code:", code);
+            console.error("⚠️ State:", state);
+            console.error("⚠️ 에러 메시지:", err.message);
+            console.error("⚠️ 전체 에러 객체:", err);
+            console.error("⚠️ 현재 URL:", window.location.href);
+
+            setError(
+              `카카오 로그인 인증 실패 (401)\n\nCode: ${code}\nState: ${state}\n\n콘솔(F12)을 열어 상세 정보를 확인하세요.`
+            );
+
+            // URL 파라미터 유지 - 디버깅 목적
+            alert(
+              "⚠️ 401 인증 에러가 발생했습니다.\n\n콘솔(F12)을 열어 code와 state 값을 확인하세요.\n\n이 화면에서 URL 파라미터가 유지됩니다."
+            );
+          }
           // 이메일 정보 미동의 시 처리
-          if (err.message.includes("이메일 정보 제공에 동의")) {
+          else if (err.message.includes("이메일 정보 제공에 동의")) {
             setError(
               "이메일 정보 제공에 동의해주세요. 카카오 계정 설정에서 동의 후 다시 시도해주세요."
             );
+            window.history.replaceState({}, "", "/login");
           } else {
             setError(err.message);
+            window.history.replaceState({}, "", "/login");
           }
         } else {
           setError("카카오 로그인에 실패했습니다. 다시 시도해주세요.");
+          window.history.replaceState({}, "", "/login");
         }
         setIsKakaoLoading(false);
-
-        // URL에서 카카오 콜백 파라미터 제거하여 useEffect 재실행 방지
-        window.history.replaceState({}, "", "/login");
       }
     },
     [kakaoLogin, router]

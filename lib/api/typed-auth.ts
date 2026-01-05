@@ -85,9 +85,10 @@ export const typedAuthApi = {
    */
   async kakaoLogin(kakaoCode: string, kakaoState?: string) {
     try {
-      console.log("카카오 로그인 API 호출:", {
+      console.log("🔵 카카오 로그인 API 호출:", {
         code: kakaoCode,
         state: kakaoState,
+        endpoint: "/api/auth/kakao",
       });
       const response = await typedApiClient.post<any, any, any>(
         "/api/auth/kakao",
@@ -96,10 +97,16 @@ export const typedAuthApi = {
           ...(kakaoState && { state: kakaoState }),
         }
       );
-      console.log("카카오 로그인 API 응답 (typed-auth):", response);
+      console.log("✅ 카카오 로그인 API 응답 성공:", response);
       return response;
-    } catch (error) {
-      console.error("카카오 로그인 API 에러 (typed-auth):", error);
+    } catch (error: any) {
+      console.error("❌ 카카오 로그인 API 에러 상세:", {
+        error,
+        message: error?.message,
+        status: error?.status,
+        response: error?.response,
+        stack: error?.stack,
+      });
       throw error;
     }
   },

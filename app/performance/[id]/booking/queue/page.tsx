@@ -90,8 +90,28 @@ export default function QueueWaiting({
   }, [isLoading, error, queueData, fetchQueuePosition]);
 
   // 나가기 버튼 핸들러
-  const handleExit = () => {
-    if (confirm("대기를 취소하시겠습니까?")) {
+  const handleExit = async () => {
+    if (!confirm("대기를 취소하시겠습니까?")) {
+      return;
+    }
+
+    if (!queueId) {
+      router.push(`/performance/${id}`);
+      return;
+    }
+
+    try {
+      // 대기열 나가기 API 호출
+      await typedQueueApi.exit(Number(queueId));
+      alert("대기가 취소되었습니다.");
+      router.push(`/performance/${id}`);
+    } catch (err: any) {
+      console.error("대기열 나가기 실패:", err);
+      // 에러가 발생해도 페이지 이동
+      alert(
+        err.response?.data?.message ||
+          "대기열 나가기에 실패했습니다. 페이지를 이동합니다."
+      );
       router.push(`/performance/${id}`);
     }
   };

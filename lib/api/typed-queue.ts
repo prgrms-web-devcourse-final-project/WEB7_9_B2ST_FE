@@ -71,4 +71,16 @@ export const typedQueueApi = {
       { path: { queueId } }
     );
   },
+
+  /**
+   * 대기열 나가기 (대기 취소)
+   * POST /api/queues/{queueId}/exit
+   */
+  async exit(queueId: number): Promise<void> {
+    return typedApiClient.post<"/api/queues/{queueId}/exit", "post", 200>(
+      `/api/queues/${queueId}/exit`,
+      {},
+      { path: { queueId } }
+    );
+  },
 };

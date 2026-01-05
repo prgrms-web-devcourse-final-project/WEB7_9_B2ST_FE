@@ -60,6 +60,22 @@ export interface CreateVenueSectionRequest {
   sectionName: string;
 }
 
+// 좌석 타입
+export interface VenueSeat {
+  seatId: number;
+  venueId: number;
+  sectionId: number;
+  sectionName: string;
+  rowLabel: string;
+  seatNumber: number;
+}
+
+export interface CreateVenueSeatRequest {
+  sectionId: number;
+  rowLabel: string;
+  seatNumber: number;
+}
+
 export const adminApi = {
   /**
    * 로그인 로그 조회
@@ -103,6 +119,24 @@ export const adminApi = {
     const url = `/api/admin/venues/${venueId}/sections`;
 
     const data = await adminApiClient.post<VenueSection>(url, request);
+
+    return {
+      code: 201,
+      message: "성공적으로 생성되었습니다",
+      data,
+    };
+  },
+
+  /**
+   * 공연장 좌석 등록
+   */
+  async createVenueSeat(
+    venueId: number,
+    request: CreateVenueSeatRequest
+  ): Promise<{ code: number; message: string; data: VenueSeat }> {
+    const url = `/api/admin/venues/${venueId}/seats`;
+
+    const data = await adminApiClient.post<VenueSeat>(url, request);
 
     return {
       code: 201,

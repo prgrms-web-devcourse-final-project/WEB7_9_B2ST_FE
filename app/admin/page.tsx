@@ -44,6 +44,12 @@ export default function AdminPage() {
       icon: "🏛️",
       path: "/admin/venues/sections",
     },
+    {
+      title: "좌석 등록",
+      description: "공연장 좌석 정보 등록",
+      icon: "🎟️",
+      path: "/admin/venues/seats",
+    },
   ];
 
   return (

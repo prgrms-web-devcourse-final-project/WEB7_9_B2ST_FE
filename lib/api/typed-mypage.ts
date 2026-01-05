@@ -50,10 +50,10 @@ export const typedMyPageApi = {
    * 회원 탈퇴
    */
   async withdraw(request: WithdrawRequest) {
-    // DELETE 요청이지만 body가 필요하므로 직접 request 호출
-    return (typedApiClient as any).request("/api/mypage/withdraw", {
-      method: "DELETE",
-      body: JSON.stringify(request),
-    });
+    // POST 요청으로 변경됨
+    return typedApiClient.post<"/api/mypage/withdraw", "post", 200>(
+      "/api/mypage/withdraw",
+      request as any
+    );
   },
 };

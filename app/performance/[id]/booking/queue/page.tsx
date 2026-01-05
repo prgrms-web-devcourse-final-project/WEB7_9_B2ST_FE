@@ -3,7 +3,10 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState, useEffect, useCallback, use } from "react";
 import Header from "@/components/Header";
-import { typedQueueApi, type QueueEntry } from "@/lib/api/typed-queue";
+import {
+  typedQueueApi,
+  type QueuePositionResponse,
+} from "@/lib/api/typed-queue";
 
 export default function QueueWaiting({
   params,
@@ -16,7 +19,9 @@ export default function QueueWaiting({
   const scheduleId = searchParams.get("scheduleId");
   const queueId = searchParams.get("queueId");
 
-  const [queueData, setQueueData] = useState<QueueEntry | null>(null);
+  const [queueData, setQueueData] = useState<QueuePositionResponse | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [pollingCount, setPollingCount] = useState(0);
@@ -35,6 +40,15 @@ export default function QueueWaiting({
         router.push(
           `/performance/${id}/booking/seats?scheduleId=${scheduleId}&queueId=${queueId}`
         );
+      }
+
+      // 만료되었거나 완료된 경우 경고
+      if (response.status === "EXPIRED") {
+        setError("입장 권한이 만료되었습니다.");
+      } else if (response.status === "COMPLETED") {
+        setError("이미 입장이 완료되었습니다.");
+      } else if (response.status === "NOT_IN_QUEUE") {
+        setError("대기열에 등록되지 않았습니다.");
       }
     } catch (err: any) {
       console.error("대기열 위치 조회 실패:", err);
@@ -171,69 +185,88 @@ export default function QueueWaiting({
             </div>
 
             {/* 대기 인원 */}
-            <div className="bg-blue-50 rounded-lg p-6 mb-6">
-              <div className="text-center">
-                <p className="text-sm text-gray-600 mb-2">내 앞 대기 인원</p>
-                <p className="text-5xl font-bold text-blue-600 mb-3">
-                  {queueData.aheadCount.toLocaleString()}
-                </p>
-                <p className="text-sm text-gray-500">명</p>
-              </div>
-              <div className="mt-4 pt-4 border-t border-blue-200">
-                <div className="text-center">
-                  <p className="text-xs text-gray-500 mb-1">내 순서</p>
-                  <p className="text-2xl font-semibold text-gray-700">
-                    {queueData.myRank.toLocaleString()}번째
-                  </p>
+            {queueData.status === "WAITING" &&
+            queueData.aheadCount !== null &&
+            queueData.myRank !== null ? (
+              <>
+                <div className="bg-blue-50 rounded-lg p-6 mb-6">
+                  <div className="text-center">
+                    <p className="text-sm text-gray-600 mb-2">
+                      내 앞 대기 인원
+                    </p>
+                    <p className="text-5xl font-bold text-blue-600 mb-3">
+                      {queueData.aheadCount.toLocaleString()}
+                    </p>
+                    <p className="text-sm text-gray-500">명</p>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-blue-200">
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500 mb-1">내 순서</p>
+                      <p className="text-2xl font-semibold text-gray-700">
+                        {queueData.myRank.toLocaleString()}번째
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            {/* 예상 대기 시간 */}
-            <div className="bg-gray-50 rounded-lg p-4 mb-6">
-              <div className="flex items-center justify-center gap-2">
-                <svg
-                  className="w-5 h-5 text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <p className="text-sm text-gray-700">
-                  예상 대기 시간:{" "}
-                  <span className="font-semibold text-gray-900">
-                    약 {Math.ceil(queueData.aheadCount / 20)}분
-                  </span>
+                {/* 예상 대기 시간 */}
+                <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                  <div className="flex items-center justify-center gap-2">
+                    <svg
+                      className="w-5 h-5 text-gray-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <p className="text-sm text-gray-700">
+                      예상 대기 시간:{" "}
+                      <span className="font-semibold text-gray-900">
+                        약 {Math.ceil(queueData.aheadCount / 20)}분
+                      </span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* 진행 상황 표시 */}
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-gray-600">진행 상황</span>
+                    <span className="text-sm text-gray-600">
+                      {pollingCount > 0 && `업데이트: ${pollingCount}회`}
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-500 animate-pulse"
+                      style={{
+                        width:
+                          queueData.aheadCount > 50
+                            ? "20%"
+                            : `${100 - queueData.aheadCount * 2}%`,
+                      }}
+                    ></div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="bg-gray-50 rounded-lg p-6 mb-6 text-center">
+                <p className="text-gray-600">
+                  {queueData.status === "ENTERABLE" && "입장 가능 상태입니다."}
+                  {queueData.status === "EXPIRED" &&
+                    "입장 권한이 만료되었습니다."}
+                  {queueData.status === "COMPLETED" && "입장이 완료되었습니다."}
+                  {queueData.status === "NOT_IN_QUEUE" &&
+                    "대기열에 등록되지 않았습니다."}
                 </p>
               </div>
-            </div>
-
-            {/* 진행 상황 표시 */}
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-600">진행 상황</span>
-                <span className="text-sm text-gray-600">
-                  {pollingCount > 0 && `업데이트: ${pollingCount}회`}
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-500 animate-pulse"
-                  style={{
-                    width:
-                      queueData.aheadCount > 50
-                        ? "20%"
-                        : `${100 - queueData.aheadCount * 2}%`,
-                  }}
-                ></div>
-              </div>
-            </div>
+            )}
 
             {/* 안내 메시지 */}
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
@@ -281,9 +314,11 @@ export default function QueueWaiting({
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
               <span>3초마다 자동 업데이트 중</span>
             </div>
-            <p className="mt-2 text-xs">
-              큐 ID: {queueData.queueId} | 순서: {queueData.myRank}번
-            </p>
+            {queueData.status === "WAITING" && queueData.myRank !== null && (
+              <p className="mt-2 text-xs">
+                큐 ID: {queueData.queueId} | 순서: {queueData.myRank}번
+              </p>
+            )}
           </div>
         </div>
       </main>

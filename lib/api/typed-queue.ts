@@ -1,7 +1,12 @@
 import { typedApiClient } from "./typed-client";
 
 // 대기열 상태
-export type QueueStatus = "WAITING" | "ENTERABLE" | "EXPIRED" | "COMPLETED";
+export type QueueStatus =
+  | "WAITING"
+  | "ENTERABLE"
+  | "EXPIRED"
+  | "COMPLETED"
+  | "NOT_IN_QUEUE";
 
 // 대기열 진입 정보
 export interface QueueEntry {
@@ -25,10 +30,10 @@ export interface QueueStartBookingResponse {
 // 대기열 위치 조회 응답
 export interface QueuePositionResponse {
   queueId: number;
+  userId: number;
   status: QueueStatus;
-  position: number;
-  estimatedWaitTimeMinutes: number;
-  updatedAt: string;
+  aheadCount: number | null;
+  myRank: number | null;
 }
 
 export const typedQueueApi = {
@@ -46,29 +51,13 @@ export const typedQueueApi = {
 
   /**
    * 대기열 위치 조회 (폴링용)
+   * GET /api/queues/{queueId}/position
    */
   async getPosition(queueId: number): Promise<QueuePositionResponse> {
-    // TODO: API 연동 시 실제 구현
-    // return typedApiClient.get<'/api/queues/{queueId}/position', 'get', 200>(
-    //   `/api/queues/${queueId}/position`
-    // );
-
-    // 임시 목업 데이터 (위치가 점점 줄어들도록)
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const currentPosition = Math.max(0, Math.floor(Math.random() * 50));
-        resolve({
-          queueId,
-          status: currentPosition === 0 ? "ENTERABLE" : "WAITING",
-          position: currentPosition,
-          estimatedWaitTimeMinutes: Math.max(
-            0,
-            Math.floor(currentPosition / 5)
-          ),
-          updatedAt: new Date().toISOString(),
-        });
-      }, 300);
-    });
+    return typedApiClient.get<"/api/queues/{queueId}/position", "get", 200>(
+      `/api/queues/${queueId}/position`,
+      { path: { queueId } }
+    );
   },
 
   /**

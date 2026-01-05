@@ -250,21 +250,21 @@ export default function ProfileTab() {
   const handleLinkKakao = async () => {
     setIsLinkingKakao(true);
     try {
+      // sessionStorage에 연동 플래그 저장
+      sessionStorage.setItem("isKakaoLink", "true");
+
+      // 로그인과 동일한 authorize URL 사용
       const { authorizeUrl } = await getKakaoAuthorizeUrl();
 
-      // 연동 콜백 URL로 설정 (현재 도메인 + /auth/kakao/link/callback)
-      const callbackUrl = `${window.location.origin}/auth/kakao/link/callback`;
-      const linkUrl = authorizeUrl.replace(
-        encodeURIComponent(`${window.location.origin}/auth/kakao/callback`),
-        encodeURIComponent(callbackUrl)
-      );
+      console.log("카카오 연동 시작:", authorizeUrl);
 
-      // 카카오 로그인 페이지로 리다이렉트
-      window.location.href = linkUrl;
+      // 카카오 인증 페이지로 리다이렉트 (콜백은 /auth/kakao/callback)
+      window.location.href = authorizeUrl;
     } catch (err) {
       console.error("카카오 연동 URL 조회 실패:", err);
       alert("카카오 연동을 시작할 수 없습니다. 다시 시도해주세요.");
       setIsLinkingKakao(false);
+      sessionStorage.removeItem("isKakaoLink");
     }
   };
 

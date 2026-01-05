@@ -140,18 +140,24 @@ export default function BookingSection({
     // AVAILABLE 상태인 좌석만 선택 가능
     if (seat.status !== "AVAILABLE") return;
 
-    setSelectedSeats((prev) => {
-      const isSelected = prev.some(
-        (s) => s.scheduleSeatId === seat.scheduleSeatId
+    const isSelected = selectedSeats.some(
+      (s) => s.scheduleSeatId === seat.scheduleSeatId
+    );
+
+    if (isSelected) {
+      // 이미 선택된 좌석이면 선택 해제
+      setSelectedSeats((prev) =>
+        prev.filter((s) => s.scheduleSeatId !== seat.scheduleSeatId)
       );
-      if (isSelected) {
-        // 이미 선택된 좌석이면 선택 해제
-        return prev.filter((s) => s.scheduleSeatId !== seat.scheduleSeatId);
-      } else {
-        // 새로운 좌석 추가 (다중 선택 가능)
-        return [...prev, seat];
+    } else {
+      // 1개만 선택 가능하도록 제한
+      if (selectedSeats.length >= 1) {
+        alert("좌석은 1개만 선택할 수 있습니다.");
+        return;
       }
-    });
+      // 새로운 좌석 선택
+      setSelectedSeats((prev) => [...prev, seat]);
+    }
   };
 
   const getSeatColor = (seat: ScheduleSeatViewRes) => {
@@ -206,13 +212,25 @@ export default function BookingSection({
 
   // 예매 홀딩 및 생성 처리 (공통 로직)
   const handleHoldingAndCreateReservation = async () => {
-    if (!scheduleId || selectedSeats.length === 0) {
+    if (!scheduleId) {
+      alert("회차 정보가 없습니다.");
+      return null;
+    }
+
+    if (selectedSeats.length === 0) {
       alert("좌석을 선택해주세요.");
+      return null;
+    }
+
+    if (selectedSeats.length > 1) {
+      alert("좌석은 1개만 선택할 수 있습니다.");
       return null;
     }
 
     setIsHolding(true);
     setError("");
+
+    let holdSuccessful = false;
 
     try {
       // 1단계: 모든 좌석에 대해 홀딩
@@ -224,6 +242,8 @@ export default function BookingSection({
         await performanceApi.holdSeat(Number(scheduleId), seat.seatId);
       }
 
+      holdSuccessful = true;
+
       // 2단계: 홀딩 성공한 좌석 ID 배열 생성
       const seatIds = selectedSeats
         .filter((seat) => seat.seatId)
@@ -233,7 +253,7 @@ export default function BookingSection({
         throw new Error("선택된 좌석이 없습니다.");
       }
 
-      // 3단계: 배열로 예매 생성
+      // 3단계: 배열로 예매 생성 (hold가 성공한 경우에만 진행)
       const response = await reservationApi.createReservation(
         Number(scheduleId),
         seatIds

@@ -16,11 +16,20 @@ import {
   type Trade,
 } from "@/lib/api/trade";
 import { mypageApi } from "@/lib/api/mypage";
+import {
+  prereservationApi,
+  type PrereservationApplication,
+} from "@/lib/api/prereservation";
 
 export default function MyPage() {
   // 초기 상태는 항상 동일하게 설정 (서버와 클라이언트 일치)
   const [activeTab, setActiveTab] = useState<
-    "reservations" | "profile" | "trades" | "lottery" | "tickets"
+    | "reservations"
+    | "profile"
+    | "trades"
+    | "lottery"
+    | "tickets"
+    | "prereservations"
   >("reservations");
   const [periodFilter, setPeriodFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -41,6 +50,14 @@ export default function MyPage() {
   const [isLoadingTickets, setIsLoadingTickets] = useState(false);
   const [ticketsError, setTicketsError] = useState("");
 
+  // 사전 신청 관련 상태
+  const [prereservations, setPrereservations] = useState<
+    PrereservationApplication[]
+  >([]);
+  const [isLoadingPrereservations, setIsLoadingPrereservations] =
+    useState(false);
+  const [prereservationsError, setPrereservationsError] = useState("");
+
   // 교환/양도 관련 상태
   const [tradesSubTab, setTradesSubTab] = useState<
     "my-trades" | "received-requests" | "sent-requests"
@@ -59,9 +76,14 @@ export default function MyPage() {
       const savedTab = sessionStorage.getItem("mypage-active-tab");
       if (
         savedTab &&
-        ["reservations", "profile", "trades", "lottery", "tickets"].includes(
-          savedTab
-        )
+        [
+          "reservations",
+          "profile",
+          "trades",
+          "lottery",
+          "tickets",
+          "prereservations",
+        ].includes(savedTab)
       ) {
         setActiveTab(
           savedTab as
@@ -69,6 +91,8 @@ export default function MyPage() {
             | "profile"
             | "trades"
             | "lottery"
+            | "tickets"
+            | "prereservations"
             | "tickets"
         );
       }
@@ -129,6 +153,36 @@ export default function MyPage() {
       };
 
       fetchReservations();
+    }
+  }, [activeTab]);
+
+  // 사전 신청 내역 조회
+  useEffect(() => {
+    if (activeTab === "prereservations") {
+      const fetchPrereservations = async () => {
+        setIsLoadingPrereservations(true);
+        setPrereservationsError("");
+
+        try {
+          const response =
+            await prereservationApi.getMyPrereservationApplications();
+          if (response.data) {
+            setPrereservations(response.data);
+          }
+        } catch (err) {
+          if (err instanceof Error) {
+            setPrereservationsError(err.message);
+          } else {
+            setPrereservationsError(
+              "사전 신청 내역을 불러오는데 실패했습니다."
+            );
+          }
+        } finally {
+          setIsLoadingPrereservations(false);
+        }
+      };
+
+      fetchPrereservations();
     }
   }, [activeTab]);
 
@@ -642,6 +696,16 @@ export default function MyPage() {
               }`}
             >
               내 티켓
+            </button>
+            <button
+              onClick={() => setActiveTab("prereservations")}
+              className={`px-6 py-4 font-medium transition-colors ${
+                activeTab === "prereservations"
+                  ? "text-red-600 border-b-2 border-red-600"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              사전 신청
             </button>
             <button
               onClick={() => setActiveTab("profile")}
@@ -1326,6 +1390,58 @@ export default function MyPage() {
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Prereservations Tab */}
+        {activeTab === "prereservations" && (
+          <div>
+            {isLoadingPrereservations ? (
+              <div className="text-center py-8 text-gray-500">
+                사전 신청 내역을 불러오는 중...
+              </div>
+            ) : prereservationsError ? (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
+                {prereservationsError}
+              </div>
+            ) : prereservations.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500 mb-2">
+                  신청한 사전 예매가 없습니다.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {prereservations.map((app, index) => (
+                  <div
+                    key={index}
+                    className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-600 mb-1">
+                          공연 ID:{" "}
+                          <span className="font-semibold">
+                            {app.scheduleId}
+                          </span>
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          신청 섹션:{" "}
+                          <span className="font-semibold">
+                            {app.sectionIds.join(", ")}
+                          </span>
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded">
+                          신청 완료
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>

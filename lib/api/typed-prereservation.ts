@@ -51,4 +51,11 @@ export const typedPrereservationApi = {
 
     return response.json();
   },
+
+  /**
+   * 나의 사전 신청 내역 조회
+   */
+  async getMyPrereservationApplications() {
+    return (typedApiClient.get as any)(`/api/prereservations/applications/me`);
+  },
 };

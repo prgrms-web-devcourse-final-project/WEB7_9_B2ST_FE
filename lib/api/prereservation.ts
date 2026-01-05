@@ -8,6 +8,11 @@ export interface PrereservationSection {
   applied: boolean;
 }
 
+export interface PrereservationApplication {
+  scheduleId: number;
+  sectionIds: number[];
+}
+
 export const prereservationApi = {
   /**
    * 신청 예매 구역 목록 조회
@@ -50,6 +55,18 @@ export const prereservationApi = {
       code: 201,
       message: "성공적으로 생성되었습니다",
       data: null,
+    };
+  },
+
+  /**
+   * 나의 사전 신청 내역 조회
+   */
+  async getMyPrereservationApplications() {
+    const data = await typedPrereservationApi.getMyPrereservationApplications();
+    return {
+      code: 200,
+      message: "성공적으로 처리되었습니다",
+      data: data as PrereservationApplication[],
     };
   },
 };

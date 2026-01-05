@@ -25,7 +25,9 @@ export default function BookingSeats({
   const [seats, setSeats] = useState<ScheduleSeatViewRes[]>([]);
   const [selectedSeats, setSelectedSeats] = useState<ScheduleSeatViewRes[]>([]);
   const [schedules, setSchedules] = useState<PerformanceScheduleListRes[]>([]);
-  const [currentScheduleId, setCurrentScheduleId] = useState<string | null>(scheduleId);
+  const [currentScheduleId, setCurrentScheduleId] = useState<string | null>(
+    scheduleId
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
@@ -203,7 +205,10 @@ export default function BookingSeats({
 
     try {
       // 1단계: 좌석 hold
-      await performanceApi.holdSeat(Number(currentScheduleId), seat.scheduleSeatId);
+      await performanceApi.holdSeat(
+        Number(currentScheduleId),
+        seat.scheduleSeatId
+      );
 
       // 2단계: 예매 생성 (hold가 성공한 경우에만 진행)
       const response = await reservationApi.createReservation(
@@ -217,10 +222,10 @@ export default function BookingSeats({
 
       // 3단계: 결제 페이지로 이동 (모든 단계가 성공한 경우에만)
       // queueId가 있으면 함께 전달
-      const paymentUrl = queueId 
+      const paymentUrl = queueId
         ? `/performance/${id}/booking/payment?reservationId=${response.data.reservationId}&scheduleId=${currentScheduleId}&queueId=${queueId}`
         : `/performance/${id}/booking/payment?reservationId=${response.data.reservationId}&scheduleId=${currentScheduleId}`;
-      
+
       router.push(paymentUrl);
     } catch (err) {
       setIsProcessing(false);
@@ -280,7 +285,7 @@ export default function BookingSeats({
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <h1 className="text-3xl font-bold text-gray-900">좌석 선택</h1>
-              
+
               {/* 대기열 정보 표시 */}
               {queueId && (
                 <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 px-4 py-2 rounded-lg">
@@ -297,15 +302,20 @@ export default function BookingSeats({
                       d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  <span className="text-sm text-blue-700 font-medium">대기열 통과</span>
+                  <span className="text-sm text-blue-700 font-medium">
+                    대기열 통과
+                  </span>
                 </div>
               )}
             </div>
-            
+
             {/* 회차 선택 드롭다운 */}
             {schedules.length > 0 && (
               <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
-                <label htmlFor="schedule-select" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="schedule-select"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   회차 선택
                 </label>
                 <select
@@ -315,18 +325,23 @@ export default function BookingSeats({
                   className="block w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white text-gray-900"
                 >
                   {schedules.map((schedule) => (
-                    <option key={schedule.performanceScheduleId} value={schedule.performanceScheduleId}>
-                      {schedule.startAt && new Date(schedule.startAt).toLocaleDateString('ko-KR', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        weekday: 'short',
-                      })}{" "}
-                      {schedule.startAt && new Date(schedule.startAt).toLocaleTimeString('ko-KR', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: false,
-                      })}
+                    <option
+                      key={schedule.performanceScheduleId}
+                      value={schedule.performanceScheduleId}
+                    >
+                      {schedule.startAt &&
+                        new Date(schedule.startAt).toLocaleDateString("ko-KR", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          weekday: "short",
+                        })}{" "}
+                      {schedule.startAt &&
+                        new Date(schedule.startAt).toLocaleTimeString("ko-KR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: false,
+                        })}
                       {schedule.roundNo && ` (${schedule.roundNo}회차)`}
                     </option>
                   ))}

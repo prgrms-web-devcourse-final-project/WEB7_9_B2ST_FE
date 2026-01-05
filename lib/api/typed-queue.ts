@@ -55,10 +55,9 @@ export const typedQueueApi = {
    * GET /api/queues/{queueId}/position
    */
   async getPosition(queueId: number): Promise<QueuePositionResponse> {
-    return typedApiClient.get(
-      `/api/queues/${queueId}/position` as any,
-      { path: { queueId } }
-    );
+    return typedApiClient.get(`/api/queues/${queueId}/position` as any, {
+      path: { queueId },
+    });
   },
 
   /**

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import {
@@ -62,7 +62,7 @@ export default function AdminQueues() {
           setPerformances(
             response.data.content.map((p) => ({
               id: p.performanceId || 0,
-              title: p.performanceTitle || "Unknown",
+              title: p.title || "Unknown",
             }))
           );
         }
@@ -124,7 +124,7 @@ export default function AdminQueues() {
   // 초기 로드 및 필터 변경 시 재로드
   useEffect(() => {
     loadQueueList();
-  }, [filterPerformanceId, filterQueueType]);
+  }, [filterPerformanceId, filterQueueType, loadQueueList]);
 
   // 대기열 생성
   const handleCreateQueue = async () => {

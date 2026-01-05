@@ -172,6 +172,8 @@ export default function AdminQueueDetail() {
       }
     } finally {
       setIsDeleting(false);
+    }
+  };
 
   // 목록으로 돌아가기
   const handleGoBack = () => {

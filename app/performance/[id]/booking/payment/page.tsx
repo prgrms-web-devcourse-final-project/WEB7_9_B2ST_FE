@@ -8,6 +8,7 @@ import {
   reservationApi,
   type ReservationDetailWithSeatsRes,
 } from "@/lib/api/reservation";
+import { paymentApi, type PaymentRequest } from "@/lib/api/payment";
 
 export default function BookingPayment({
   params,
@@ -25,9 +26,9 @@ export default function BookingPayment({
     ? [Number(reservationIdParam)]
     : reservationIdsParam?.split(",").map(Number).filter(Boolean) || [];
 
-  const [paymentMethod, setPaymentMethod] = useState<"card" | "bank" | "kakao">(
-    "card"
-  );
+  const [paymentMethod, setPaymentMethod] = useState<
+    "CARD" | "VIRTUAL_ACCOUNT" | "EASY_PAY"
+  >("CARD");
   const [isComplete, setIsComplete] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [reservations, setReservations] = useState<
@@ -80,20 +81,34 @@ export default function BookingPayment({
       return;
     }
 
+    if (reservationIds.length > 1) {
+      alert("한 번에 하나의 예매만 결제할 수 있습니다.");
+      return;
+    }
+
     setIsProcessing(true);
     setError("");
 
     try {
-      // 모든 예매에 대해 확정 처리
-      await Promise.all(
-        reservationIds.map((reservationId) =>
-          reservationApi.completeReservation(reservationId)
-        )
-      );
+      const reservationId = reservationIds[0];
 
+      // 결제 API 호출
+      const paymentRequest: PaymentRequest = {
+        domainType: "RESERVATION",
+        paymentMethod: paymentMethod,
+        domainId: reservationId,
+      };
+
+      const response = await paymentApi.pay(paymentRequest);
+
+      if (!response.success || !response.data) {
+        throw new Error(response.error || "결제에 실패했습니다.");
+      }
+
+      // 결제 성공
       setIsComplete(true);
       setTimeout(() => {
-        router.push("/my-page");
+        router.push(`/my-page/reservations/${reservationId}`);
       }, 2000);
     } catch (err) {
       setIsProcessing(false);
@@ -163,16 +178,16 @@ export default function BookingPayment({
 
               <div className="space-y-3 mb-8">
                 <button
-                  onClick={() => setPaymentMethod("card")}
+                  onClick={() => setPaymentMethod("CARD")}
                   className={`w-full p-4 rounded-lg border-2 text-left transition-colors ${
-                    paymentMethod === "card"
+                    paymentMethod === "CARD"
                       ? "border-red-600 bg-red-50"
                       : "border-gray-300 hover:border-gray-400"
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-medium">신용카드</span>
-                    {paymentMethod === "card" && (
+                    {paymentMethod === "CARD" && (
                       <div className="w-5 h-5 bg-red-600 rounded-full flex items-center justify-center">
                         <div className="w-2 h-2 bg-white rounded-full"></div>
                       </div>
@@ -181,16 +196,16 @@ export default function BookingPayment({
                 </button>
 
                 <button
-                  onClick={() => setPaymentMethod("bank")}
+                  onClick={() => setPaymentMethod("VIRTUAL_ACCOUNT")}
                   className={`w-full p-4 rounded-lg border-2 text-left transition-colors ${
-                    paymentMethod === "bank"
+                    paymentMethod === "VIRTUAL_ACCOUNT"
                       ? "border-red-600 bg-red-50"
                       : "border-gray-300 hover:border-gray-400"
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-medium">무통장입금</span>
-                    {paymentMethod === "bank" && (
+                    {paymentMethod === "VIRTUAL_ACCOUNT" && (
                       <div className="w-5 h-5 bg-red-600 rounded-full flex items-center justify-center">
                         <div className="w-2 h-2 bg-white rounded-full"></div>
                       </div>
@@ -199,16 +214,16 @@ export default function BookingPayment({
                 </button>
 
                 <button
-                  onClick={() => setPaymentMethod("kakao")}
+                  onClick={() => setPaymentMethod("EASY_PAY")}
                   className={`w-full p-4 rounded-lg border-2 text-left transition-colors ${
-                    paymentMethod === "kakao"
+                    paymentMethod === "EASY_PAY"
                       ? "border-red-600 bg-red-50"
                       : "border-gray-300 hover:border-gray-400"
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-medium">카카오페이</span>
-                    {paymentMethod === "kakao" && (
+                    <span className="font-medium">간편결제</span>
+                    {paymentMethod === "EASY_PAY" && (
                       <div className="w-5 h-5 bg-red-600 rounded-full flex items-center justify-center">
                         <div className="w-2 h-2 bg-white rounded-full"></div>
                       </div>
@@ -221,7 +236,7 @@ export default function BookingPayment({
               <div className="space-y-4">
                 <h3 className="font-bold text-gray-900">결제 정보 입력</h3>
 
-                {paymentMethod === "card" && (
+                {paymentMethod === "CARD" && (
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -258,7 +273,7 @@ export default function BookingPayment({
                   </div>
                 )}
 
-                {paymentMethod === "bank" && (
+                {paymentMethod === "VIRTUAL_ACCOUNT" && (
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <p className="text-sm text-gray-600 mb-2">입금계좌 정보</p>
                     <p className="font-medium">국민은행 123-456-789012</p>
@@ -269,10 +284,10 @@ export default function BookingPayment({
                   </div>
                 )}
 
-                {paymentMethod === "kakao" && (
+                {paymentMethod === "EASY_PAY" && (
                   <div className="p-4 bg-yellow-50 rounded-lg text-center">
                     <p className="text-gray-600">
-                      카카오페이 결제는 결제하기 버튼 클릭 시 진행됩니다.
+                      간편결제는 결제하기 버튼 클릭 시 진행됩니다.
                     </p>
                   </div>
                 )}

@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Header from "@/components/Header";
 import {
   typedAdminQueueApi,
   type AdminQueueCreateRequest,
@@ -14,8 +13,9 @@ import {
   type PerformanceScheduleListRes,
 } from "@/lib/api/performance";
 
-export default function AdminQueues() {
+export default function AdminQueuesPage() {
   const router = useRouter();
+  const [isAdmin, setIsAdmin] = useState(false);
   const [activeTab, setActiveTab] = useState<"create" | "list" | "detail">(
     "list"
   );
@@ -55,6 +55,15 @@ export default function AdminQueues() {
 
   // 공연 목록 로드
   useEffect(() => {
+    const admin = localStorage.getItem("isAdmin") === "true";
+    setIsAdmin(admin);
+    if (!admin) {
+      router.push("/admin/login");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     const fetchPerformances = async () => {
       try {
         const response = await performanceApi.getPerformances({ size: 100 });
@@ -71,8 +80,10 @@ export default function AdminQueues() {
       }
     };
 
-    fetchPerformances();
-  }, []);
+    if (isAdmin) {
+      fetchPerformances();
+    }
+  }, [isAdmin]);
 
   // 선택된 공연의 회차 로드
   useEffect(() => {
@@ -214,18 +225,15 @@ export default function AdminQueues() {
     }
   };
 
+  if (!isAdmin) return null;
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-      <main className="pt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              대기열 관리
-            </h1>
-            <p className="text-gray-600">공연별 대기열을 관리합니다.</p>
-          </div>
-
+      <div className="max-w-6xl mx-auto px-4 py-12">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold">대기열 관리</h1>
+        </div>
+        <div className="bg-white rounded-lg shadow-sm p-6">
           {/* 알림 메시지 */}
           {error && (
             <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
@@ -574,7 +582,7 @@ export default function AdminQueues() {
             </div>
           )}
         </div>
-      </main>
+      </div>
     </div>
   );
 }

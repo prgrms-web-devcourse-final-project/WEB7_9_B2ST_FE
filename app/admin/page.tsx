@@ -33,6 +33,12 @@ export default function AdminPage() {
       path: "/admin/performances",
     },
     {
+      title: "대기열 관리",
+      description: "대기열 생성, 조회, 상태 관리",
+      icon: "⏳",
+      path: "/admin/queues",
+    },
+    {
       title: "로그인 로그",
       description: "로그인 시도 내역 조회",
       icon: "📊",

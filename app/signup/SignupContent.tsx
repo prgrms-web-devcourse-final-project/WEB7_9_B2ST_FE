@@ -354,7 +354,7 @@ export default function SignupContent() {
           <div className="text-center mb-6">
             <Link href="/" className="inline-block">
               <Image
-                src="/doncrytt-logo2.png"
+                src="/doncrytt-logo4.png"
                 alt="doncrytt 로고"
                 width={200}
                 height={80}

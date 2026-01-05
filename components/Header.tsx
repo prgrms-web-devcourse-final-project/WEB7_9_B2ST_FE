@@ -132,7 +132,7 @@ export default function Header({
           {/* Logo */}
           <Link href="/" className="flex items-center">
             <Image
-              src="/doncrytt-logo2.png"
+              src="/doncrytt-logo4.png"
               alt="doncrytt 로고"
               width={200}
               height={80}
@@ -276,29 +276,38 @@ export default function Header({
           </div>
 
           {/* User Actions */}
-          {isAuthenticated ? (
-            <div className="flex items-center gap-4">
-              <Link
-                href="/my-page"
-                className="px-4 py-2 text-gray-700 hover:text-red-600 font-medium text-sm transition-colors"
-              >
-                마이페이지
-              </Link>
-              <button
-                onClick={logout}
-                className="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium text-sm"
-              >
-                로그아웃
-              </button>
-            </div>
-          ) : (
+          <div className="flex items-center gap-3">
             <Link
-              href="/login"
-              className="px-5 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors text-sm"
+              href="/#service"
+              className="px-4 py-2 text-gray-700 hover:text-red-600 font-medium text-sm transition-colors"
             >
-              로그인
+              서비스 소개
             </Link>
-          )}
+
+            {isAuthenticated ? (
+              <>
+                <Link
+                  href="/my-page"
+                  className="px-4 py-2 text-gray-700 hover:text-red-600 font-medium text-sm transition-colors"
+                >
+                  마이페이지
+                </Link>
+                <button
+                  onClick={logout}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium text-sm"
+                >
+                  로그아웃
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                className="px-5 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors text-sm"
+              >
+                로그인
+              </Link>
+            )}
+          </div>
         </div>
       </div>
 

@@ -27,87 +27,22 @@ export default function LoginContent() {
       setIsKakaoLoading(true);
 
       try {
-        console.log("🔵 카카오 로그인 처리 시작");
-        console.log("🔵 Code:", code);
-        console.log("🔵 State:", state);
-        console.log("🔵 카카오 로그인 전 localStorage:", {
-          accessToken: localStorage.getItem("accessToken"),
-          refreshToken: localStorage.getItem("refreshToken"),
-        });
-
         await kakaoLogin({ code, state });
 
-        console.log("✅ 카카오 로그인 성공, 토큰 저장 후 localStorage:", {
-          accessToken: localStorage.getItem("accessToken"),
-          refreshToken: localStorage.getItem("refreshToken"),
-        });
-
-        // 약간의 지연을 추가하여 상태 업데이트가 완료되도록 대기
         setTimeout(() => {
-          console.log("✅ 홈 페이지로 리다이렉트 중...");
-          router.push("/");
+          const redirectTo = searchParams.get("from") || "/";
+          router.push(redirectTo);
         }, 100);
       } catch (err) {
-        console.error("❌ 카카오 로그인 오류 발생");
-        console.error("❌ Code:", code);
-        console.error("❌ State:", state);
-        console.error("❌ 에러 상세:", err);
-        console.log("❌ 카카오 로그인 실패 후 localStorage:", {
-          accessToken: localStorage.getItem("accessToken"),
-          refreshToken: localStorage.getItem("refreshToken"),
-        });
-
-        if (err instanceof Error) {
-          // 401 에러인 경우 상세 정보 출력 및 URL 유지
-          if (err.message.includes("401") || err.message.includes("인증")) {
-            console.error("⚠️⚠️⚠️ 401 인증 에러 발생 ⚠️⚠️⚠️");
-            console.error("⚠️ Code:", code);
-            console.error("⚠️ State:", state);
-            console.error("⚠️ 에러 메시지:", err.message);
-            console.error("⚠️ 전체 에러 객체:", err);
-            console.error("⚠️ 현재 URL:", window.location.href);
-
-            setError(
-              `카카오 로그인 인증 실패 (401)\n\nCode: ${code}\nState: ${state}\n\n콘솔(F12)을 열어 상세 정보를 확인하세요.`
-            );
-
-            // URL 파라미터 유지 - 디버깅 목적
-            alert(
-              "⚠️ 401 인증 에러가 발생했습니다.\n\n콘솔(F12)을 열어 code와 state 값을 확인하세요.\n\n이 화면에서 URL 파라미터가 유지됩니다."
-            );
-          }
-          // 이메일 정보 미동의 시 처리
-          else if (err.message.includes("이메일 정보 제공에 동의")) {
-            setError(
-              "이메일 정보 제공에 동의해주세요. 카카오 계정 설정에서 동의 후 다시 시도해주세요."
-            );
-            window.history.replaceState({}, "", "/login");
-          } else {
-            setError(err.message);
-            window.history.replaceState({}, "", "/login");
-          }
-        } else {
-          setError("카카오 로그인에 실패했습니다. 다시 시도해주세요.");
-          window.history.replaceState({}, "", "/login");
-        }
+        console.error("❌ 카카오 로그인 오류", err);
+        setError("카카오 로그인에 실패했습니다. 다시 시도해주세요.");
+      } finally {
         setIsKakaoLoading(false);
+        isProcessingKakaoLogin.current = false;
       }
     },
-    [kakaoLogin, router]
+    [kakaoLogin, router, searchParams]
   );
-
-  // 카카오 로그인 콜백 처리
-  useEffect(() => {
-    const code = searchParams.get("code");
-    const state = searchParams.get("state");
-
-    // code와 state가 있고, 아직 처리 중이 아닐 때만 실행
-    if (code && state && !isProcessingKakaoLogin.current) {
-      console.log("🔵 카카오 콜백 감지 - 처리 시작");
-      isProcessingKakaoLogin.current = true; // 중복 실행 방지
-      handleKakaoCallback(code, state);
-    }
-  }, [searchParams]); // handleKakaoCallback 의존성 제거 - 중복 실행 방지
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,156 +50,229 @@ export default function LoginContent() {
     setIsLoading(true);
 
     try {
-      await login(formData);
-      router.push("/");
+      await login({ email: formData.email, password: formData.password });
+      const redirectTo = searchParams.get("from") || "/";
+      router.push(redirectTo);
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("로그인에 실패했습니다. 다시 시도해주세요.");
-      }
+      console.error("❌ 로그인 실패", err);
+      setError("이메일 또는 비밀번호를 확인해주세요.");
+    } finally {
       setIsLoading(false);
-      // 에러 발생 시 새로고침하지 않고 에러 상태 유지
     }
   };
 
   const handleKakaoLoginClick = async () => {
+    if (isProcessingKakaoLogin.current) return;
+
     setError("");
     setIsKakaoLoading(true);
+    isProcessingKakaoLogin.current = true;
 
     try {
-      // 백엔드에서 카카오 로그인 URL 조회
-      const urlResponse = await getKakaoAuthorizeUrl();
-      // 카카오 로그인 페이지로 리다이렉트
-      window.location.href = urlResponse.authorizeUrl;
+      const response = await getKakaoAuthorizeUrl();
+      window.location.href = response.authorizeUrl;
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("카카오 로그인 처리 중 오류가 발생했습니다.");
-      }
+      console.error("❌ 카카오 로그인 URL 생성 실패", err);
+      setError("카카오 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.");
+      isProcessingKakaoLogin.current = false;
       setIsKakaoLoading(false);
     }
   };
 
+  useEffect(() => {
+    const code = searchParams.get("code");
+    const state = searchParams.get("state");
+
+    if (code && state && !isProcessingKakaoLogin.current) {
+      isProcessingKakaoLogin.current = true;
+      handleKakaoCallback(code, state);
+    }
+  }, [handleKakaoCallback, searchParams]);
+
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-block mb-4">
-            <Image
-              src="/doncrytt-logo2.png"
-              alt="doncrytt 로고"
-              width={200}
-              height={80}
-              className="h-16 w-auto mx-auto"
-              priority
-            />
-          </Link>
-          <h2 className="text-2xl font-bold text-gray-900">로그인</h2>
-          <p className="mt-2 text-sm text-gray-600">
-            또는{" "}
-            <Link
-              href="/signup"
-              className="font-semibold text-red-600 hover:text-red-700"
-            >
-              회원가입
-            </Link>
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto grid lg:grid-cols-5 gap-10 items-start">
+        {/* 서비스 소개 패널 */}
+        <div className="lg:col-span-2 bg-gray-900 text-white rounded-2xl shadow-xl p-8 flex flex-col gap-6">
+          <div>
+            <p className="text-sm text-gray-300 mb-2">
+              Doncrytt Ticket Platform
+            </p>
+            <h2 className="text-3xl font-bold leading-tight">
+              일반 · 추첨 · 사전신청을 한 번에 지원하는 공연 플랫폼
+            </h2>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex gap-3 items-start">
+              <span className="mt-0.5 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs font-bold">
+                1
+              </span>
+              <div>
+                <p className="font-semibold">비로그인 탐색 가능</p>
+                <p className="text-sm text-gray-300">
+                  서비스 소개와 공연 목록은 누구나 볼 수 있습니다.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 items-start">
+              <span className="mt-0.5 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold">
+                2
+              </span>
+              <div>
+                <p className="font-semibold">로그인 후 기능 해제</p>
+                <p className="text-sm text-gray-300">
+                  양도/교환, 마이페이지, 응모/사전신청 관리에 접근합니다.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 items-start">
+              <span className="mt-0.5 w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center text-xs font-bold">
+                3
+              </span>
+              <div>
+                <p className="font-semibold">이전 페이지로 복귀</p>
+                <p className="text-sm text-gray-300">
+                  로그인 완료 후 직전 경로로 돌아가 작업을 이어갑니다.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-4 rounded-xl bg-white/10 border border-white/10">
+              <p className="text-xs text-gray-300 mb-1">예매 타입</p>
+              <p className="font-semibold">일반 · 추첨 · 사전신청</p>
+              <p className="text-xs text-gray-400 mt-1">각 타입별 안내 제공</p>
+            </div>
+            <div className="p-4 rounded-xl bg-white/10 border border-white/10">
+              <p className="text-xs text-gray-300 mb-1">양도/교환</p>
+              <p className="font-semibold">로그인 후 이용</p>
+              <p className="text-xs text-gray-400 mt-1">
+                마이페이지에서 상태 확인
+              </p>
+            </div>
+          </div>
         </div>
-        <form
-          className="bg-white rounded-xl shadow-lg p-8"
-          onSubmit={handleSubmit}
-        >
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-              {error}
-            </div>
-          )}
-          <div className="space-y-5">
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-semibold text-gray-700 mb-2"
-              >
-                이메일
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-                className="appearance-none relative block w-full px-4 py-3 border border-gray-200 placeholder-gray-400 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
-                placeholder="이메일 주소"
+
+        {/* 로그인 폼 */}
+        <div className="lg:col-span-3">
+          <div className="text-center mb-8">
+            <Link href="/" className="inline-block mb-4">
+              <Image
+                src="/doncrytt-logo2.png"
+                alt="doncrytt 로고"
+                width={200}
+                height={80}
+                className="h-16 w-auto mx-auto"
+                priority
               />
-            </div>
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-semibold text-gray-700 mb-2"
-              >
-                비밀번호
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-                className="appearance-none relative block w-full px-4 py-3 border border-gray-200 placeholder-gray-400 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
-                placeholder="비밀번호"
-              />
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <button
-              type="submit"
-              disabled={isLoading || isKakaoLoading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-lg text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
-            >
-              {isLoading ? "로그인 중..." : "로그인"}
-            </button>
-          </div>
-
-          <div className="mt-4 relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">또는</span>
-            </div>
-          </div>
-
-          <div className="mt-4">
-            <button
-              type="button"
-              onClick={handleKakaoLoginClick}
-              disabled={isLoading || isKakaoLoading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-yellow-400 text-sm font-bold rounded-lg text-gray-800 bg-yellow-300 hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
-            >
-              {isKakaoLoading ? "카카오 로그인 중..." : "카카오로 로그인"}
-            </button>
-          </div>
-
-          <div className="mt-4 text-center">
-            <Link
-              href="/auth/withdrawal-recovery"
-              className="text-xs text-gray-500 hover:text-gray-700"
-            >
-              탈퇴 복구하기
             </Link>
+            <h2 className="text-2xl font-bold text-gray-900">로그인</h2>
+            <p className="mt-2 text-sm text-gray-600">
+              또는{" "}
+              <Link
+                href="/signup"
+                className="font-semibold text-red-600 hover:text-red-700"
+              >
+                회원가입
+              </Link>
+            </p>
           </div>
-        </form>
+          <form
+            className="bg-white rounded-xl shadow-lg p-8"
+            onSubmit={handleSubmit}
+          >
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+                {error}
+              </div>
+            )}
+            <div className="space-y-5">
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-semibold text-gray-700 mb-2"
+                >
+                  이메일
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                  className="appearance-none relative block w-full px-4 py-3 border border-gray-200 placeholder-gray-400 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
+                  placeholder="이메일 주소"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-semibold text-gray-700 mb-2"
+                >
+                  비밀번호
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={formData.password}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
+                  className="appearance-none relative block w-full px-4 py-3 border border-gray-200 placeholder-gray-400 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
+                  placeholder="비밀번호"
+                />
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <button
+                type="submit"
+                disabled={isLoading || isKakaoLoading}
+                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-lg text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+              >
+                {isLoading ? "로그인 중..." : "로그인"}
+              </button>
+            </div>
+
+            <div className="mt-4 relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">또는</span>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={handleKakaoLoginClick}
+                disabled={isLoading || isKakaoLoading}
+                className="group relative w-full flex justify-center py-3 px-4 border border-yellow-400 text-sm font-bold rounded-lg text-gray-800 bg-yellow-300 hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+              >
+                {isKakaoLoading ? "카카오 로그인 중..." : "카카오로 로그인"}
+              </button>
+            </div>
+
+            <div className="mt-4 text-center">
+              <Link
+                href="/auth/withdrawal-recovery"
+                className="text-xs text-gray-500 hover:text-gray-700"
+              >
+                탈퇴 복구하기
+              </Link>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

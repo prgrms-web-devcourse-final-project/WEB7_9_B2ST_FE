@@ -1,20 +1,36 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import Header from '@/components/Header';
-import { performanceApi, type PerformanceListRes } from '@/lib/api/performance';
+import Link from "next/link";
+import { useState, useEffect, useRef } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import Header from "@/components/Header";
+import { performanceApi, type PerformanceListRes } from "@/lib/api/performance";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function TradeRegisterStep1() {
   const router = useRouter();
-  const [tradeType, setTradeType] = useState<'EXCHANGE' | 'TRANSFER'>('EXCHANGE');
-  const [searchQuery, setSearchQuery] = useState('');
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { isAuthenticated, isLoading } = useAuth();
+  const [tradeType, setTradeType] = useState<"EXCHANGE" | "TRANSFER">(
+    "EXCHANGE"
+  );
+  const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<PerformanceListRes[]>([]);
-  const [selectedPerformance, setSelectedPerformance] = useState<PerformanceListRes | null>(null);
+  const [selectedPerformance, setSelectedPerformance] =
+    useState<PerformanceListRes | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (!isAuthenticated) {
+      const queryString = searchParams.toString();
+      const from = queryString ? `${pathname}?${queryString}` : pathname;
+      router.replace(`/login?from=${encodeURIComponent(from)}`);
+    }
+  }, [isAuthenticated, isLoading, pathname, router, searchParams]);
 
   // 검색어 변경 시 debounce 검색
   useEffect(() => {
@@ -30,11 +46,14 @@ export default function TradeRegisterStep1() {
     setIsSearching(true);
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const response = await performanceApi.searchPerformances(searchQuery.trim(), {
-          page: 0,
-          size: 10,
-          sort: ['createdAt,desc'],
-        });
+        const response = await performanceApi.searchPerformances(
+          searchQuery.trim(),
+          {
+            page: 0,
+            size: 10,
+            sort: ["createdAt,desc"],
+          }
+        );
 
         if (response.data?.content) {
           setSearchResults(response.data.content);
@@ -58,28 +77,31 @@ export default function TradeRegisterStep1() {
   // 외부 클릭 시 드롭다운 닫기
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setSearchResults([]);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
   const formatDateRange = (startDate?: string, endDate?: string) => {
-    if (!startDate || !endDate) return '';
-    const start = new Date(startDate).toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
+    if (!startDate || !endDate) return "";
+    const start = new Date(startDate).toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
     });
-    const end = new Date(endDate).toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
+    const end = new Date(endDate).toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
     });
     return `${start} ~ ${end}`;
   };
@@ -90,6 +112,10 @@ export default function TradeRegisterStep1() {
       `/trade/register/step2?type=${tradeType}&performanceId=${selectedPerformance.performanceId}`
     );
   };
+
+  if (isLoading || !isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -103,21 +129,27 @@ export default function TradeRegisterStep1() {
                 <div className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center font-bold">
                   1
                 </div>
-                <span className="ml-2 font-medium text-green-600">공연 선택</span>
+                <span className="ml-2 font-medium text-green-600">
+                  공연 선택
+                </span>
               </div>
               <div className="w-16 h-1 bg-gray-300"></div>
               <div className="flex items-center">
                 <div className="w-10 h-10 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center font-bold">
                   2
                 </div>
-                <span className="ml-2 font-medium text-gray-500">내 티켓 선택</span>
+                <span className="ml-2 font-medium text-gray-500">
+                  내 티켓 선택
+                </span>
               </div>
               <div className="w-16 h-1 bg-gray-300"></div>
               <div className="flex items-center">
                 <div className="w-10 h-10 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center font-bold">
                   3
                 </div>
-                <span className="ml-2 font-medium text-gray-500">최종 확인</span>
+                <span className="ml-2 font-medium text-gray-500">
+                  최종 확인
+                </span>
               </div>
             </div>
           </div>
@@ -128,22 +160,26 @@ export default function TradeRegisterStep1() {
             <div className="space-y-8">
               {/* Trade Type Selection */}
               <div>
-                <h2 className="text-lg font-bold text-gray-900 mb-4">교환/양도 유형 선택</h2>
+                <h2 className="text-lg font-bold text-gray-900 mb-4">
+                  교환/양도 유형 선택
+                </h2>
                 <div className="grid grid-cols-2 gap-4">
                   <button
-                    onClick={() => setTradeType('EXCHANGE')}
+                    onClick={() => setTradeType("EXCHANGE")}
                     className={`p-6 rounded-lg border-2 text-left transition-colors ${
-                      tradeType === 'EXCHANGE'
-                        ? 'border-green-600 bg-green-50'
-                        : 'border-gray-300 hover:border-gray-400'
+                      tradeType === "EXCHANGE"
+                        ? "border-green-600 bg-green-50"
+                        : "border-gray-300 hover:border-gray-400"
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="font-bold text-gray-900 mb-1">교환</h3>
-                        <p className="text-sm text-gray-600">다른 좌석과 교환하고 싶을 때</p>
+                        <p className="text-sm text-gray-600">
+                          다른 좌석과 교환하고 싶을 때
+                        </p>
                       </div>
-                      {tradeType === 'EXCHANGE' && (
+                      {tradeType === "EXCHANGE" && (
                         <div className="w-5 h-5 bg-green-600 rounded-full flex items-center justify-center">
                           <div className="w-2 h-2 bg-white rounded-full"></div>
                         </div>
@@ -152,19 +188,21 @@ export default function TradeRegisterStep1() {
                   </button>
 
                   <button
-                    onClick={() => setTradeType('TRANSFER')}
+                    onClick={() => setTradeType("TRANSFER")}
                     className={`p-6 rounded-lg border-2 text-left transition-colors ${
-                      tradeType === 'TRANSFER'
-                        ? 'border-green-600 bg-green-50'
-                        : 'border-gray-300 hover:border-gray-400'
+                      tradeType === "TRANSFER"
+                        ? "border-green-600 bg-green-50"
+                        : "border-gray-300 hover:border-gray-400"
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="font-bold text-gray-900 mb-1">양도</h3>
-                        <p className="text-sm text-gray-600">티켓을 판매하고 싶을 때</p>
+                        <p className="text-sm text-gray-600">
+                          티켓을 판매하고 싶을 때
+                        </p>
                       </div>
-                      {tradeType === 'TRANSFER' && (
+                      {tradeType === "TRANSFER" && (
                         <div className="w-5 h-5 bg-green-600 rounded-full flex items-center justify-center">
                           <div className="w-2 h-2 bg-white rounded-full"></div>
                         </div>
@@ -176,7 +214,9 @@ export default function TradeRegisterStep1() {
 
               {/* Performance Search */}
               <div>
-                <h2 className="text-lg font-bold text-gray-900 mb-4">공연 검색</h2>
+                <h2 className="text-lg font-bold text-gray-900 mb-4">
+                  공연 검색
+                </h2>
                 <div className="relative" ref={dropdownRef}>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -211,7 +251,7 @@ export default function TradeRegisterStep1() {
                           key={performance.performanceId}
                           onClick={() => {
                             setSelectedPerformance(performance);
-                            setSearchQuery(performance.title || '');
+                            setSearchQuery(performance.title || "");
                             setSearchResults([]);
                           }}
                           className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
@@ -229,11 +269,14 @@ export default function TradeRegisterStep1() {
                                 {performance.title}
                               </h3>
                               <p className="text-sm text-gray-600 mb-1">
-                                {performance.venueName || '장소 정보 없음'}
+                                {performance.venueName || "장소 정보 없음"}
                               </p>
                               {performance.startDate && performance.endDate && (
                                 <p className="text-xs text-gray-500">
-                                  {formatDateRange(performance.startDate, performance.endDate)}
+                                  {formatDateRange(
+                                    performance.startDate,
+                                    performance.endDate
+                                  )}
                                 </p>
                               )}
                             </div>
@@ -248,7 +291,9 @@ export default function TradeRegisterStep1() {
               {/* Selected Performance */}
               {selectedPerformance && (
                 <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <h3 className="text-sm font-medium text-green-800 mb-2">선택한 공연</h3>
+                  <h3 className="text-sm font-medium text-green-800 mb-2">
+                    선택한 공연
+                  </h3>
                   <div className="flex items-start gap-3">
                     {selectedPerformance.posterUrl && (
                       <img
@@ -258,15 +303,21 @@ export default function TradeRegisterStep1() {
                       />
                     )}
                     <div className="flex-1">
-                      <h4 className="font-bold text-gray-900 mb-1">{selectedPerformance.title}</h4>
+                      <h4 className="font-bold text-gray-900 mb-1">
+                        {selectedPerformance.title}
+                      </h4>
                       <p className="text-sm text-gray-600 mb-1">
-                        {selectedPerformance.venueName || '장소 정보 없음'}
+                        {selectedPerformance.venueName || "장소 정보 없음"}
                       </p>
-                      {selectedPerformance.startDate && selectedPerformance.endDate && (
-                        <p className="text-xs text-gray-500">
-                          {formatDateRange(selectedPerformance.startDate, selectedPerformance.endDate)}
-                        </p>
-                      )}
+                      {selectedPerformance.startDate &&
+                        selectedPerformance.endDate && (
+                          <p className="text-xs text-gray-500">
+                            {formatDateRange(
+                              selectedPerformance.startDate,
+                              selectedPerformance.endDate
+                            )}
+                          </p>
+                        )}
                     </div>
                   </div>
                 </div>

@@ -1,40 +1,66 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { useState, useEffect, Suspense } from 'react';
-import Header from '@/components/Header';
-import { tradeApi, type Ticket, type CreateTradeRequest } from '@/lib/api/trade';
-import { performanceApi, type PerformanceDetailRes } from '@/lib/api/performance';
+import Link from "next/link";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import Header from "@/components/Header";
+import {
+  tradeApi,
+  type Ticket,
+  type CreateTradeRequest,
+} from "@/lib/api/trade";
+import {
+  performanceApi,
+  type PerformanceDetailRes,
+} from "@/lib/api/performance";
+import { useAuth } from "@/contexts/AuthContext";
 
 function TradeRegisterStep3Content() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const tradeType = (searchParams.get('type') || 'EXCHANGE') as 'EXCHANGE' | 'TRANSFER';
-  const performanceIdParam = searchParams.get('performanceId');
-  const ticketIdsParam = searchParams.get('ticketIds');
-  const priceParam = searchParams.get('price');
+  const pathname = usePathname();
+  const tradeType = (searchParams.get("type") || "EXCHANGE") as
+    | "EXCHANGE"
+    | "TRANSFER";
+  const performanceIdParam = searchParams.get("performanceId");
+  const ticketIdsParam = searchParams.get("ticketIds");
+  const priceParam = searchParams.get("price");
+  const { isAuthenticated, isLoading } = useAuth();
 
   const performanceId = performanceIdParam ? Number(performanceIdParam) : null;
   const ticketIds = ticketIdsParam
-    ? ticketIdsParam.split(',').map((id) => Number(id))
+    ? ticketIdsParam.split(",").map((id) => Number(id))
     : [];
 
-  const [performance, setPerformance] = useState<PerformanceDetailRes | null>(null);
+  const [performance, setPerformance] = useState<PerformanceDetailRes | null>(
+    null
+  );
   const [selectedTickets, setSelectedTickets] = useState<Ticket[]>([]);
-  const [price, setPrice] = useState(priceParam || '');
+  const [price, setPrice] = useState(priceParam || "");
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (!isAuthenticated) {
+      const queryString = searchParams.toString();
+      const from = queryString ? `${pathname}?${queryString}` : pathname;
+      router.replace(`/login?from=${encodeURIComponent(from)}`);
+    }
+  }, [isAuthenticated, isLoading, pathname, router, searchParams]);
 
   // 공연 정보 및 선택한 티켓 정보 조회
   useEffect(() => {
+    if (!isAuthenticated) return;
     const fetchData = async () => {
       setIsFetching(true);
       try {
         // 공연 정보 조회
         if (performanceId) {
-          const performanceResponse = await performanceApi.getPerformance(performanceId);
+          const performanceResponse = await performanceApi.getPerformance(
+            performanceId
+          );
           if (performanceResponse.data) {
             setPerformance(performanceResponse.data);
           }
@@ -45,7 +71,9 @@ function TradeRegisterStep3Content() {
           const ticketsResponse = await tradeApi.getMyTickets();
           if (ticketsResponse.data) {
             const filtered = ticketsResponse.data.filter(
-              (ticket) => ticket.ticketId !== undefined && ticketIds.includes(ticket.ticketId)
+              (ticket) =>
+                ticket.ticketId !== undefined &&
+                ticketIds.includes(ticket.ticketId)
             );
             setSelectedTickets(filtered);
           }
@@ -54,7 +82,7 @@ function TradeRegisterStep3Content() {
         if (err instanceof Error) {
           setError(err.message);
         } else {
-          setError('정보를 불러오는데 실패했습니다.');
+          setError("정보를 불러오는데 실패했습니다.");
         }
       } finally {
         setIsFetching(false);
@@ -62,36 +90,36 @@ function TradeRegisterStep3Content() {
     };
 
     fetchData();
-  }, [performanceId, ticketIds.join(',')]);
+  }, [isAuthenticated, performanceId, ticketIds.join(",")]);
 
   const handleSubmit = async () => {
     if (selectedTickets.length === 0) {
-      setError('티켓을 선택해주세요.');
+      setError("티켓을 선택해주세요.");
       return;
     }
 
-    if (tradeType === 'TRANSFER' && !price) {
-      setError('가격을 입력해주세요.');
+    if (tradeType === "TRANSFER" && !price) {
+      setError("가격을 입력해주세요.");
       return;
     }
 
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
       let request: CreateTradeRequest;
 
-      if (tradeType === 'EXCHANGE') {
+      if (tradeType === "EXCHANGE") {
         // 교환: ticketIds 배열 사용 (1개만)
         request = {
           ticketIds: ticketIds,
-          type: 'EXCHANGE',
+          type: "EXCHANGE",
         };
       } else {
         // 양도: ticketIds 배열과 price 사용
         request = {
           ticketIds: ticketIds,
-          type: 'TRANSFER',
+          type: "TRANSFER",
           price: parseInt(price),
         };
       }
@@ -99,19 +127,23 @@ function TradeRegisterStep3Content() {
       const response = await tradeApi.createTrade(request);
 
       if (response.data) {
-        alert('거래가 등록되었습니다.');
-        router.push('/trade');
+        alert("거래가 등록되었습니다.");
+        router.push("/trade");
       }
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError('거래 등록에 실패했습니다.');
+        setError("거래 등록에 실패했습니다.");
       }
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (isLoading || !isAuthenticated) {
+    return null;
+  }
 
   if (isFetching) {
     return (
@@ -138,21 +170,27 @@ function TradeRegisterStep3Content() {
                 <div className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center font-bold">
                   ✓
                 </div>
-                <span className="ml-2 font-medium text-green-600">공연 선택</span>
+                <span className="ml-2 font-medium text-green-600">
+                  공연 선택
+                </span>
               </div>
               <div className="w-16 h-1 bg-green-600"></div>
               <div className="flex items-center">
                 <div className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center font-bold">
                   ✓
                 </div>
-                <span className="ml-2 font-medium text-green-600">내 티켓 선택</span>
+                <span className="ml-2 font-medium text-green-600">
+                  내 티켓 선택
+                </span>
               </div>
               <div className="w-16 h-1 bg-green-600"></div>
               <div className="flex items-center">
                 <div className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center font-bold">
                   3
                 </div>
-                <span className="ml-2 font-medium text-green-600">최종 확인</span>
+                <span className="ml-2 font-medium text-green-600">
+                  최종 확인
+                </span>
               </div>
             </div>
           </div>
@@ -161,7 +199,7 @@ function TradeRegisterStep3Content() {
             <div className="flex items-center justify-between mb-6">
               <h1 className="text-2xl font-bold text-gray-900">최종 확인</h1>
               <span className="px-3 py-1 bg-green-600 text-white text-sm font-medium rounded">
-                {tradeType === 'EXCHANGE' ? '교환' : '양도'}
+                {tradeType === "EXCHANGE" ? "교환" : "양도"}
               </span>
             </div>
 
@@ -192,8 +230,12 @@ function TradeRegisterStep3Content() {
                     <h3 className="text-sm font-medium text-gray-700">공연</h3>
                   </div>
                   <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <h4 className="font-bold text-gray-900 mb-1">{performance.title}</h4>
-                    <p className="text-sm text-gray-600">{performance.venue?.name || '장소 정보 없음'}</p>
+                    <h4 className="font-bold text-gray-900 mb-1">
+                      {performance.title}
+                    </h4>
+                    <p className="text-sm text-gray-600">
+                      {performance.venue?.name || "장소 정보 없음"}
+                    </p>
                   </div>
                 </div>
               )}
@@ -201,12 +243,17 @@ function TradeRegisterStep3Content() {
               {/* Selected Tickets */}
               {selectedTickets.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-medium text-green-800 mb-2">선택한 티켓</h3>
+                  <h3 className="text-sm font-medium text-green-800 mb-2">
+                    선택한 티켓
+                  </h3>
                   <div className="p-4 bg-green-50 border border-green-200 rounded-lg space-y-2">
                     {selectedTickets.map((ticket) => (
-                      <div key={ticket.ticketId} className="text-sm text-gray-700">
-                        • {ticket.sectionName || '구역 정보 없음'}구역 {ticket.rowLabel || ''}열{' '}
-                        {ticket.seatNumber || ''}번
+                      <div
+                        key={ticket.ticketId}
+                        className="text-sm text-gray-700"
+                      >
+                        • {ticket.sectionName || "구역 정보 없음"}구역{" "}
+                        {ticket.rowLabel || ""}열 {ticket.seatNumber || ""}번
                       </div>
                     ))}
                   </div>
@@ -214,7 +261,7 @@ function TradeRegisterStep3Content() {
               )}
 
               {/* Price Input (양도만) */}
-              {tradeType === 'TRANSFER' && (
+              {tradeType === "TRANSFER" && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     가격 (원)
@@ -232,9 +279,9 @@ function TradeRegisterStep3Content() {
               {/* Guidance */}
               <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                 <p className="text-sm text-green-800">
-                  {tradeType === 'EXCHANGE'
-                    ? '안내: 교환 등록 후 다른 사용자들이 교환을 제안할 수 있습니다. 실제 교환은 1:1 대화를 통해 진행됩니다.'
-                    : '안내: 양도 등록 후 다른 사용자들이 구매할 수 있습니다. 실제 거래는 1:1 대화를 통해 진행됩니다.'}
+                  {tradeType === "EXCHANGE"
+                    ? "안내: 교환 등록 후 다른 사용자들이 교환을 제안할 수 있습니다. 실제 교환은 1:1 대화를 통해 진행됩니다."
+                    : "안내: 양도 등록 후 다른 사용자들이 구매할 수 있습니다. 실제 거래는 1:1 대화를 통해 진행됩니다."}
                 </p>
               </div>
 
@@ -248,10 +295,10 @@ function TradeRegisterStep3Content() {
                 </Link>
                 <button
                   onClick={handleSubmit}
-                  disabled={isLoading || (tradeType === 'TRANSFER' && !price)}
+                  disabled={isLoading || (tradeType === "TRANSFER" && !price)}
                   className="flex-1 px-6 py-4 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isLoading ? '등록 중...' : '등록하기'}
+                  {isLoading ? "등록 중..." : "등록하기"}
                 </button>
               </div>
             </div>
@@ -280,4 +327,3 @@ export default function TradeRegisterStep3() {
     </Suspense>
   );
 }
-

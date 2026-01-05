@@ -4,6 +4,11 @@ import type { components } from '@/types/api';
 type ChangePasswordRequest = components['schemas']['PasswordChangeReq'];
 type RefundAccountRequest = components['schemas']['RefundAccountReq'];
 
+// 회원 탈퇴 요청 타입 (API 명세에 없으므로 직접 정의)
+type WithdrawRequest = {
+  password: string;
+};
+
 export const typedMyPageApi = {
   /**
    * 내 정보 조회
@@ -47,6 +52,13 @@ export const typedMyPageApi = {
       'post',
       200
     >('/api/mypage/account', request);
+  },
+
+  /**
+   * 회원 탈퇴
+   */
+  async withdraw(request: WithdrawRequest) {
+    return typedApiClient.delete<any, any, any>('/api/mypage/withdraw', request);
   },
 };
 

@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { mypageApi, type MyInfoRes, type RefundAccountRes, type BankRes } from '@/lib/api/mypage';
 
 export default function ProfileTab() {
+  const router = useRouter();
   const [myInfo, setMyInfo] = useState<MyInfoRes | null>(null);
   const [refundAccount, setRefundAccount] = useState<RefundAccountRes | null>(null);
   const [banks, setBanks] = useState<BankRes[]>([]);
@@ -19,6 +21,12 @@ export default function ProfileTab() {
   });
   const [passwordError, setPasswordError] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  // 회원 탈퇴 관련 상태
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [withdrawPassword, setWithdrawPassword] = useState('');
+  const [withdrawError, setWithdrawError] = useState('');
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   // 환불 계좌 관련 상태
   const [accountForm, setAccountForm] = useState({
@@ -166,6 +174,41 @@ export default function ProfileTab() {
     }
   };
 
+  // 회원 탈퇴
+  const handleWithdraw = async () => {
+    setWithdrawError('');
+
+    if (!withdrawPassword) {
+      setWithdrawError('비밀번호를 입력해주세요.');
+      return;
+    }
+
+    if (!confirm('정말로 회원 탈퇴하시겠습니까?\n\n탈퇴 후에는 모든 정보가 삭제되며 복구할 수 없습니다.')) {
+      return;
+    }
+
+    setIsWithdrawing(true);
+
+    try {
+      await mypageApi.withdraw({ password: withdrawPassword });
+      
+      // 로컬스토리지 토큰 삭제
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      
+      alert('회원 탈퇴가 완료되었습니다.');
+      router.push('/');
+    } catch (err) {
+      if (err instanceof Error) {
+        setWithdrawError(err.message);
+      } else {
+        setWithdrawError('회원 탈퇴에 실패했습니다.');
+      }
+    } finally {
+      setIsWithdrawing(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="bg-white rounded-lg shadow-sm p-6">
@@ -309,7 +352,10 @@ export default function ProfileTab() {
 
         {/* 회원 탈퇴 */}
         <div className="border-t pt-6">
-          <button className="px-6 py-2 border border-red-300 text-red-600 rounded-lg font-medium hover:bg-red-50 transition-colors">
+          <button 
+            onClick={() => setShowWithdrawModal(true)}
+            className="px-6 py-2 border border-red-300 text-red-600 rounded-lg font-medium hover:bg-red-50 transition-colors"
+          >
             회원 탈퇴
           </button>
         </div>
@@ -371,6 +417,57 @@ export default function ProfileTab() {
                   className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isChangingPassword ? '변경 중...' : '변경'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 회원 탈퇴 모달 */}
+      {showWithdrawModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">회원 탈퇴</h3>
+            <div className="space-y-4">
+              <div className="p-4 bg-red-50 rounded-lg">
+                <p className="text-sm text-red-800 font-medium mb-2">⚠️ 주의사항</p>
+                <ul className="text-sm text-red-700 space-y-1 list-disc list-inside">
+                  <li>탈퇴 시 모든 회원 정보가 삭제됩니다</li>
+                  <li>예매 내역, 응모 내역 등이 모두 삭제됩니다</li>
+                  <li>삭제된 정보는 복구할 수 없습니다</li>
+                </ul>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">비밀번호 확인</label>
+                <input
+                  type="password"
+                  value={withdrawPassword}
+                  onChange={(e) => setWithdrawPassword(e.target.value)}
+                  placeholder="비밀번호를 입력하세요"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                />
+              </div>
+              {withdrawError && (
+                <p className="text-sm text-red-600">{withdrawError}</p>
+              )}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowWithdrawModal(false);
+                    setWithdrawPassword('');
+                    setWithdrawError('');
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleWithdraw}
+                  disabled={isWithdrawing}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isWithdrawing ? '탈퇴 중...' : '탈퇴하기'}
                 </button>
               </div>
             </div>

@@ -102,5 +102,19 @@ export const mypageApi = {
       data: (Array.isArray(banks) ? banks : []) as BankRes[],
     };
   },
+
+  /**
+   * 회원 탈퇴
+   */
+  async withdraw(password: string): Promise<ApiResponse<string>> {
+    const data = await typedMyPageApi.withdraw({ password });
+    return {
+      code: 200,
+      message: '성공적으로 처리되었습니다',
+      data: (data && typeof data === 'object' && 'data' in data) 
+        ? (data as any).data 
+        : '회원 탈퇴가 완료되었습니다',
+    };
+  },
 };
 

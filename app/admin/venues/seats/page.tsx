@@ -68,13 +68,14 @@ export default function AdminVenueSeatsPage() {
         } else if (msg.includes("401")) {
           errorMessage = "인증이 필요합니다. 관리자로 로그인해주세요.";
         } else if (msg.includes("400")) {
-          errorMessage = "요청 값이 올바르지 않습니다. 좌석 정보를 다시 확인해주세요.";
+          errorMessage =
+            "요청 값이 올바르지 않습니다. 좌석 정보를 다시 확인해주세요.";
         } else if (msg.includes("404")) {
           errorMessage = msg.includes("공연장")
             ? "공연장 정보를 찾을 수 없습니다."
             : msg.includes("구역")
-              ? "구역 정보를 찾을 수 없습니다."
-              : "요청한 정보를 찾을 수 없습니다.";
+            ? "구역 정보를 찾을 수 없습니다."
+            : "요청한 정보를 찾을 수 없습니다.";
         } else if (msg.includes("409")) {
           errorMessage = "이미 등록된 좌석입니다.";
         } else if (msg.includes("500")) {

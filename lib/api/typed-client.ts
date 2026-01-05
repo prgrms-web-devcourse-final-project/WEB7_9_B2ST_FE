@@ -5,14 +5,10 @@ import { tokenManager } from "@/lib/auth/token";
 // 개발 환경에서 프록시 사용 여부 (CORS 우회)
 const USE_PROXY = process.env.NEXT_PUBLIC_USE_PROXY === "true";
 
-// 개발 환경에서는 HTTP/IP 사용, 프로덕션에서는 HTTPS 도메인 사용
-// 프록시를 사용하는 경우 상대 경로 사용
+// 프록시를 사용하는 경우 상대 경로, 아니면 HTTPS 도메인으로 고정
 const API_BASE_URL = USE_PROXY
   ? "" // 프록시 사용 시 상대 경로
-  : process.env.NEXT_PUBLIC_API_BASE_URL ||
-    (process.env.NODE_ENV === "development"
-      ? "http://15.165.115.135:8080"
-      : "https://api.b2st.doncrytt.online");
+  : process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.b2st.doncrytt.online";
 
 // 헬퍼 타입: paths에서 특정 경로와 메서드의 타입 추출
 type PathMethod<T extends keyof paths, M extends keyof paths[T]> = paths[T][M];

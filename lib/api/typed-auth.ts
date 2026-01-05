@@ -60,9 +60,7 @@ export const typedAuthApi = {
     const apiBaseURL = process.env.NEXT_PUBLIC_USE_PROXY
       ? ""
       : process.env.NEXT_PUBLIC_API_BASE_URL ||
-        (process.env.NODE_ENV === "development"
-          ? "http://15.165.115.135:8080"
-          : "https://api.b2st.doncrytt.online");
+        "https://api.b2st.doncrytt.online";
 
     const url = `${apiBaseURL}/api/auth/kakao/authorize-url`;
     const response = await fetch(url, {

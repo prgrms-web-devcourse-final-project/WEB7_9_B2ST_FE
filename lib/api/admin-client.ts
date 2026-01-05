@@ -4,13 +4,10 @@ import { adminTokenManager } from "@/lib/auth/token";
 // 개발 환경에서 프록시 사용 여부 (CORS 우회)
 const USE_PROXY = process.env.NEXT_PUBLIC_USE_PROXY === "true";
 
-// API Base URL
+// API Base URL: 프록시 사용 시 상대 경로, 그 외엔 HTTPS 도메인 강제
 const API_BASE_URL = USE_PROXY
   ? ""
-  : process.env.NEXT_PUBLIC_API_BASE_URL ||
-    (process.env.NODE_ENV === "development"
-      ? "http://15.165.115.135:8080"
-      : "https://api.b2st.doncrytt.online");
+  : process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.b2st.doncrytt.online";
 
 /**
  * 관리자 전용 API 클라이언트

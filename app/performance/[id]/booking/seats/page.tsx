@@ -30,14 +30,6 @@ export default function BookingSeats({
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
 
-  const [seats, setSeats] = useState<ScheduleSeatViewRes[]>([]);
-  const [selectedSeats, setSelectedSeats] = useState<ScheduleSeatViewRes[]>([]);
-  const [schedules, setSchedules] = useState<PerformanceScheduleListRes[]>([]);
-  const [currentScheduleId, setCurrentScheduleId] = useState<string | null>(scheduleId);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState("");
-
   // 공연 일정 목록 로드
   useEffect(() => {
     const fetchSchedules = async () => {
@@ -239,7 +231,6 @@ export default function BookingSeats({
       }
     }
   };
-  };
 
   if (isLoading) {
     return (
@@ -324,17 +315,19 @@ export default function BookingSeats({
                   className="block w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white text-gray-900"
                 >
                   {schedules.map((schedule) => (
-                    <option key={schedule.scheduleId} value={schedule.scheduleId}>
-                      {new Date(schedule.performanceDate).toLocaleDateString('ko-KR', {
+                    <option key={schedule.performanceScheduleId} value={schedule.performanceScheduleId}>
+                      {schedule.startAt && new Date(schedule.startAt).toLocaleDateString('ko-KR', {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric',
                         weekday: 'short',
                       })}{" "}
-                      {schedule.performanceTime}
-                      {schedule.availableSeats !== undefined && 
-                        ` (잔여: ${schedule.availableSeats}석)`
-                      }
+                      {schedule.startAt && new Date(schedule.startAt).toLocaleTimeString('ko-KR', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false,
+                      })}
+                      {schedule.roundNo && ` (${schedule.roundNo}회차)`}
                     </option>
                   ))}
                 </select>

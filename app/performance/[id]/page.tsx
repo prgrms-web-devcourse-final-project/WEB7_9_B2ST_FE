@@ -147,6 +147,11 @@ export default function PerformanceDetail({
       return;
     }
 
+    if (!selectedSchedule.performanceScheduleId) {
+      alert("회차 정보가 올바르지 않습니다.");
+      return;
+    }
+
     if (selectedSchedule.bookingType === "LOTTERY") {
       router.push(
         `/performance/${id}/lottery/step1?scheduleId=${selectedSchedule.performanceScheduleId}`

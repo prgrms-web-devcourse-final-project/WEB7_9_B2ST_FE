@@ -223,11 +223,11 @@ export default function PrereservationBookingPayment({
               </div>
 
               <div className="border-t pt-4 mb-6">
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-start gap-3">
                   <span className="text-lg font-bold text-gray-900">
                     총 결제 금액
                   </span>
-                  <span className="text-2xl font-bold text-red-600">
+                  <span className="text-xl sm:text-2xl font-bold text-red-600 text-right leading-snug break-keep">
                     결제 진행 시 확인
                   </span>
                 </div>

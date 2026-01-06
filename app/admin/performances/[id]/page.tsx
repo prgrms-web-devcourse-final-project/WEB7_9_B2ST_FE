@@ -25,6 +25,17 @@ export default function AdminPerformanceDetailPage() {
   const [policyError, setPolicyError] = useState<string | null>(null);
   const [isSavingPolicy, setIsSavingPolicy] = useState(false);
 
+  // 회차 생성
+  const [scheduleStartAt, setScheduleStartAt] = useState("");
+  const [scheduleRoundNo, setScheduleRoundNo] = useState("1");
+  const [scheduleBookingType, setScheduleBookingType] = useState<
+    "FIRST_COME" | "SEAT" | "LOTTERY"
+  >("FIRST_COME");
+  const [scheduleOpenAt, setScheduleOpenAt] = useState("");
+  const [scheduleCloseAt, setScheduleCloseAt] = useState("");
+  const [scheduleError, setScheduleError] = useState<string | null>(null);
+  const [isCreatingSchedule, setIsCreatingSchedule] = useState(false);
+
   useEffect(() => {
     const admin = localStorage.getItem("isAdmin") === "true";
     setIsAdmin(admin);
@@ -317,6 +328,137 @@ export default function AdminPerformanceDetailPage() {
             </div>
           </div>
         )}
+
+        {/* 회차 생성 */}
+        <div className="border-t pt-6 mt-6">
+          <h2 className="text-lg font-semibold mb-4">회차 생성</h2>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                시작 시간 *
+              </label>
+              <input
+                type="datetime-local"
+                value={scheduleStartAt}
+                onChange={(e) => setScheduleStartAt(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded"
+                disabled={isCreatingSchedule}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                회차 번호 *
+              </label>
+              <input
+                type="number"
+                min={1}
+                value={scheduleRoundNo}
+                onChange={(e) => setScheduleRoundNo(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded"
+                disabled={isCreatingSchedule}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                예매 방식 *
+              </label>
+              <select
+                value={scheduleBookingType}
+                onChange={(e) =>
+                  setScheduleBookingType(
+                    e.target.value as "FIRST_COME" | "SEAT" | "LOTTERY"
+                  )
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded bg-white"
+                disabled={isCreatingSchedule}
+                required
+              >
+                <option value="FIRST_COME">선착순 (FIRST_COME)</option>
+                <option value="SEAT">좌석지정 (SEAT)</option>
+                <option value="LOTTERY">추첨 (LOTTERY)</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                예매 오픈 *
+              </label>
+              <input
+                type="datetime-local"
+                value={scheduleOpenAt}
+                onChange={(e) => setScheduleOpenAt(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded"
+                disabled={isCreatingSchedule}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                예매 마감 *
+              </label>
+              <input
+                type="datetime-local"
+                value={scheduleCloseAt}
+                onChange={(e) => setScheduleCloseAt(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded"
+                disabled={isCreatingSchedule}
+                required
+              />
+            </div>
+          </div>
+
+          {scheduleError && (
+            <div className="text-sm text-red-600 bg-red-50 p-3 rounded mt-3">
+              {scheduleError}
+            </div>
+          )}
+
+          <div className="mt-4 flex gap-2">
+            <button
+              onClick={async () => {
+                setScheduleError(null);
+                if (!scheduleStartAt || !scheduleOpenAt || !scheduleCloseAt) {
+                  setScheduleError("날짜와 시간을 모두 입력해주세요.");
+                  return;
+                }
+                const round = parseInt(scheduleRoundNo, 10);
+                if (Number.isNaN(round) || round < 1) {
+                  setScheduleError("회차 번호는 1 이상 숫자여야 합니다.");
+                  return;
+                }
+
+                setIsCreatingSchedule(true);
+                try {
+                  await performanceApi.createSchedule(parseInt(performanceId), {
+                    startAt: `${scheduleStartAt}:00`,
+                    roundNo: round,
+                    bookingType: scheduleBookingType,
+                    bookingOpenAt: `${scheduleOpenAt}:00`,
+                    bookingCloseAt: `${scheduleCloseAt}:00`,
+                  });
+                  alert("회차가 생성되었습니다.");
+                  setScheduleStartAt("");
+                  setScheduleRoundNo("1");
+                  setScheduleBookingType("FIRST_COME");
+                  setScheduleOpenAt("");
+                  setScheduleCloseAt("");
+                  await loadPerformance();
+                } catch (err: any) {
+                  setScheduleError(
+                    err?.response?.data?.message || "회차 생성에 실패했습니다."
+                  );
+                } finally {
+                  setIsCreatingSchedule(false);
+                }
+              }}
+              disabled={isCreatingSchedule}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
+            >
+              {isCreatingSchedule ? "생성 중..." : "회차 생성"}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

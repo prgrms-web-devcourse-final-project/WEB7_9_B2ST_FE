@@ -295,14 +295,33 @@ export default function TicketPage() {
 
                     {/* 콘텐츠 영역 */}
                     <div className="p-5">
-                      {/* 카테고리 */}
-                      {performance.category && (
-                        <div className="mb-2">
+                      {/* 카테고리 및 예매 방식 */}
+                      <div className="mb-2 flex items-center gap-2 flex-wrap">
+                        {performance.category && (
                           <span className="inline-block px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded">
                             {performance.category}
                           </span>
-                        </div>
-                      )}
+                        )}
+                        {(performance as any).bookingType && (
+                          <span
+                            className={`inline-block px-2 py-1 text-xs font-medium rounded ${
+                              (performance as any).bookingType === "LOTTERY"
+                                ? "text-purple-700 bg-purple-100"
+                                : (performance as any).bookingType ===
+                                  "PRE_REGISTRATION"
+                                ? "text-blue-700 bg-blue-100"
+                                : "text-green-700 bg-green-100"
+                            }`}
+                          >
+                            {(performance as any).bookingType === "LOTTERY"
+                              ? "추첨"
+                              : (performance as any).bookingType ===
+                                "PRE_REGISTRATION"
+                              ? "구역별 사전등록"
+                              : "일반예매"}
+                          </span>
+                        )}
+                      </div>
 
                       {/* 제목 */}
                       <h3 className="text-lg font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-indigo-600 transition-colors">

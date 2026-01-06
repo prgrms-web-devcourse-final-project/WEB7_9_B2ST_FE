@@ -62,6 +62,7 @@ export default function TicketPage() {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
+      weekday: "short",
     });
   };
 
@@ -125,15 +126,16 @@ export default function TicketPage() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredPerformances.map((performance) => (
                 <Link
                   key={performance.performanceId}
                   href={`/performance/${performance.performanceId}`}
                   className="group block"
                 >
-                  <div className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300">
-                    <div className="aspect-[3/4.2] bg-gray-100 relative overflow-hidden">
+                  <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200">
+                    {/* 이미지 영역 - 더 짧게 */}
+                    <div className="aspect-[16/9] bg-gray-100 relative overflow-hidden">
                       {performance.posterUrl ? (
                         <img
                           src={performance.posterUrl}
@@ -143,7 +145,7 @@ export default function TicketPage() {
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300">
                           <svg
-                            className="w-20 h-20 text-gray-400"
+                            className="w-16 h-16 text-gray-400"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -157,21 +159,55 @@ export default function TicketPage() {
                           </svg>
                         </div>
                       )}
-                      {performance.category === "뮤지컬" && (
-                        <div className="absolute top-2 right-2 bg-gradient-to-r from-red-600 to-pink-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
-                          HOT
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                    </div>
+
+                    {/* 콘텐츠 영역 */}
+                    <div className="p-5">
+                      {/* 카테고리 */}
+                      {performance.category && (
+                        <div className="mb-2">
+                          <span className="inline-block px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded">
+                            {performance.category}
+                          </span>
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    </div>
-                    <div className="p-4">
-                      <h3 className="text-sm font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-indigo-600 transition-colors leading-tight">
+
+                      {/* 제목 */}
+                      <h3 className="text-lg font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-indigo-600 transition-colors">
                         {performance.title}
                       </h3>
-                      <div className="space-y-1">
-                        <p className="text-xs text-gray-600 flex items-center">
+
+                      {/* 장소 */}
+                      <div className="flex items-start mb-3 text-sm text-gray-600">
+                        <svg
+                          className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                        </svg>
+                        <span>{performance.venueName}</span>
+                      </div>
+
+                      {/* 날짜 정보 */}
+                      <div className="space-y-2 text-sm">
+                        {/* 사전 등록 오픈일 */}
+                        <div className="flex items-start">
                           <svg
-                            className="w-3 h-3 mr-1 text-gray-400"
+                            className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0 text-gray-400"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -180,20 +216,25 @@ export default function TicketPage() {
                               strokeLinecap="round"
                               strokeLinejoin="round"
                               strokeWidth={2}
-                              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                             />
                           </svg>
-                          {performance.venueName}
-                        </p>
-                        <p className="text-xs text-gray-500 flex items-center">
+                          <div className="flex-1">
+                            <p className="text-xs text-gray-500 mb-0.5">
+                              사전 등록 오픈일
+                            </p>
+                            <p className="text-gray-700 font-medium">
+                              {performance.startDate
+                                ? formatDate(performance.startDate)
+                                : "-"}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* 티켓 오픈일 */}
+                        <div className="flex items-start">
                           <svg
-                            className="w-3 h-3 mr-1 text-gray-400"
+                            className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0 text-gray-400"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -202,14 +243,20 @@ export default function TicketPage() {
                               strokeLinecap="round"
                               strokeLinejoin="round"
                               strokeWidth={2}
-                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                              d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2V7a2 2 0 00-2-2H5z"
                             />
                           </svg>
-                          {formatDateRange(
-                            performance.startDate,
-                            performance.endDate
-                          )}
-                        </p>
+                          <div className="flex-1">
+                            <p className="text-xs text-gray-500 mb-0.5">
+                              티켓 오픈일
+                            </p>
+                            <p className="text-gray-700 font-medium">
+                              {performance.endDate
+                                ? formatDate(performance.endDate)
+                                : "-"}
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>

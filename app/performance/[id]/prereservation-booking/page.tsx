@@ -84,7 +84,7 @@ export default function PrereservationBookingPage({
     };
 
     fetchSeats();
-  }, [scheduleId, sectionIdParams]);
+  }, [scheduleId, sectionIdParams.join(",")]);
 
   // 중복 제거: sectionName + rowLabel + seatNumber로 유니크한 좌석만 선택
   const uniqueSeats = Array.from(

@@ -66,8 +66,8 @@ export default function PrereservationBookingPage({
         const response = await performanceApi.getScheduleSeats(scheduleId);
         if (response.data) {
           // 해당 섹션들의 좌석만 필터링 (섹션 이름으로)
-          const filteredSeats = response.data.filter((seat) =>
-            seat.sectionName && names.includes(seat.sectionName)
+          const filteredSeats = response.data.filter(
+            (seat) => seat.sectionName && names.includes(seat.sectionName)
           );
 
           setSeats(filteredSeats);

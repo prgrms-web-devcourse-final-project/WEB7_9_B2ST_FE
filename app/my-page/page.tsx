@@ -1506,7 +1506,9 @@ export default function MyPage() {
                           </h4>
                           <div className="space-y-2 text-sm">
                             <div className="flex items-start">
-                              <span className="text-gray-600 w-20 flex-shrink-0">시작:</span>
+                              <span className="text-gray-600 w-20 flex-shrink-0">
+                                시작:
+                              </span>
                               <span className="font-medium text-gray-900">
                                 {bookingOpen.toLocaleString("ko-KR", {
                                   year: "numeric",
@@ -1518,7 +1520,9 @@ export default function MyPage() {
                               </span>
                             </div>
                             <div className="flex items-start">
-                              <span className="text-gray-600 w-20 flex-shrink-0">종료:</span>
+                              <span className="text-gray-600 w-20 flex-shrink-0">
+                                종료:
+                              </span>
                               <span className="font-medium text-gray-900">
                                 {bookingClose.toLocaleString("ko-KR", {
                                   year: "numeric",
@@ -1570,16 +1574,22 @@ export default function MyPage() {
                       )}
 
                       {/* 예매하러 가기 버튼 */}
-                      {isBookable && app.sectionIds && app.sectionIds.length > 0 && (
-                        <div className="border-t pt-4 mt-4">
-                          <Link
-                            href={`/performance/${app.scheduleId}/prereservation-booking?${app.sectionIds.map(id => `sectionId=${id}`).join('&')}`}
-                            className="block w-full bg-red-600 text-white text-center py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors"
-                          >
-                            예매하러 가기 ({app.sectionIds.length}개 구역)
-                          </Link>
-                        </div>
-                      )}
+                      {isBookable &&
+                        app.sectionIds &&
+                        app.sectionIds.length > 0 && (
+                          <div className="border-t pt-4 mt-4">
+                            <Link
+                              href={`/performance/${
+                                app.scheduleId
+                              }/prereservation-booking?${app.sectionIds
+                                .map((id) => `sectionId=${id}`)
+                                .join("&")}`}
+                              className="block w-full bg-red-600 text-white text-center py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors"
+                            >
+                              예매하러 가기 ({app.sectionIds.length}개 구역)
+                            </Link>
+                          </div>
+                        )}
                     </div>
                   );
                 })}

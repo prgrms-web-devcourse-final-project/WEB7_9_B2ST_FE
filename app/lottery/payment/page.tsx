@@ -1,11 +1,11 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Header from "@/components/Header";
 import { paymentApi, type PaymentRequest } from "@/lib/api/payment";
 
-export default function LotteryPaymentPage() {
+function LotteryPaymentContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -238,5 +238,22 @@ export default function LotteryPaymentPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LotteryPaymentPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50">
+          <Header />
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="text-center py-12 text-gray-400">로딩 중...</div>
+          </div>
+        </div>
+      }
+    >
+      <LotteryPaymentContent />
+    </Suspense>
   );
 }

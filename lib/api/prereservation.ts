@@ -14,6 +14,8 @@ export interface PrereservationSection {
 export interface PrereservationApplication {
   scheduleId: number;
   sectionIds: number[];
+  bookingOpenAt: string;
+  bookingCloseAt: string;
 }
 
 export const prereservationApi = {

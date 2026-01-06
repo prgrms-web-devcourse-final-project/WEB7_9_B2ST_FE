@@ -17,7 +17,7 @@ export default function PrereservationBookingPage({
   const { id: scheduleIdParam } = use(params);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const sectionIdParam = searchParams.get("sectionId");
+  const sectionIdParams = searchParams.getAll("sectionId");
 
   const [seats, setSeats] = useState<ScheduleSeatViewRes[]>([]);
   const [selectedSeat, setSelectedSeat] = useState<ScheduleSeatViewRes | null>(
@@ -26,14 +26,14 @@ export default function PrereservationBookingPage({
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
-  const [sectionName, setSectionName] = useState("");
-  const [sectionId, setSectionId] = useState<number | null>(null);
+  const [sectionNames, setSectionNames] = useState<string[]>([]);
+  const [sectionIds, setSectionIds] = useState<number[]>([]);
 
   const scheduleId = Number(scheduleIdParam);
 
   // 좌석 데이터 로드
   useEffect(() => {
-    if (!scheduleId || !sectionIdParam) {
+    if (!scheduleId || sectionIdParams.length === 0) {
       setError("회차 정보 또는 구역 정보가 없습니다.");
       setIsLoading(false);
       return;
@@ -49,23 +49,25 @@ export default function PrereservationBookingPage({
         const sectionsResponse =
           await prereservationApi.getPrereservationSections(scheduleId);
 
-        const targetSection = sectionsResponse.data?.find(
-          (s) => s.sectionId === Number(sectionIdParam)
+        const targetSectionIds = sectionIdParams.map(Number);
+        const targetSections = sectionsResponse.data?.filter((s) =>
+          targetSectionIds.includes(s.sectionId)
         );
 
-        if (!targetSection) {
+        if (!targetSections || targetSections.length === 0) {
           throw new Error("해당 구역을 찾을 수 없습니다.");
         }
 
-        setSectionName(targetSection.sectionName);
-        setSectionId(targetSection.sectionId);
+        const names = targetSections.map((s) => s.sectionName);
+        setSectionNames(names);
+        setSectionIds(targetSections.map((s) => s.sectionId));
 
         // 좌석 정보 가져오기
         const response = await performanceApi.getScheduleSeats(scheduleId);
         if (response.data) {
-          // 해당 섹션의 좌석만 필터링 (섹션 이름으로)
-          const filteredSeats = response.data.filter(
-            (seat) => seat.sectionName === targetSection.sectionName
+          // 해당 섹션들의 좌석만 필터링 (섹션 이름으로)
+          const filteredSeats = response.data.filter((seat) =>
+            seat.sectionName && names.includes(seat.sectionName)
           );
 
           setSeats(filteredSeats);
@@ -82,35 +84,45 @@ export default function PrereservationBookingPage({
     };
 
     fetchSeats();
-  }, [scheduleId, sectionIdParam]);
+  }, [scheduleId, sectionIdParams]);
 
-  // 중복 제거: rowLabel + seatNumber로 유니크한 좌석만 선택
+  // 중복 제거: sectionName + rowLabel + seatNumber로 유니크한 좌석만 선택
   const uniqueSeats = Array.from(
     new Map(
       seats.map((seat) => {
-        const key = `${seat.rowLabel}_${seat.seatNumber}`;
+        const key = `${seat.sectionName}_${seat.rowLabel}_${seat.seatNumber}`;
         return [key, seat];
       })
     ).values()
   );
 
-  // 좌석을 행별로 그룹화
-  const groupedSeats = uniqueSeats.reduce((acc, seat) => {
+  // 좌석을 섹션별 → 행별로 그룹화
+  const groupedSeatsBySection: Record<
+    string,
+    Record<string, ScheduleSeatViewRes[]>
+  > = {};
+  uniqueSeats.forEach((seat) => {
+    const sectionName = seat.sectionName || "";
     const rowLabel = seat.rowLabel || "";
 
-    if (!acc[rowLabel]) {
-      acc[rowLabel] = [];
+    if (!groupedSeatsBySection[sectionName]) {
+      groupedSeatsBySection[sectionName] = {};
     }
 
-    acc[rowLabel].push(seat);
-    return acc;
-  }, {} as Record<string, ScheduleSeatViewRes[]>);
+    if (!groupedSeatsBySection[sectionName][rowLabel]) {
+      groupedSeatsBySection[sectionName][rowLabel] = [];
+    }
 
-  // 각 행의 좌석을 좌석 번호 순으로 정렬
-  Object.keys(groupedSeats).forEach((rowLabel) => {
-    groupedSeats[rowLabel].sort(
-      (a, b) => (a.seatNumber || 0) - (b.seatNumber || 0)
-    );
+    groupedSeatsBySection[sectionName][rowLabel].push(seat);
+  });
+
+  // 각 섹션의 각 행 좌석을 정렬
+  Object.keys(groupedSeatsBySection).forEach((sectionName) => {
+    Object.keys(groupedSeatsBySection[sectionName]).forEach((rowLabel) => {
+      groupedSeatsBySection[sectionName][rowLabel].sort(
+        (a, b) => (a.seatNumber || 0) - (b.seatNumber || 0)
+      );
+    });
   });
 
   const toggleSeat = (seat: ScheduleSeatViewRes) => {
@@ -281,7 +293,7 @@ export default function PrereservationBookingPage({
               <p className="text-sm text-gray-600">
                 선택된 구역:{" "}
                 <span className="font-bold text-gray-900">
-                  {sectionName}구역
+                  {sectionNames.join(", ")}구역
                 </span>
               </p>
               <p className="text-xs text-gray-500 mt-1">
@@ -329,45 +341,64 @@ export default function PrereservationBookingPage({
                 {/* Seat Grid by Row */}
                 <div className="mb-8">
                   <h3 className="text-lg font-bold text-gray-900 mb-4">
-                    {sectionName}구역
+                    {sectionNames.join(", ")}구역
                   </h3>
-                  <div className="space-y-2">
-                    {Object.keys(groupedSeats)
-                      .sort()
-                      .map((rowLabel) => (
-                        <div key={rowLabel} className="flex items-center gap-2">
-                          <span className="w-12 text-center font-medium text-gray-700">
-                            {rowLabel}열
-                          </span>
-                          <div className="flex gap-1 flex-1 flex-wrap">
-                            {groupedSeats[rowLabel].map((seat) => (
-                              <button
-                                key={seat.scheduleSeatId}
-                                onClick={() => toggleSeat(seat)}
-                                className={`w-8 h-8 rounded border-2 text-xs font-medium transition-colors ${getSeatColor(
-                                  seat
-                                )}`}
-                                disabled={isSeatDisabled(seat)}
-                                title={`${sectionName}구역 ${rowLabel}열 ${
-                                  seat.seatNumber
-                                }번 - ${
-                                  seat.price
-                                    ? `${seat.price.toLocaleString()}원`
-                                    : "가격 정보 없음"
-                                } - ${
-                                  seat.status === "AVAILABLE"
-                                    ? "선택 가능"
-                                    : seat.status === "HOLD"
-                                    ? "예약 중"
-                                    : "판매 완료"
-                                }`}
+                  <div className="space-y-6">
+                    {sectionNames.map((sectionName) => (
+                      <div
+                        key={sectionName}
+                        className="border-t pt-4 first:border-t-0 first:pt-0"
+                      >
+                        <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                          {sectionName}구역
+                        </h4>
+                        <div className="space-y-2">
+                          {Object.keys(groupedSeatsBySection[sectionName] || {})
+                            .sort()
+                            .map((rowLabel) => (
+                              <div
+                                key={rowLabel}
+                                className="flex items-center gap-2"
                               >
-                                {seat.seatNumber}
-                              </button>
+                                <span className="w-12 text-center font-medium text-gray-700">
+                                  {rowLabel}열
+                                </span>
+                                <div className="flex gap-1 flex-1 flex-wrap">
+                                  {(
+                                    groupedSeatsBySection[sectionName][
+                                      rowLabel
+                                    ] || []
+                                  ).map((seat) => (
+                                    <button
+                                      key={seat.scheduleSeatId}
+                                      onClick={() => toggleSeat(seat)}
+                                      className={`w-8 h-8 rounded border-2 text-xs font-medium transition-colors ${getSeatColor(
+                                        seat
+                                      )}`}
+                                      disabled={isSeatDisabled(seat)}
+                                      title={`${sectionName}구역 ${rowLabel}열 ${
+                                        seat.seatNumber
+                                      }번 - ${
+                                        seat.price
+                                          ? `${seat.price.toLocaleString()}원`
+                                          : "가격 정보 없음"
+                                      } - ${
+                                        seat.status === "AVAILABLE"
+                                          ? "선택 가능"
+                                          : seat.status === "HOLD"
+                                          ? "예약 중"
+                                          : "판매 완료"
+                                      }`}
+                                    >
+                                      {seat.seatNumber}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
                             ))}
-                          </div>
                         </div>
-                      ))}
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>

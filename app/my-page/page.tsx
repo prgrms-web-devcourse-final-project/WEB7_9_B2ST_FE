@@ -1444,11 +1444,10 @@ export default function MyPage() {
                 {prereservations.map((app, index) => {
                   // 예매 가능 시간 체크
                   const now = new Date();
-                  const bookableSection = app.sections?.find((section) => {
-                    const bookingStart = new Date(section.bookingStartAt);
-                    const bookingEnd = new Date(section.bookingEndAt);
-                    return now >= bookingStart && now <= bookingEnd;
-                  });
+                  const bookingOpen = new Date(app.bookingOpenAt);
+                  const bookingClose = new Date(app.bookingCloseAt);
+                  const isBookable = now >= bookingOpen && now <= bookingClose;
+                  const isUpcoming = now < bookingOpen;
 
                   // 첫 번째 섹션에서 공연 정보 가져오기
                   const firstSection = app.sections?.[0];
@@ -1499,80 +1498,85 @@ export default function MyPage() {
                         </div>
                       </div>
 
+                      {/* 예매 기간 정보 */}
+                      <div className="border-t pt-4 mt-4 mb-4">
+                        <div className="bg-gray-50 rounded-lg p-4">
+                          <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                            예매 기간
+                          </h4>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex items-start">
+                              <span className="text-gray-600 w-20 flex-shrink-0">시작:</span>
+                              <span className="font-medium text-gray-900">
+                                {bookingOpen.toLocaleString("ko-KR", {
+                                  year: "numeric",
+                                  month: "2-digit",
+                                  day: "2-digit",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </span>
+                            </div>
+                            <div className="flex items-start">
+                              <span className="text-gray-600 w-20 flex-shrink-0">종료:</span>
+                              <span className="font-medium text-gray-900">
+                                {bookingClose.toLocaleString("ko-KR", {
+                                  year: "numeric",
+                                  month: "2-digit",
+                                  day: "2-digit",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="mt-3 pt-3 border-t">
+                            {isBookable && (
+                              <span className="inline-block bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded">
+                                ✓ 예매 가능
+                              </span>
+                            )}
+                            {isUpcoming && (
+                              <span className="inline-block bg-yellow-100 text-yellow-800 text-xs font-semibold px-3 py-1 rounded">
+                                ⏰ 예매 대기중
+                              </span>
+                            )}
+                            {!isBookable && !isUpcoming && (
+                              <span className="inline-block bg-gray-100 text-gray-800 text-xs font-semibold px-3 py-1 rounded">
+                                ✕ 예매 종료
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
                       {/* 신청한 섹션 정보 */}
                       {app.sections && app.sections.length > 0 && (
-                        <div className="border-t pt-4 mt-4">
+                        <div className="border-t pt-4">
                           <h4 className="text-sm font-semibold text-gray-700 mb-2">
-                            신청 구역
+                            신청 구역 ({app.sections.length}개)
                           </h4>
-                          <div className="space-y-2">
-                            {app.sections.map((section) => {
-                              const bookingStart = new Date(
-                                section.bookingStartAt
-                              );
-                              const bookingEnd = new Date(section.bookingEndAt);
-                              const isBookable =
-                                now >= bookingStart && now <= bookingEnd;
-                              const isUpcoming = now < bookingStart;
-
-                              return (
-                                <div
-                                  key={section.sectionId}
-                                  className="bg-gray-50 rounded-lg p-3"
-                                >
-                                  <div className="flex justify-between items-start mb-2">
-                                    <div>
-                                      <p className="font-medium text-gray-900">
-                                        {section.sectionName}
-                                      </p>
-                                      <p className="text-xs text-gray-600 mt-1">
-                                        예매 기간:{" "}
-                                        {bookingStart.toLocaleString("ko-KR", {
-                                          month: "short",
-                                          day: "numeric",
-                                          hour: "2-digit",
-                                          minute: "2-digit",
-                                        })}{" "}
-                                        ~{" "}
-                                        {bookingEnd.toLocaleString("ko-KR", {
-                                          month: "short",
-                                          day: "numeric",
-                                          hour: "2-digit",
-                                          minute: "2-digit",
-                                        })}
-                                      </p>
-                                    </div>
-                                    {isBookable && (
-                                      <span className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded">
-                                        예매 가능
-                                      </span>
-                                    )}
-                                    {isUpcoming && (
-                                      <span className="bg-yellow-100 text-yellow-800 text-xs font-semibold px-2 py-1 rounded">
-                                        예매 대기
-                                      </span>
-                                    )}
-                                    {!isBookable && !isUpcoming && (
-                                      <span className="bg-gray-100 text-gray-800 text-xs font-semibold px-2 py-1 rounded">
-                                        예매 종료
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              );
-                            })}
+                          <div className="flex flex-wrap gap-2">
+                            {app.sections.map((section) => (
+                              <span
+                                key={section.sectionId}
+                                className="inline-block bg-indigo-50 text-indigo-700 px-3 py-1 rounded-lg text-sm font-medium border border-indigo-200"
+                              >
+                                {section.sectionName} 구역
+                              </span>
+                            ))}
                           </div>
                         </div>
                       )}
 
                       {/* 예매하러 가기 버튼 */}
-                      {bookableSection && (
+                      {isBookable && app.sectionIds && app.sectionIds.length > 0 && (
                         <div className="border-t pt-4 mt-4">
                           <Link
-                            href={`/performance/${app.scheduleId}/prereservation-booking?sectionId=${bookableSection.sectionId}`}
+                            href={`/performance/${app.scheduleId}/prereservation-booking?${app.sectionIds.map(id => `sectionId=${id}`).join('&')}`}
                             className="block w-full bg-red-600 text-white text-center py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors"
                           >
-                            예매하러 가기
+                            예매하러 가기 ({app.sectionIds.length}개 구역)
                           </Link>
                         </div>
                       )}

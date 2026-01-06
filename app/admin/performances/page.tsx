@@ -252,7 +252,9 @@ export default function AdminPerformancesPage() {
                 disabled={isLoading}
               >
                 <option value="GENERAL">일반예매 (GENERAL)</option>
-                <option value="PRE_REGISTRATION">구역별 사전등록 (PRE_REGISTRATION)</option>
+                <option value="PRE_REGISTRATION">
+                  구역별 사전등록 (PRE_REGISTRATION)
+                </option>
                 <option value="LOTTERY">추첨 (LOTTERY)</option>
               </select>
             </div>

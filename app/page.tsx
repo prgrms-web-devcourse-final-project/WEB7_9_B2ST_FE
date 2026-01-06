@@ -25,14 +25,14 @@ export default function Home() {
       <Header activeTab="landing" />
 
       {/* Hero Section */}
-      <section className="relative min-h-screen bg-gradient-to-br from-rose-50 via-white to-rose-100 text-gray-900 flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-screen bg-gradient-to-br from-amber-50 via-white to-orange-50 text-gray-900 flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 overflow-hidden opacity-60 pointer-events-none">
           <div
-            className="absolute top-[-4rem] right-[-6rem] w-[28rem] h-[28rem] bg-rose-200 rounded-full mix-blend-multiply filter blur-3xl"
+            className="absolute top-[-4rem] right-[-6rem] w-[28rem] h-[28rem] bg-orange-200 rounded-full mix-blend-multiply filter blur-3xl"
             style={{ animation: "blob 7s infinite" }}
           ></div>
           <div
-            className="absolute bottom-[-6rem] left-[-4rem] w-[26rem] h-[26rem] bg-red-100 rounded-full mix-blend-multiply filter blur-3xl"
+            className="absolute bottom-[-6rem] left-[-4rem] w-[26rem] h-[26rem] bg-amber-100 rounded-full mix-blend-multiply filter blur-3xl"
             style={{ animation: "blob 7s infinite 2s" }}
           ></div>
         </div>
@@ -41,10 +41,10 @@ export default function Home() {
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 leading-tight text-gray-900">
             티켓팅 이제 울지 마세요
           </h1>
-          <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-red-500 mb-6">
+          <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-orange-500 mb-6">
             모두에게 공정한 예매 서비스
           </p>
-          <div className="text-6xl sm:text-7xl lg:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-rose-400 mb-8">
+          <div className="text-6xl sm:text-7xl lg:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-400 mb-8">
             TT
           </div>
           <p className="text-base sm:text-lg text-gray-700 mb-10 max-w-2xl mx-auto leading-relaxed">
@@ -56,19 +56,19 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={() => scrollToSection("service")}
-              className="px-8 py-4 rounded-full font-bold text-white bg-red-600 hover:bg-red-700 transition-colors shadow-md"
+              className="px-8 py-4 rounded-full font-bold text-white bg-orange-500 hover:bg-orange-600 transition-colors shadow-md"
             >
               서비스 소개
             </button>
             <Link
               href="/ticket"
-              className="px-8 py-4 rounded-full font-bold text-white bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-700 hover:to-rose-600 transition-all shadow-lg text-center"
+              className="px-8 py-4 rounded-full font-bold text-white bg-gradient-to-r from-orange-500 to-amber-400 hover:from-orange-600 hover:to-amber-500 transition-all shadow-lg text-center"
             >
               예매하러 가기
             </Link>
             <button
               onClick={() => scrollToSection("booking-methods")}
-              className="px-8 py-4 rounded-full font-bold text-red-600 bg-white hover:bg-red-50 transition-colors border border-red-200"
+              className="px-8 py-4 rounded-full font-bold text-orange-600 bg-white hover:bg-orange-50 transition-colors border border-orange-200"
             >
               예매방식안내
             </button>
@@ -103,7 +103,7 @@ export default function Home() {
 
           <div className="grid md:grid-cols-2 gap-8">
             {/* Card 1 */}
-            <div className="bg-white border border-red-100 rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-white border border-orange-100 rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow">
               <h3 className="text-2xl font-bold text-gray-900 mb-4">
                 공정한 티켓팅
               </h3>
@@ -118,7 +118,7 @@ export default function Home() {
             </div>
 
             {/* Card 2 */}
-            <div className="bg-white border border-rose-100 rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-white border border-amber-100 rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow">
               <h3 className="text-2xl font-bold text-gray-900 mb-4">
                 교환/양도 서비스
               </h3>
@@ -137,7 +137,7 @@ export default function Home() {
       </section>
 
       {/* Booking Methods Section */}
-      <section id="booking-methods" className="py-20 bg-rose-50">
+      <section id="booking-methods" className="py-20 bg-orange-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-gray-900">
@@ -147,8 +147,8 @@ export default function Home() {
 
           <div className="space-y-8">
             {/* Method 1 */}
-            <div className="flex flex-col lg:flex-row gap-8 items-center bg-white p-8 rounded-2xl border border-red-100 shadow-sm">
-              <div className="flex-shrink-0 w-20 h-20 rounded-full bg-gradient-to-br from-red-500 to-rose-400 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
+            <div className="flex flex-col lg:flex-row gap-8 items-center bg-white p-8 rounded-2xl border border-orange-100 shadow-sm">
+              <div className="flex-shrink-0 w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
                 1
               </div>
               <div className="flex-1">
@@ -166,8 +166,8 @@ export default function Home() {
             </div>
 
             {/* Method 2 */}
-            <div className="flex flex-col lg:flex-row-reverse gap-8 items-center bg-white p-8 rounded-2xl border border-red-100 shadow-sm">
-              <div className="flex-shrink-0 w-20 h-20 rounded-full bg-gradient-to-br from-rose-500 to-red-400 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
+            <div className="flex flex-col lg:flex-row-reverse gap-8 items-center bg-white p-8 rounded-2xl border border-orange-100 shadow-sm">
+              <div className="flex-shrink-0 w-20 h-20 rounded-full bg-gradient-to-br from-amber-500 to-orange-400 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
                 2
               </div>
               <div className="flex-1">
@@ -184,8 +184,8 @@ export default function Home() {
             </div>
 
             {/* Method 3 */}
-            <div className="flex flex-col lg:flex-row gap-8 items-center bg-white p-8 rounded-2xl border border-red-100 shadow-sm">
-              <div className="flex-shrink-0 w-20 h-20 rounded-full bg-gradient-to-br from-red-500 to-orange-400 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
+            <div className="flex flex-col lg:flex-row gap-8 items-center bg-white p-8 rounded-2xl border border-orange-100 shadow-sm">
+              <div className="flex-shrink-0 w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
                 3
               </div>
               <div className="flex-1">
@@ -206,7 +206,7 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-red-600 to-rose-500">
+      <section className="py-20 bg-gradient-to-r from-orange-500 to-amber-400">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
           <h2 className="text-4xl sm:text-5xl font-bold mb-6">
             공정한 티켓팅, 지금 시작하세요
@@ -219,7 +219,7 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/signup"
-              className="px-8 py-4 rounded-full font-bold text-red-600 bg-white hover:bg-gray-100 transition-all shadow-lg"
+              className="px-8 py-4 rounded-full font-bold text-orange-600 bg-white hover:bg-gray-100 transition-all shadow-lg"
             >
               회원가입
             </Link>
@@ -249,7 +249,7 @@ export default function Home() {
                 <li>
                   <Link
                     href="/ticket"
-                    className="text-gray-600 hover:text-red-600"
+                    className="text-gray-600 hover:text-orange-600"
                   >
                     공연 찾기
                   </Link>
@@ -257,7 +257,7 @@ export default function Home() {
                 <li>
                   <Link
                     href="/trade"
-                    className="text-gray-600 hover:text-red-600"
+                    className="text-gray-600 hover:text-orange-600"
                   >
                     티켓 양도
                   </Link>
@@ -268,12 +268,12 @@ export default function Home() {
               <h4 className="text-gray-900 font-bold mb-4">고객지원</h4>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <a href="#" className="text-gray-600 hover:text-red-600">
+                  <a href="#" className="text-gray-600 hover:text-orange-600">
                     공지사항
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="text-gray-600 hover:text-red-600">
+                  <a href="#" className="text-gray-600 hover:text-orange-600">
                     FAQ
                   </a>
                 </li>
@@ -283,12 +283,12 @@ export default function Home() {
               <h4 className="text-gray-900 font-bold mb-4">법적사항</h4>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <a href="#" className="text-gray-600 hover:text-red-600">
+                  <a href="#" className="text-gray-600 hover:text-orange-600">
                     이용약관
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="text-gray-600 hover:text-red-600">
+                  <a href="#" className="text-gray-600 hover:text-orange-600">
                     개인정보처리방침
                   </a>
                 </li>

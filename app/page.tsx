@@ -22,7 +22,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
-      <Header />
+      <Header activeTab="landing" />
 
       {/* Hero Section */}
       <section className="relative min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white flex items-center justify-center overflow-hidden">

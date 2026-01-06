@@ -95,6 +95,8 @@ export default function ReservationDetailPage({
       case "HOLD":
       case "CREATED":
         return "예매 확정 대기";
+      case "PAID":
+        return "결제 완료";
       case "CONFIRMED":
         return "예매 확정";
       case "COMPLETED":
@@ -116,6 +118,8 @@ export default function ReservationDetailPage({
       case "HOLD":
       case "CREATED":
         return "bg-blue-100 text-blue-800";
+      case "PAID":
+        return "bg-green-100 text-green-800";
       case "CONFIRMED":
         return "bg-green-100 text-green-800";
       case "COMPLETED":

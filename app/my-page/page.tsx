@@ -1222,6 +1222,10 @@ export default function MyPage() {
                           label: "응모완료",
                           className: "bg-red-100 text-red-800",
                         },
+                        PAID: {
+                          label: "결제완료",
+                          className: "bg-green-100 text-green-800",
+                        },
                         WIN: {
                           label: "당첨",
                           className: "bg-green-100 text-green-800",

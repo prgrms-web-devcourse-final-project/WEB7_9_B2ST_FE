@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import ProfileTab from "./ProfileTab";
 import {
@@ -24,6 +25,8 @@ import {
 import { performanceApi } from "@/lib/api/performance";
 
 export default function MyPage() {
+  const router = useRouter();
+
   // 초기 상태는 항상 동일하게 설정 (서버와 클라이언트 일치)
   const [activeTab, setActiveTab] = useState<
     | "reservations"
@@ -1283,7 +1286,18 @@ export default function MyPage() {
                             <p className="text-sm text-green-800 font-medium mb-3">
                               🎉 당첨되었습니다! 결제를 진행해주세요.
                             </p>
-                            <button className="w-full px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors text-sm">
+                            <button
+                              onClick={() => {
+                                router.push(
+                                  `/lottery/payment?entryId=${
+                                    entry.lotteryEntryId
+                                  }&price=${
+                                    entry.price
+                                  }&title=${encodeURIComponent(entry.title)}`
+                                );
+                              }}
+                              className="w-full px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors text-sm"
+                            >
                               결제하기
                             </button>
                           </div>

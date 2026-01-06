@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { performanceApi, type PerformanceListRes } from "@/lib/api/performance";
 
 interface HeaderProps {
-  activeTab?: "ticket" | "trade";
+  activeTab?: "ticket" | "trade" | "landing";
   onTabChange?: (tab: "ticket" | "trade") => void;
   showCategoryTabs?: boolean;
   activeCategory?: string;

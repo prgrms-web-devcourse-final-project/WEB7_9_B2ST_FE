@@ -164,7 +164,7 @@ export const performanceApi = {
     venueId: number;
     title: string;
     category: string;
-    posterUrl: string;
+    posterKey: string;
     description: string;
     startDate: string;
     endDate: string;

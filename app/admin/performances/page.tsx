@@ -17,7 +17,7 @@ export default function AdminPerformancesPage() {
   const [description, setDescription] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [posterUrl, setPosterUrl] = useState("");
+  const [posterKey, setPosterKey] = useState("");
   const [posterFile, setPosterFile] = useState<File | null>(null);
   const [posterPreview, setPosterPreview] = useState<string | null>(null);
   const [isUploadingPoster, setIsUploadingPoster] = useState(false);
@@ -91,7 +91,7 @@ export default function AdminPerformancesPage() {
       }
 
       setPosterFile(file);
-      setPosterUrl(""); // URL 입력 초기화
+      setPosterKey(""); // Key 입력 초기화
       setError(null);
 
       // 미리보기 생성
@@ -109,7 +109,7 @@ export default function AdminPerformancesPage() {
     setIsLoading(true);
 
     try {
-      let finalPosterUrl = posterUrl;
+      let finalPosterKey = posterKey;
 
       // 파일이 선택된 경우 업로드 진행
       if (posterFile) {
@@ -136,8 +136,8 @@ export default function AdminPerformancesPage() {
             throw new Error("이미지 업로드에 실패했습니다.");
           }
 
-          // 3. 업로드된 파일의 public URL 생성 (uploadUrl에서 쿼리 파라미터 제거)
-          finalPosterUrl = uploadUrl.split("?")[0];
+          // 3. 업로드된 objectKey 사용
+          finalPosterKey = objectKey;
         } catch (uploadErr: any) {
           console.error("포스터 업로드 실패:", uploadErr);
           throw new Error(
@@ -148,16 +148,16 @@ export default function AdminPerformancesPage() {
         }
       }
 
-      // 포스터 URL이 없으면 에러
-      if (!finalPosterUrl) {
-        throw new Error("포스터 이미지를 업로드하거나 URL을 입력해주세요.");
+      // 포스터 Key가 없으면 에러
+      if (!finalPosterKey) {
+        throw new Error("포스터 이미지를 업로드하거나 Key를 입력해주세요.");
       }
 
       const response = await performanceApi.createPerformance({
         venueId: parseInt(venueId),
         title,
         category,
-        posterUrl: finalPosterUrl,
+        posterKey: finalPosterKey,
         description,
         startDate: `${startDate}T00:00:00`,
         endDate: `${endDate}T23:59:59`,
@@ -170,7 +170,7 @@ export default function AdminPerformancesPage() {
         setDescription("");
         setStartDate("");
         setEndDate("");
-        setPosterUrl("");
+        setPosterKey("");
         setPosterFile(null);
         setPosterPreview(null);
         alert("공연이 생성되었습니다.");
@@ -288,7 +288,7 @@ export default function AdminPerformancesPage() {
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
                     onChange={handleFileChange}
-                    disabled={isLoading || !!posterUrl}
+                    disabled={isLoading || !!posterKey}
                     className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50"
                   />
                 </div>
@@ -300,21 +300,21 @@ export default function AdminPerformancesPage() {
                   <div className="flex-1 border-t border-gray-300"></div>
                 </div>
 
-                {/* URL 입력 */}
+                {/* Key 입력 */}
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">
-                    포스터 URL 직접 입력
+                    포스터 Key 직접 입력
                   </label>
                   <input
-                    value={posterUrl}
+                    value={posterKey}
                     onChange={(e) => {
-                      setPosterUrl(e.target.value);
+                      setPosterKey(e.target.value);
                       if (e.target.value) {
                         setPosterFile(null);
                         setPosterPreview(null);
                       }
                     }}
-                    placeholder="https://example.com/poster.jpg"
+                    placeholder="posters/example.jpg"
                     className="block w-full rounded border px-3 py-2 border-gray-300 text-sm"
                     disabled={isLoading || !!posterFile}
                   />

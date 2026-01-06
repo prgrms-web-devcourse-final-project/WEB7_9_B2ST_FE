@@ -1209,7 +1209,7 @@ export default function MyPage() {
               !lotteryError &&
               lotteryEntries.length > 0 && (
                 <div className="space-y-4">
-                  {lotteryEntries.map((entry) => {
+                  {lotteryEntries.map((entry, index) => {
                     const getStatusBadge = (status: string) => {
                       const statusMap: Record<
                         string,
@@ -1259,7 +1259,7 @@ export default function MyPage() {
 
                     return (
                       <div
-                        key={entry.lotteryEntryId}
+                        key={`${entry.lotteryEntryId}_${index}`}
                         className="bg-white rounded-lg shadow-sm p-6"
                       >
                         <div className="flex justify-between items-start mb-4">
@@ -1271,6 +1271,7 @@ export default function MyPage() {
                               <p>공연일시: {formatDateTime(entry.startAt)}</p>
                               <p>회차: {entry.roundNo}회차</p>
                               <p>등급: {entry.gradeType}</p>
+                              <p>가격: {entry.price?.toLocaleString()}원</p>
                               <p>매수: {entry.quantity}매</p>
                             </div>
                           </div>

@@ -29,6 +29,7 @@ export interface LotteryEntry {
   startAt: string;
   roundNo: number;
   gradeType: string;
+  price: number;
   quantity: number;
   status: "APPLIED" | "WIN" | "LOSE" | "CANCELLED";
 }
@@ -126,6 +127,7 @@ export const lotteryApi = {
           gradeType: entry.gradeType || "",
           quantity: entry.quantity || 0,
           status: (entry.status || "APPLIED") as LotteryEntry["status"],
+          price: entry.price || 0,
         }))
       : [];
 

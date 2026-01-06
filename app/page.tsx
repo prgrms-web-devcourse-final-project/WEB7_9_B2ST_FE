@@ -247,12 +247,18 @@ export default function Home() {
               <h4 className="text-gray-900 font-bold mb-4">서비스</h4>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <Link href="/ticket" className="text-gray-600 hover:text-red-600">
+                  <Link
+                    href="/ticket"
+                    className="text-gray-600 hover:text-red-600"
+                  >
                     공연 찾기
                   </Link>
                 </li>
                 <li>
-                  <Link href="/trade" className="text-gray-600 hover:text-red-600">
+                  <Link
+                    href="/trade"
+                    className="text-gray-600 hover:text-red-600"
+                  >
                     티켓 양도
                   </Link>
                 </li>

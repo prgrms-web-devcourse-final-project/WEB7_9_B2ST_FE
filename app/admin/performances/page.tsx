@@ -14,6 +14,9 @@ export default function AdminPerformancesPage() {
   const [title, setTitle] = useState("");
   const [venueId, setVenueId] = useState("1");
   const [category, setCategory] = useState("");
+  const [bookingType, setBookingType] = useState<
+    "FIRST_COME" | "SEAT" | "LOTTERY"
+  >("FIRST_COME");
   const [description, setDescription] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -157,6 +160,7 @@ export default function AdminPerformancesPage() {
         venueId: parseInt(venueId),
         title,
         category,
+        bookingType,
         posterKey: finalPosterKey,
         description,
         startDate: `${startDate}T00:00:00`,
@@ -167,6 +171,7 @@ export default function AdminPerformancesPage() {
         setTitle("");
         setVenueId("1");
         setCategory("");
+        setBookingType("FIRST_COME");
         setDescription("");
         setStartDate("");
         setEndDate("");
@@ -228,6 +233,24 @@ export default function AdminPerformancesPage() {
                 required
                 disabled={isLoading}
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium">예매 방식 *</label>
+              <select
+                value={bookingType}
+                onChange={(e) =>
+                  setBookingType(
+                    e.target.value as "FIRST_COME" | "SEAT" | "LOTTERY"
+                  )
+                }
+                className="mt-1 block w-full rounded border px-3 py-2 border-gray-300 bg-white"
+                required
+                disabled={isLoading}
+              >
+                <option value="FIRST_COME">선착순 (FIRST_COME)</option>
+                <option value="SEAT">좌석지정 (SEAT)</option>
+                <option value="LOTTERY">추첨 (LOTTERY)</option>
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium">공연장 ID *</label>

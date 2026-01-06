@@ -119,6 +119,7 @@ export const typedPerformanceApi = {
     venueId: number;
     title: string;
     category: string;
+    bookingType: "FIRST_COME" | "SEAT" | "LOTTERY";
     posterKey: string;
     description: string;
     startDate: string;

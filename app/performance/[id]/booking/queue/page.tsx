@@ -89,6 +89,37 @@ export default function QueueWaiting({
     }
   }, [isLoading, error, queueData, fetchQueuePosition]);
 
+  // 페이지 이탈 시 대기열 나가기
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (queueId && queueData?.status === "WAITING") {
+        // 동기적으로 API 호출 (navigator.sendBeacon 사용)
+        const blob = new Blob([JSON.stringify({})], {
+          type: "application/json",
+        });
+        navigator.sendBeacon(`/api/queues/${queueId}/exit`, blob);
+      }
+    };
+
+    const handleRouteChange = async () => {
+      if (queueId && queueData?.status === "WAITING") {
+        try {
+          await typedQueueApi.exit(Number(queueId));
+        } catch (err) {
+          console.error("대기열 나가기 실패:", err);
+        }
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("popstate", handleRouteChange);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("popstate", handleRouteChange);
+    };
+  }, [queueId, queueData?.status]);
+
   // 나가기 버튼 핸들러
   const handleExit = async () => {
     if (!confirm("대기를 취소하시겠습니까?")) {

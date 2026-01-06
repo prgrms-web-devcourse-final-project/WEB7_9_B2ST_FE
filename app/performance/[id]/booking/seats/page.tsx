@@ -9,6 +9,7 @@ import {
   type PerformanceScheduleListRes,
 } from "@/lib/api/performance";
 import { reservationApi } from "@/lib/api/reservation";
+import { typedQueueApi } from "@/lib/api/typed-queue";
 
 export default function BookingSeats({
   params,
@@ -91,6 +92,43 @@ export default function BookingSeats({
 
     fetchSeats();
   }, [currentScheduleId, section]);
+
+  // 페이지 이탈 시 대기열 나가기
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (queueId) {
+        // 동기적으로 API 호출 (navigator.sendBeacon 사용)
+        const blob = new Blob([JSON.stringify({})], {
+          type: "application/json",
+        });
+        navigator.sendBeacon(`/api/queues/${queueId}/exit`, blob);
+      }
+    };
+
+    const handleRouteChange = async () => {
+      if (queueId) {
+        try {
+          await typedQueueApi.exit(Number(queueId));
+        } catch (err) {
+          console.error("대기열 나가기 실패:", err);
+        }
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("popstate", handleRouteChange);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("popstate", handleRouteChange);
+
+      // 컴포넌트 언마운트 시에도 대기열 나가기 (정상적인 페이지 이동)
+      if (queueId && !isProcessing) {
+        // 비동기 호출이지만 최선을 다해 전송
+        typedQueueApi.exit(Number(queueId)).catch(() => {});
+      }
+    };
+  }, [queueId, isProcessing]);
 
   // 회차 변경 핸들러
   const handleScheduleChange = (newScheduleId: string) => {

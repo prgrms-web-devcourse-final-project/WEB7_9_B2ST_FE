@@ -15,8 +15,8 @@ export default function AdminPerformancesPage() {
   const [venueId, setVenueId] = useState("1");
   const [category, setCategory] = useState("");
   const [bookingType, setBookingType] = useState<
-    "FIRST_COME" | "SEAT" | "LOTTERY"
-  >("FIRST_COME");
+    "LOTTERY" | "GENERAL" | "PRE_REGISTRATION"
+  >("GENERAL");
   const [description, setDescription] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -171,7 +171,7 @@ export default function AdminPerformancesPage() {
         setTitle("");
         setVenueId("1");
         setCategory("");
-        setBookingType("FIRST_COME");
+        setBookingType("GENERAL");
         setDescription("");
         setStartDate("");
         setEndDate("");
@@ -217,7 +217,9 @@ export default function AdminPerformancesPage() {
               <label className="block text-sm font-medium">제목 *</label>
               <input
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setTitle(e.target.value)
+                }
                 className="mt-1 block w-full rounded border px-3 py-2 border-gray-300"
                 required
                 disabled={isLoading}
@@ -227,7 +229,9 @@ export default function AdminPerformancesPage() {
               <label className="block text-sm font-medium">카테고리 *</label>
               <input
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setCategory(e.target.value)
+                }
                 placeholder="뮤지컬, 콘서트 등"
                 className="mt-1 block w-full rounded border px-3 py-2 border-gray-300"
                 required
@@ -240,15 +244,15 @@ export default function AdminPerformancesPage() {
                 value={bookingType}
                 onChange={(e) =>
                   setBookingType(
-                    e.target.value as "FIRST_COME" | "SEAT" | "LOTTERY"
+                    e.target.value as "LOTTERY" | "GENERAL" | "PRE_REGISTRATION"
                   )
                 }
                 className="mt-1 block w-full rounded border px-3 py-2 border-gray-300 bg-white"
                 required
                 disabled={isLoading}
               >
-                <option value="FIRST_COME">선착순 (FIRST_COME)</option>
-                <option value="SEAT">좌석지정 (SEAT)</option>
+                <option value="GENERAL">일반예매 (GENERAL)</option>
+                <option value="PRE_REGISTRATION">구역별 사전등록 (PRE_REGISTRATION)</option>
                 <option value="LOTTERY">추첨 (LOTTERY)</option>
               </select>
             </div>

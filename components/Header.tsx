@@ -132,7 +132,7 @@ export default function Header({
           {/* Logo */}
           <Link href="/" className="flex items-center">
             <Image
-              src="/doncrytt-logo4.png"
+              src="/doncrytt-logo5.png"
               alt="doncrytt 로고"
               width={200}
               height={80}

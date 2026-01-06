@@ -10,6 +10,7 @@ export default function TicketPage() {
   const [performances, setPerformances] = useState<PerformanceListRes[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [carouselIndex, setCarouselIndex] = useState(0);
 
   const categories = [
     "전체",
@@ -50,6 +51,15 @@ export default function TicketPage() {
     fetchPerformances();
   }, []);
 
+  // 캐러셀용 랜덤 공연 선택 (5개)
+  const carouselPerformances = useMemo(() => {
+    if (performances.length === 0) return [];
+    const shuffled = [...performances]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, Math.min(5, performances.length));
+    return shuffled;
+  }, [performances]);
+
   const filteredPerformances = useMemo(() => {
     if (activeCategory === "전체") return performances;
     return performances.filter((p) => p.category === activeCategory);
@@ -71,6 +81,19 @@ export default function TicketPage() {
     return `${formatDate(startDate)} ~ ${formatDate(endDate)}`;
   };
 
+  // 캐러셀 이동
+  const handleCarouselPrev = () => {
+    setCarouselIndex((prev) =>
+      prev === 0 ? carouselPerformances.length - 1 : prev - 1
+    );
+  };
+
+  const handleCarouselNext = () => {
+    setCarouselIndex((prev) =>
+      prev === carouselPerformances.length - 1 ? 0 : prev + 1
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header
@@ -84,6 +107,114 @@ export default function TicketPage() {
 
       <main className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* 캐러셀 */}
+          {carouselPerformances.length > 0 && !isLoading && (
+            <div className="mb-12">
+              <div className="relative bg-gray-900 rounded-xl overflow-hidden">
+                {/* 캐러셀 컨테이너 */}
+                <div className="relative h-96 bg-gray-900">
+                  <Link
+                    href={`/performance/${carouselPerformances[carouselIndex].performanceId}`}
+                    className="block w-full h-full"
+                  >
+                    <img
+                      src={
+                        carouselPerformances[carouselIndex].posterUrl ||
+                        "/placeholder.jpg"
+                      }
+                      alt={carouselPerformances[carouselIndex].title}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent" />
+                  </Link>
+
+                  {/* 좌측 화살표 */}
+                  <button
+                    onClick={handleCarouselPrev}
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20 bg-white/30 hover:bg-white/50 text-white rounded-full p-3 transition-colors"
+                  >
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 19l-7-7 7-7"
+                      />
+                    </svg>
+                  </button>
+
+                  {/* 우측 화살표 */}
+                  <button
+                    onClick={handleCarouselNext}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 z-20 bg-white/30 hover:bg-white/50 text-white rounded-full p-3 transition-colors"
+                  >
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </button>
+
+                  {/* 포스터 정보 (좌측 하단) */}
+                  <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
+                    <Link
+                      href={`/performance/${carouselPerformances[carouselIndex].performanceId}`}
+                      className="block group"
+                    >
+                      <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 group-hover:text-gray-300 transition-colors line-clamp-2">
+                        {carouselPerformances[carouselIndex].title}
+                      </h2>
+                      <p className="text-gray-300 text-sm mb-3">
+                        {carouselPerformances[carouselIndex].venueName}
+                      </p>
+                      <div className="flex gap-3 text-xs text-gray-400">
+                        <span>
+                          {formatDate(
+                            carouselPerformances[carouselIndex].startDate
+                          )}
+                        </span>
+                        <span>~</span>
+                        <span>
+                          {formatDate(
+                            carouselPerformances[carouselIndex].endDate
+                          )}
+                        </span>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+
+                {/* 인디케이터 (하단 중앙) */}
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 flex gap-2">
+                  {carouselPerformances.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCarouselIndex(index)}
+                      className={`w-2 h-2 rounded-full transition-colors ${
+                        index === carouselIndex
+                          ? "bg-white"
+                          : "bg-white/50 hover:bg-white/75"
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">공연 목록</h2>
             <p className="text-gray-600">원하는 공연을 선택하고 예매하세요</p>

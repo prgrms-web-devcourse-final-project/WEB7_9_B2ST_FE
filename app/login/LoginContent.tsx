@@ -91,76 +91,13 @@ export default function LoginContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto grid lg:grid-cols-5 gap-10 items-start">
-        {/* 서비스 소개 패널 */}
-        <div className="lg:col-span-2 bg-gray-900 text-white rounded-2xl shadow-xl p-8 flex flex-col gap-6">
-          <div>
-            <p className="text-sm text-gray-300 mb-2">
-              Doncrytt Ticket Platform
-            </p>
-            <h2 className="text-3xl font-bold leading-tight">
-              일반 · 추첨 · 사전신청을 한 번에 지원하는 공연 플랫폼
-            </h2>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex gap-3 items-start">
-              <span className="mt-0.5 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs font-bold">
-                1
-              </span>
-              <div>
-                <p className="font-semibold">비로그인 탐색 가능</p>
-                <p className="text-sm text-gray-300">
-                  서비스 소개와 공연 목록은 누구나 볼 수 있습니다.
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-3 items-start">
-              <span className="mt-0.5 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold">
-                2
-              </span>
-              <div>
-                <p className="font-semibold">로그인 후 기능 해제</p>
-                <p className="text-sm text-gray-300">
-                  양도/교환, 마이페이지, 응모/사전신청 관리에 접근합니다.
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-3 items-start">
-              <span className="mt-0.5 w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center text-xs font-bold">
-                3
-              </span>
-              <div>
-                <p className="font-semibold">이전 페이지로 복귀</p>
-                <p className="text-sm text-gray-300">
-                  로그인 완료 후 직전 경로로 돌아가 작업을 이어갑니다.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-4 rounded-xl bg-white/10 border border-white/10">
-              <p className="text-xs text-gray-300 mb-1">예매 타입</p>
-              <p className="font-semibold">일반 · 추첨 · 사전신청</p>
-              <p className="text-xs text-gray-400 mt-1">각 타입별 안내 제공</p>
-            </div>
-            <div className="p-4 rounded-xl bg-white/10 border border-white/10">
-              <p className="text-xs text-gray-300 mb-1">양도/교환</p>
-              <p className="font-semibold">로그인 후 이용</p>
-              <p className="text-xs text-gray-400 mt-1">
-                마이페이지에서 상태 확인
-              </p>
-            </div>
-          </div>
-        </div>
-
+      <div className="max-w-xl mx-auto ">
         {/* 로그인 폼 */}
-        <div className="lg:col-span-3">
-          <div className="text-center mb-8">
+        <div className="">
+          <div className="text-center mb-8 ">
             <Link href="/" className="inline-block mb-4">
               <Image
-                src="/doncrytt-logo2.png"
+                src="/doncrytt-logo5.png"
                 alt="doncrytt 로고"
                 width={200}
                 height={80}

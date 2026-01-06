@@ -319,7 +319,7 @@ export default function Header({
               {activeTab !== undefined && (
                 <>
                   <Link
-                    href="/"
+                    href="/ticket"
                     className={`px-6 py-4 font-medium text-sm transition-colors relative ${
                       activeTab === "ticket"
                         ? "text-red-600"

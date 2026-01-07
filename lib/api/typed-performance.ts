@@ -173,6 +173,13 @@ export const typedPerformanceApi = {
   },
 
   /**
+   * 관리자 공연 삭제
+   */
+  async deletePerformance(performanceId: number) {
+    return adminApiClient.delete(`/api/admin/performances/${performanceId}`);
+  },
+
+  /**
    * 공연 예매 정책 수정 (관리자)
    */
   async updateBookingPolicy(

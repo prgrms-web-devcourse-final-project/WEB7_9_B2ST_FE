@@ -30,6 +30,18 @@ export default function AdminPerformancesPage() {
   const [isLoadingList, setIsLoadingList] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState("");
 
+  const handleDelete = async (performanceId: number) => {
+    if (!confirm("해당 공연을 삭제하시겠습니까?")) return;
+    try {
+      await performanceApi.deletePerformance(performanceId);
+      alert("공연이 삭제되었습니다.");
+      await loadPerformances();
+    } catch (err: any) {
+      console.error("공연 삭제 실패:", err);
+      setError(err?.message || "공연 삭제에 실패했습니다.");
+    }
+  };
+
   const loadPerformances = async () => {
     setIsLoadingList(true);
     try {
@@ -446,6 +458,17 @@ export default function AdminPerformancesPage() {
                     <div className="text-sm text-gray-400">
                       {p.startDate} ~ {p.endDate}
                     </div>
+                  </div>
+                  <div className="flex-shrink-0">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(p.performanceId);
+                      }}
+                      className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700"
+                    >
+                      삭제
+                    </button>
                   </div>
                 </li>
               ))}

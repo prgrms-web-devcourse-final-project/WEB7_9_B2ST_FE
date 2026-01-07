@@ -233,6 +233,18 @@ export const performanceApi = {
   },
 
   /**
+   * 공연 삭제 (관리자)
+   */
+  async deletePerformance(performanceId: number) {
+    const data = await typedPerformanceApi.deletePerformance(performanceId);
+    return {
+      code: 200,
+      message: "성공적으로 처리되었습니다",
+      data: data as string,
+    };
+  },
+
+  /**
    * 공연 예매 정책 수정 (관리자)
    */
   async updateBookingPolicy(

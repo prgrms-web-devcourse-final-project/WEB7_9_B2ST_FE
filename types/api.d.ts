@@ -1169,6 +1169,7 @@ export interface components {
       section?: string;
       row?: string;
       seatNumber?: string;
+      performanceTitle?: string;
       /** Format: date-time */
       createdAt?: string;
     };

@@ -1006,7 +1006,7 @@ export default function MyPage() {
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
                           <h3 className="text-lg font-bold text-gray-900 mb-2">
-                            거래 #{trade.tradeId}
+                            {trade.performanceTitle || `거래 #${trade.tradeId}`}
                           </h3>
                           <div className="space-y-1 text-sm text-gray-600">
                             {trade.section && (

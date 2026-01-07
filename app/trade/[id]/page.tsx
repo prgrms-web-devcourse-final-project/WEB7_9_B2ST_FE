@@ -8,7 +8,6 @@ import {
   type PerformanceDetailRes,
   type PerformanceScheduleListRes,
 } from "@/lib/api/performance";
-import { paymentApi, type PaymentRequest } from "@/lib/api/payment";
 import { mypageApi } from "@/lib/api/mypage";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -43,9 +42,6 @@ export default function TradeDetailPage({
 
   // 삭제 관련 상태
   const [isDeleting, setIsDeleting] = useState(false);
-
-  // 구매 관련 상태
-  const [isPurchasing, setIsPurchasing] = useState(false);
 
   useEffect(() => {
     const fetchTradeDetail = async () => {
@@ -146,48 +142,8 @@ export default function TradeDetailPage({
       return;
     }
 
-    setIsPurchasing(true);
-    setError("");
-
-    try {
-      // 결제 API 호출 (domainType: TRADE)
-      const paymentRequest: PaymentRequest = {
-        domainType: "TRADE",
-        paymentMethod: "CARD",
-        domainId: tradeId,
-      };
-
-      const response = await paymentApi.pay(paymentRequest);
-
-      if (!response.success || !response.data) {
-        throw new Error(response.error || "결제에 실패했습니다.");
-      }
-
-      // 결제 성공
-      alert("구매가 완료되었습니다.");
-      router.push("/my-page/trades");
-    } catch (err: any) {
-      let errorMessage = "구매 처리에 실패했습니다.";
-
-      if (err instanceof Error) {
-        errorMessage = err.message;
-      } else if (err && typeof err === "object") {
-        if ("message" in err) {
-          errorMessage = String(err.message);
-        } else if ("response" in err && err.response) {
-          const response = err.response as any;
-          if (response.data && response.data.message) {
-            errorMessage = response.data.message;
-          } else if (response.message) {
-            errorMessage = response.message;
-          }
-        }
-      }
-
-      setError(errorMessage);
-    } finally {
-      setIsPurchasing(false);
-    }
+    // 결제 페이지로 이동
+    router.push(`/trade/${tradeId}/payment`);
   };
 
   const formatDate = (dateString: string | undefined) => {
@@ -329,10 +285,9 @@ export default function TradeDetailPage({
               currentUserId !== trade.memberId && (
                 <button
                   onClick={handlePurchase}
-                  disabled={isPurchasing}
-                  className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
                 >
-                  {isPurchasing ? "처리 중..." : "구매하기"}
+                  구매하기
                 </button>
               )}
             {trade.status === "ACTIVE" && currentUserId === trade.memberId && (

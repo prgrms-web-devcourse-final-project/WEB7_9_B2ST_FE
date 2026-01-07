@@ -322,7 +322,7 @@ export default function TicketPage() {
                       </div>
 
                       {/* 제목 */}
-                      <h3 className="text-lg font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-indigo-600 transition-colors">
+                      <h3 className="text-lg font-bold text-gray-900 mb-3 line-clamp-1 group-hover:text-indigo-600 transition-colors">
                         {performance.title}
                       </h3>
 

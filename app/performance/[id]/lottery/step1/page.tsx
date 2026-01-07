@@ -165,8 +165,16 @@ function LotteryStep1Content({ params }: { params: Promise<{ id: string }> }) {
             {/* Left: Performance Info */}
             <div>
               <div className="bg-white rounded-lg shadow-sm p-6">
-                <div className="aspect-[3/4] bg-gray-200 rounded-lg mb-6 flex items-center justify-center">
-                  <p className="text-gray-400">공연 포스터</p>
+                <div className="aspect-[3/4] bg-gray-200 rounded-lg mb-6 flex items-center justify-center overflow-hidden">
+                  {performance?.posterUrl ? (
+                    <img
+                      src={performance.posterUrl}
+                      alt={performance.title || "공연 포스터"}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <p className="text-gray-400">공연 포스터</p>
+                  )}
                 </div>
 
                 <h1 className="text-2xl font-bold text-gray-900 mb-4">

@@ -655,32 +655,24 @@ export default function PerformanceDetail({
                   {/* Booking Button */}
                   {selectedSchedule && (
                     <div className="space-y-2">
-                      {(selectedSchedule.bookingType as string) ===
-                      "PRERESERVATION" ? (
+                      {selectedSchedule.bookingType === "PRERESERVATION" && (
                         <button
-                          onClick={handleBooking}
-                          className="w-full px-6 py-4 rounded-lg font-bold text-center transition-colors shadow-lg bg-blue-600 text-white hover:bg-blue-700"
+                          onClick={() => setShowPrereservation(true)}
+                          className="w-full px-6 py-3 rounded-lg font-medium text-center transition-colors bg-blue-600 text-white hover:bg-blue-700"
                         >
-                          신청예매 시작
+                          예매 사전 신청
                         </button>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => setShowPrereservation(true)}
-                            className="w-full px-6 py-3 rounded-lg font-medium text-center transition-colors bg-blue-600 text-white hover:bg-blue-700"
-                          >
-                            예매 사전 신청
-                          </button>
-                          <button
-                            onClick={handleBooking}
-                            className="w-full px-6 py-4 rounded-lg font-bold text-center transition-colors shadow-lg bg-red-600 text-white hover:bg-red-700"
-                          >
-                            {selectedSchedule.bookingType === "LOTTERY"
-                              ? "응모하기 (추첨)"
-                              : "예매하기"}
-                          </button>
-                        </>
                       )}
+                      <button
+                        onClick={handleBooking}
+                        className="w-full px-6 py-4 rounded-lg font-bold text-center transition-colors shadow-lg bg-red-600 text-white hover:bg-red-700"
+                      >
+                        {selectedSchedule.bookingType === "PRERESERVATION"
+                          ? "신청예매 시작"
+                          : selectedSchedule.bookingType === "LOTTERY"
+                          ? "응모하기 (추첨)"
+                          : "예매하기"}
+                      </button>
                     </div>
                   )}
                 </div>

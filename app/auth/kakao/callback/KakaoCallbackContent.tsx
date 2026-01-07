@@ -1,13 +1,17 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 export default function KakaoCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const handledRef = useRef(false); // prevent duplicate handling
 
   useEffect(() => {
+    if (handledRef.current) return;
+    handledRef.current = true;
+
     const code = searchParams.get("code");
     const state = searchParams.get("state");
     const error = searchParams.get("error");

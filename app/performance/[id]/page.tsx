@@ -655,7 +655,7 @@ export default function PerformanceDetail({
                   {/* Booking Button */}
                   {selectedSchedule && (
                     <div className="space-y-2">
-                      {selectedSchedule.bookingType === "PRERESERVATION" && (
+                      {selectedSchedule.bookingType === "PRERESERVE" && (
                         <button
                           onClick={() => setShowPrereservation(true)}
                           className="w-full px-6 py-3 rounded-lg font-medium text-center transition-colors bg-blue-600 text-white hover:bg-blue-700"
@@ -667,7 +667,7 @@ export default function PerformanceDetail({
                         onClick={handleBooking}
                         className="w-full px-6 py-4 rounded-lg font-bold text-center transition-colors shadow-lg bg-red-600 text-white hover:bg-red-700"
                       >
-                        {selectedSchedule.bookingType === "PRERESERVATION"
+                        {selectedSchedule.bookingType === "PRERESERVE"
                           ? "신청예매 시작"
                           : selectedSchedule.bookingType === "LOTTERY"
                           ? "응모하기 (추첨)"

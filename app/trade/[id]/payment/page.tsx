@@ -216,21 +216,13 @@ export default function TradePaymentPage({
                 <h3 className="font-semibold text-gray-900 mb-4">약관 동의</h3>
                 <div className="space-y-3">
                   <label className="flex items-start gap-3">
-                    <input
-                      type="checkbox"
-                      defaultChecked
-                      className="mt-1"
-                    />
+                    <input type="checkbox" defaultChecked className="mt-1" />
                     <span className="text-sm text-gray-700">
                       결제 이용약관에 동의합니다.
                     </span>
                   </label>
                   <label className="flex items-start gap-3">
-                    <input
-                      type="checkbox"
-                      defaultChecked
-                      className="mt-1"
-                    />
+                    <input type="checkbox" defaultChecked className="mt-1" />
                     <span className="text-sm text-gray-700">
                       거래 약관에 동의합니다.
                     </span>

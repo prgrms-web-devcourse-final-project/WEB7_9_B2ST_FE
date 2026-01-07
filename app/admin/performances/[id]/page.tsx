@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import {
   performanceApi,
@@ -29,25 +29,14 @@ export default function AdminPerformanceDetailPage() {
   const [scheduleStartAt, setScheduleStartAt] = useState("");
   const [scheduleRoundNo, setScheduleRoundNo] = useState("1");
   const [scheduleBookingType, setScheduleBookingType] = useState<
-    "FIRST_COME" | "SEAT" | "LOTTERY"
+    "FIRST_COME" | "PRERESERVE" | "LOTTERY"
   >("FIRST_COME");
   const [scheduleOpenAt, setScheduleOpenAt] = useState("");
   const [scheduleCloseAt, setScheduleCloseAt] = useState("");
   const [scheduleError, setScheduleError] = useState<string | null>(null);
   const [isCreatingSchedule, setIsCreatingSchedule] = useState(false);
 
-  useEffect(() => {
-    const admin = localStorage.getItem("isAdmin") === "true";
-    setIsAdmin(admin);
-    if (!admin) {
-      router.push("/admin/login");
-      return;
-    }
-
-    loadPerformance();
-  }, [performanceId, router]);
-
-  const loadPerformance = async () => {
+  const loadPerformance = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -64,7 +53,18 @@ export default function AdminPerformanceDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [performanceId]);
+
+  useEffect(() => {
+    const admin = localStorage.getItem("isAdmin") === "true";
+    setIsAdmin(admin);
+    if (!admin) {
+      router.push("/admin/login");
+      return;
+    }
+
+    loadPerformance();
+  }, [loadPerformance, router]);
 
   const handleEditPolicy = () => {
     setIsEditingPolicy(true);
@@ -368,15 +368,15 @@ export default function AdminPerformanceDetailPage() {
                 value={scheduleBookingType}
                 onChange={(e) =>
                   setScheduleBookingType(
-                    e.target.value as "FIRST_COME" | "SEAT" | "LOTTERY"
+                    e.target.value as "FIRST_COME" | "PRERESERVE" | "LOTTERY"
                   )
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded bg-white"
                 disabled={isCreatingSchedule}
                 required
               >
-                <option value="FIRST_COME">선착순 (FIRST_COME)</option>
-                <option value="SEAT">좌석지정 (SEAT)</option>
+                <option value="FIRST_COME">일반예매 (FIRST_COME)</option>
+                <option value="PRERESERVE">구역별 사전등록 (PRERESERVE)</option>
                 <option value="LOTTERY">추첨 (LOTTERY)</option>
               </select>
             </div>

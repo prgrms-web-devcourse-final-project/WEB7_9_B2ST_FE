@@ -302,21 +302,19 @@ export default function TicketPage() {
                             {performance.category}
                           </span>
                         )}
-                        {(performance as any).bookingType && (
+                        {performance.bookingType && (
                           <span
                             className={`inline-block px-2 py-1 text-xs font-medium rounded ${
-                              (performance as any).bookingType === "LOTTERY"
+                              performance.bookingType === "LOTTERY"
                                 ? "text-purple-700 bg-purple-100"
-                                : (performance as any).bookingType ===
-                                  "PRE_REGISTRATION"
+                                : performance.bookingType === "PRERESERVE"
                                 ? "text-blue-700 bg-blue-100"
                                 : "text-green-700 bg-green-100"
                             }`}
                           >
-                            {(performance as any).bookingType === "LOTTERY"
+                            {performance.bookingType === "LOTTERY"
                               ? "추첨"
-                              : (performance as any).bookingType ===
-                                "PRE_REGISTRATION"
+                              : performance.bookingType === "PRERESERVE"
                               ? "구역별 사전등록"
                               : "일반예매"}
                           </span>

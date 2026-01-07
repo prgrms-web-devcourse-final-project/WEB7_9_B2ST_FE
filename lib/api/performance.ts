@@ -164,7 +164,7 @@ export const performanceApi = {
     venueId: number;
     title: string;
     category: string;
-    bookingType: "LOTTERY" | "GENERAL" | "PRE_REGISTRATION";
+    bookingType: "LOTTERY" | "FIRST_COME" | "PRERESERVE";
     posterKey: string;
     description: string;
     startDate: string;
@@ -258,7 +258,7 @@ export const performanceApi = {
     request: {
       startAt: string;
       roundNo: number;
-      bookingType: "FIRST_COME" | "SEAT" | "LOTTERY";
+      bookingType: "FIRST_COME" | "PRERESERVE" | "LOTTERY";
       bookingOpenAt: string;
       bookingCloseAt: string;
     }

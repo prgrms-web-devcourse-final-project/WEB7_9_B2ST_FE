@@ -15,8 +15,8 @@ export default function AdminPerformancesPage() {
   const [venueId, setVenueId] = useState("1");
   const [category, setCategory] = useState("");
   const [bookingType, setBookingType] = useState<
-    "LOTTERY" | "GENERAL" | "PRE_REGISTRATION"
-  >("GENERAL");
+    "LOTTERY" | "FIRST_COME" | "PRERESERVE"
+  >("FIRST_COME");
   const [description, setDescription] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -171,7 +171,7 @@ export default function AdminPerformancesPage() {
         setTitle("");
         setVenueId("1");
         setCategory("");
-        setBookingType("GENERAL");
+        setBookingType("FIRST_COME");
         setDescription("");
         setStartDate("");
         setEndDate("");
@@ -244,17 +244,15 @@ export default function AdminPerformancesPage() {
                 value={bookingType}
                 onChange={(e) =>
                   setBookingType(
-                    e.target.value as "LOTTERY" | "GENERAL" | "PRE_REGISTRATION"
+                    e.target.value as "LOTTERY" | "FIRST_COME" | "PRERESERVE"
                   )
                 }
                 className="mt-1 block w-full rounded border px-3 py-2 border-gray-300 bg-white"
                 required
                 disabled={isLoading}
               >
-                <option value="GENERAL">일반예매 (GENERAL)</option>
-                <option value="PRE_REGISTRATION">
-                  구역별 사전등록 (PRE_REGISTRATION)
-                </option>
+                <option value="FIRST_COME">일반예매 (FIRST_COME)</option>
+                <option value="PRERESERVE">구역별 사전등록 (PRERESERVE)</option>
                 <option value="LOTTERY">추첨 (LOTTERY)</option>
               </select>
             </div>

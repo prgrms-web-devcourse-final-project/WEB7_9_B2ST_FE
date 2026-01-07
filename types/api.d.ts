@@ -884,7 +884,7 @@ export interface components {
       /** Format: int32 */
       roundNo: number;
       /** @enum {string} */
-      bookingType: "FIRST_COME" | "SEAT" | "LOTTERY";
+      bookingType: "FIRST_COME" | "PRERESERVE" | "LOTTERY";
       /** Format: date-time */
       bookingOpenAt: string;
       /** Format: date-time */
@@ -906,7 +906,7 @@ export interface components {
       /** Format: int32 */
       roundNo?: number;
       /** @enum {string} */
-      bookingType?: "FIRST_COME" | "SEAT" | "LOTTERY";
+      bookingType?: "FIRST_COME" | "PRERESERVE" | "LOTTERY";
       /** Format: date-time */
       bookingOpenAt?: string;
       /** Format: date-time */
@@ -1300,6 +1300,7 @@ export interface components {
       category?: string;
       posterUrl?: string;
       venueName?: string;
+      bookingType?: "LOTTERY" | "FIRST_COME" | "PRERESERVE";
       /** Format: date-time */
       startDate?: string;
       /** Format: date-time */
@@ -1345,7 +1346,7 @@ export interface components {
       /** Format: int32 */
       roundNo?: number;
       /** @enum {string} */
-      bookingType?: "FIRST_COME" | "SEAT" | "LOTTERY";
+      bookingType?: "FIRST_COME" | "PRERESERVE" | "LOTTERY";
       /** Format: date-time */
       bookingOpenAt?: string;
       /** Format: date-time */
@@ -1361,7 +1362,7 @@ export interface components {
       /** Format: int64 */
       performanceScheduleId?: number;
       /** @enum {string} */
-      bookingType?: "FIRST_COME" | "SEAT" | "LOTTERY";
+      bookingType?: "FIRST_COME" | "PRERESERVE" | "LOTTERY";
       /** Format: date-time */
       bookingOpenAt?: string;
       /** Format: date-time */

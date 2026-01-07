@@ -208,6 +208,12 @@ export default function QueueWaiting({
       <Header />
       <main className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-50 pt-16">
         <div className="max-w-2xl mx-auto p-6">
+          <button
+            onClick={() => router.push(`/performance/${id}`)}
+            className="mb-6 text-red-600 hover:text-red-700 font-medium flex items-center gap-2"
+          >
+            ← 공연으로 돌아가기
+          </button>
           {/* 대기열 상태 카드 */}
           <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
             {/* 헤더 */}

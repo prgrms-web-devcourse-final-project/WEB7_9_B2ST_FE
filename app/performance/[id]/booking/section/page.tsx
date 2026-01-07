@@ -351,6 +351,13 @@ export default function BookingSection({
       <Header />
       <div className="py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <button
+            onClick={() => router.push(`/performance/${id}`)}
+            className="mb-6 text-red-600 hover:text-red-700 font-medium flex items-center gap-2"
+          >
+            ← 공연으로 돌아가기
+          </button>
+
           <h1 className="text-3xl font-bold text-gray-900 mb-2">좌석 선택</h1>
 
           {/* 회차 정보 */}

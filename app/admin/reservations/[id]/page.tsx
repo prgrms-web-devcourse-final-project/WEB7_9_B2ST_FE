@@ -311,53 +311,70 @@ export default function AdminReservationDetailPage() {
         </section>
 
         {/* 결제 정보 */}
-        <section className="bg-white p-6 rounded-lg shadow-sm">
-          <h2 className="text-lg font-semibold mb-4 border-b pb-2">
-            결제 정보
-          </h2>
-          <div className="space-y-3">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <div className="text-sm text-gray-600">결제 ID</div>
-                <div className="text-gray-900">{payment.paymentId}</div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-600">주문 ID</div>
-                <div className="text-gray-900 font-mono text-xs">
-                  {payment.orderId}
-                </div>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <div className="text-sm text-gray-600">결제 금액</div>
-                <div className="text-lg font-semibold text-red-600">
-                  {formatAmount(payment.amount)}
-                </div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-600">결제 상태</div>
+        {payment ? (
+          <section className="bg-white p-6 rounded-lg shadow-sm">
+            <h2 className="text-lg font-semibold mb-4 border-b pb-2">
+              결제 정보
+            </h2>
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <span
-                    className={`inline-flex items-center px-3 py-1 rounded text-sm font-semibold ${
-                      payment.status === "DONE"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}
-                  >
-                    {payment.status}
-                  </span>
+                  <div className="text-sm text-gray-600">결제 ID</div>
+                  <div className="text-gray-900">{payment.paymentId}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-gray-600">주문 ID</div>
+                  <div className="text-gray-900 font-mono text-xs">
+                    {payment.orderId}
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <div className="text-sm text-gray-600">결제 금액</div>
+                  <div className="text-lg font-semibold text-red-600">
+                    {formatAmount(payment.amount)}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm text-gray-600">결제 상태</div>
+                  <div>
+                    <span
+                      className={`inline-flex items-center px-3 py-1 rounded text-sm font-semibold ${
+                        payment.status === "DONE"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {payment.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">결제 완료 시간</div>
+                <div className="text-gray-900">
+                  {formatDateTime(payment.paidAt)}
                 </div>
               </div>
             </div>
-            <div>
-              <div className="text-sm text-gray-600">결제 완료 시간</div>
-              <div className="text-gray-900">
-                {formatDateTime(payment.paidAt)}
-              </div>
+          </section>
+        ) : (
+          <section className="bg-white p-6 rounded-lg shadow-sm">
+            <h2 className="text-lg font-semibold mb-4 border-b pb-2">
+              결제 정보
+            </h2>
+            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded">
+              <p className="text-sm text-yellow-700">
+                {reservation.status === "PENDING"
+                  ? "결제 대기 중입니다. 결제가 진행되면 결제 정보가 표시됩니다."
+                  : reservation.status === "EXPIRED"
+                  ? "예매가 만료되어 결제 정보가 없습니다."
+                  : "아직 결제 정보가 등록되지 않았습니다."}
+              </p>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* 취소 확인 모달 */}
         {showCancelModal && (

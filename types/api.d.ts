@@ -1198,6 +1198,8 @@ export interface components {
       /** Format: int64 */
       seatId?: number;
       /** @enum {string} */
+      acquisitionType?: "RESERVATION" | "TRANSFER" | "EXCHANGE";
+      /** @enum {string} */
       status?:
         | "ISSUED"
         | "USED"

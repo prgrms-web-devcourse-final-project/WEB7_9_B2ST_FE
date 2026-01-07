@@ -1412,7 +1412,24 @@ export default function MyPage() {
                             )}
                           </div>
                         </div>
-                        <div>
+                        <div className="flex items-center gap-2">
+                          {ticket.acquisitionType && (
+                            <span
+                              className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                ticket.acquisitionType === "RESERVATION"
+                                  ? "bg-indigo-100 text-indigo-800"
+                                  : ticket.acquisitionType === "TRANSFER"
+                                  ? "bg-orange-100 text-orange-800"
+                                  : "bg-blue-100 text-blue-800"
+                              }`}
+                            >
+                              {ticket.acquisitionType === "RESERVATION"
+                                ? "예매"
+                                : ticket.acquisitionType === "TRANSFER"
+                                ? "양도"
+                                : "교환"}
+                            </span>
+                          )}
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
                               ticket.status

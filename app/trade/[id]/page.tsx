@@ -245,6 +245,87 @@ export default function TradeDetailPage({
             </div>
           )}
 
+          {/* 액션 버튼 */}
+          <div className="flex gap-3 flex-wrap mb-6">
+            {trade.type === "EXCHANGE" &&
+              trade.status === "ACTIVE" &&
+              currentUserId !== trade.memberId && (
+                <>
+                  {myTradeRequest ? (
+                    <Link
+                      href={`/my-page/trade-requests/${myTradeRequest.tradeRequestId}`}
+                      className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors inline-block text-center"
+                    >
+                      거래 상세 보기
+                    </Link>
+                  ) : (
+                    <Link
+                      href={`/trade/${tradeId}/request/step1`}
+                      className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors inline-block text-center"
+                    >
+                      교환 신청하기
+                    </Link>
+                  )}
+                </>
+              )}
+            {trade.type === "TRANSFER" &&
+              trade.status === "ACTIVE" &&
+              currentUserId !== trade.memberId && (
+                <button className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors">
+                  구매하기
+                </button>
+              )}
+            {trade.status === "ACTIVE" && currentUserId === trade.memberId && (
+              <button
+                onClick={async () => {
+                  if (
+                    !confirm(
+                      "정말로 이 거래를 삭제하시겠습니까?\n대기 중인 신청이 있으면 삭제할 수 없습니다."
+                    )
+                  ) {
+                    return;
+                  }
+
+                  setIsDeleting(true);
+                  setError("");
+
+                  try {
+                    await tradeApi.deleteTrade(tradeId);
+                    alert("거래가 삭제되었습니다.");
+                    router.push("/trade");
+                  } catch (err: any) {
+                    // API 에러 메시지 추출
+                    let errorMessage = "거래 삭제에 실패했습니다.";
+
+                    if (err instanceof Error) {
+                      errorMessage = err.message;
+                    } else if (err && typeof err === "object") {
+                      // API 응답에서 메시지 추출 시도
+                      if ("message" in err) {
+                        errorMessage = String(err.message);
+                      } else if ("response" in err && err.response) {
+                        const response = err.response as any;
+                        if (response.data && response.data.message) {
+                          errorMessage = response.data.message;
+                        } else if (response.message) {
+                          errorMessage = response.message;
+                        }
+                      }
+                    }
+
+                    setError(errorMessage);
+                  } finally {
+                    setIsDeleting(false);
+                  }
+                }}
+                disabled={isDeleting}
+                className="px-6 py-3 border-2 border-red-600 text-red-600 rounded-lg font-medium hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? "삭제 중..." : "거래 삭제"}
+              </button>
+            )}
+          </div>
+
           <div className="space-y-6">
             {/* 공연 정보 */}
             {performance && (
@@ -442,87 +523,6 @@ export default function TradeDetailPage({
                   </div>
                 </div>
               </div>
-            </div>
-
-            <div className="flex gap-3 pt-6 border-t">
-              {trade.type === "EXCHANGE" &&
-                trade.status === "ACTIVE" &&
-                currentUserId !== trade.memberId && (
-                  <>
-                    {myTradeRequest ? (
-                      <Link
-                        href={`/my-page/trade-requests/${myTradeRequest.tradeRequestId}`}
-                        className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors inline-block text-center"
-                      >
-                        거래 상세 보기
-                      </Link>
-                    ) : (
-                      <Link
-                        href={`/trade/${tradeId}/request/step1`}
-                        className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors inline-block text-center"
-                      >
-                        교환 신청하기
-                      </Link>
-                    )}
-                  </>
-                )}
-              {trade.type === "TRANSFER" &&
-                trade.status === "ACTIVE" &&
-                currentUserId !== trade.memberId && (
-                  <button className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors">
-                    구매하기
-                  </button>
-                )}
-              {trade.status === "ACTIVE" &&
-                currentUserId === trade.memberId && (
-                  <button
-                    onClick={async () => {
-                      if (
-                        !confirm(
-                          "정말로 이 거래를 삭제하시겠습니까?\n대기 중인 신청이 있으면 삭제할 수 없습니다."
-                        )
-                      ) {
-                        return;
-                      }
-
-                      setIsDeleting(true);
-                      setError("");
-
-                      try {
-                        await tradeApi.deleteTrade(tradeId);
-                        alert("거래가 삭제되었습니다.");
-                        router.push("/trade");
-                      } catch (err: any) {
-                        // API 에러 메시지 추출
-                        let errorMessage = "거래 삭제에 실패했습니다.";
-
-                        if (err instanceof Error) {
-                          errorMessage = err.message;
-                        } else if (err && typeof err === "object") {
-                          // API 응답에서 메시지 추출 시도
-                          if ("message" in err) {
-                            errorMessage = String(err.message);
-                          } else if ("response" in err && err.response) {
-                            const response = err.response as any;
-                            if (response.data && response.data.message) {
-                              errorMessage = response.data.message;
-                            } else if (response.message) {
-                              errorMessage = response.message;
-                            }
-                          }
-                        }
-
-                        setError(errorMessage);
-                      } finally {
-                        setIsDeleting(false);
-                      }
-                    }}
-                    disabled={isDeleting}
-                    className="px-6 py-3 border-2 border-red-600 text-red-600 rounded-lg font-medium hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isDeleting ? "삭제 중..." : "거래 삭제"}
-                  </button>
-                )}
             </div>
           </div>
         </div>
